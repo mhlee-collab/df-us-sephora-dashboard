@@ -25,6 +25,18 @@
 //    · 1순위 — 스크립트 속성 SPREADSHEET_ID (프로젝트 설정 → 스크립트 속성)
 //    · 2순위 — 컨테이너 바인딩 폴백 (이 프로젝트는 RAW 시트에 바인딩돼 있다)
 //    속성이 비어 있어도 바인딩 덕에 그대로 돈다. 속성은 시트를 갈아끼울 때만 쓴다.
+// 배포된 코드 버전 표식.
+// doGet 은 **배포된 버전의 코드**로 돌고, 30분 트리거는 저장된 최신 코드로 돈다.
+// 「기존 버전으로 배포」하면 데이터는 새 코드로 구워지는데 게이트는 옛 코드가 도는
+// 상태가 될 수 있다. 토큰 없이 /exec 를 호출하면 이 값이 돌아오므로
+// 밖에서 배포 상태를 바로 확인할 수 있다.
+// 🛑 Code.gs 를 고치면 이 값을 함께 올린다.
+var CODE_VERSION = '2026-08-14c';
+
+// 이 배포가 실제로 거는 검사 목록. 토큰 없이 /exec 를 부르면 함께 돌아온다.
+// audience 가 빠져 있으면 옛 코드가 배포돼 있다는 뜻이다 (→ 새 버전으로 재배포).
+var GATE_CHECKS = 'token,audience,verified_email,domain';
+
 var SPREADSHEET_PROP_KEY = 'SPREADSHEET_ID';
 var ALLOWED_DOMAIN = 'wyattcorp.com';
 var USD_TO_KRW     = 1500;               // 환율 기준: $1 = 1,500원 (수동 갱신)
@@ -78,10 +90,10 @@ function doGet(e) {
 
   // ── 1. 토큰 인증 ───────────────────────────────────────────────────────────
   var token = p.token || '';
-  if (!token) return jsonOut_({ error: 'NO_TOKEN' });
+  if (!token) return jsonOut_({ error: 'NO_TOKEN', v: CODE_VERSION, gate: GATE_CHECKS });
 
   var auth = verifyToken_(token);
-  if (auth.error) return jsonOut_(auth);
+  if (auth.error) { auth.v = CODE_VERSION; return jsonOut_(auth); }
   var email = auth.email;
 
   // ── 2. 단일 섹션 경량 경로 (캐시 미경유 — 수정 시 새 버전 배포 필요) ────────
@@ -218,6 +230,7 @@ function buildPayload_() {
 
   return {
     ok:        true,
+    v:         CODE_VERSION,
     tz:        ss.getSpreadsheetTimeZone(),
     usdToKrw:  USD_TO_KRW,
     excludedChannels: EXCLUDED_CHANNELS,
