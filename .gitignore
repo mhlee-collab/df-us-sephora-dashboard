@@ -1,0 +1,16 @@
+# 🛑 공개 리포지토리다. 실데이터를 절대 커밋하지 않는다.
+#    검증 픽스처(시트에서 뽑은 매출·방문 원본)는 로컬에만 둔다.
+test/fixtures/
+*.tsv
+*.csv
+*.xlsx
+
+# 로컬 설정
+.claude/settings.local.json
+
+node_modules/
+.DS_Store
+Thumbs.db
+
+# 검증 러너 임시 산출물
+test/.tmp/
