@@ -1755,6 +1755,8 @@ function loadData(isSilent){
         NO_TOKEN:            '세션이 만료되었습니다. 다시 로그인해 주세요.',
         INVALID_TOKEN:       '세션이 만료되었습니다. 다시 로그인해 주세요.',
         WRONG_AUDIENCE:      '이 대시보드에서 발급한 로그인이 아닙니다. 다시 로그인해 주세요.',
+        AUDIENCE_MISSING:    '토큰 검증 응답을 해석하지 못했습니다. 관리자에게 알려 주세요 '
+                             + '(Apps Script 편집기에서 checkToken 실행).',
         UNVERIFIED_EMAIL:    '확인되지 않은 계정입니다. 다시 로그인해 주세요.',
         UNAUTHORIZED_DOMAIN: '@' + ALLOWED_DOMAIN + ' 계정만 접근 가능합니다'
                              + (data.email ? ' (' + data.email + ')' : '') + '.'

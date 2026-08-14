@@ -56,16 +56,26 @@ if (fs.existsSync(gs)) {
   }
 } else { console.log('  –   Code.gs 없음 (건너뜀)'); }
 
-// ── 3·4. 데이터 검증 ─────────────────────────────────────────────────────────
+// ── 3. 토큰 검증 (픽스처 불필요 — 항상 돈다) ────────────────────────────────
+head('3. 토큰 검증 — test/verify-auth.js');
+try {
+  console.log(execFileSync(process.execPath, [path.join(__dirname, 'verify-auth.js')],
+    { stdio: 'pipe' }).toString().trim());
+} catch (e) {
+  console.log((e.stdout ? e.stdout.toString() : '') + (e.stderr ? e.stderr.toString() : ''));
+  failed++;
+}
+
+// ── 4·5. 데이터 검증 ─────────────────────────────────────────────────────────
 const haveFixtures = fs.existsSync(path.join(__dirname, 'fixtures', 'commerce.tsv'))
                   && fs.existsSync(path.join(__dirname, 'fixtures', 'channel.tsv'));
 if (!haveFixtures) {
-  head('3·4. 데이터 검증 — 건너뜀');
+  head('4·5. 데이터 검증 — 건너뜀');
   console.log('  test/fixtures/commerce.tsv · channel.tsv 가 없습니다.');
   console.log('  test/README.md 의 절차대로 시트에서 다시 뽑으면 실행됩니다.');
 } else {
   process.env.DFUS_INDEX = path.join(ROOT, 'index.html');
-  [['3. 실측값 재현', 'verify-figures.js'], ['4. 상호작용·규칙', 'verify-interactions.js']]
+  [['4. 실측값 재현', 'verify-figures.js'], ['5. 상호작용·규칙', 'verify-interactions.js']]
     .forEach(([title, file]) => {
       head(title + ' — test/' + file);
       try {

@@ -159,16 +159,25 @@ function verifyToken_(token) {
     return { error: 'TOKEN_VERIFY_FAILED', detail: err.message };
   }
 
-  // 2. 발급처 확인 — v2 tokeninfo 는 audience 와 issued_to 를 함께 준다
-  var aud = info.audience || info.issued_to || '';
-  if (aud !== GOOGLE_CLIENT_ID) return { error: 'WRONG_AUDIENCE' };
+  // 2. 발급처 확인 — v2 tokeninfo 는 audience 와 issued_to 를 함께 준다.
+  //    둘 다 없으면 응답 계약이 바뀐 것이다. 통과시키지 않고(fail closed)
+  //    WRONG_AUDIENCE 와 구분되는 코드로 돌려 원인이 바로 보이게 한다.
+  //    → 그때는 편집기에서 checkToken(토큰) 을 돌려 실제 응답 필드를 확인할 것.
+  //    정상 흐름에서 두 값은 항상 같다. 하나라도 다르면 통과시키지 않는다.
+  var aud = info.audience  || '';
+  var iss = info.issued_to || '';
+  if (!aud && !iss) return { error: 'AUDIENCE_MISSING' };
+  if ((aud && aud !== GOOGLE_CLIENT_ID) || (iss && iss !== GOOGLE_CLIENT_ID))
+    return { error: 'WRONG_AUDIENCE' };
 
   // 3·4. 이메일 확인
   if (!info.email) return { error: 'INVALID_TOKEN' };
   if (info.verified_email === false) return { error: 'UNVERIFIED_EMAIL' };
 
   var email = String(info.email).trim().toLowerCase();
-  if (!endsWith_(email, '@' + ALLOWED_DOMAIN))
+  var at = email.indexOf('@');
+  if (at < 1) return { error: 'INVALID_TOKEN' };            // 로컬파트가 비었거나 @ 가 없다
+  if (email.slice(at) !== '@' + ALLOWED_DOMAIN)             // 접미사가 아니라 도메인 전체 일치
     return { error: 'UNAUTHORIZED_DOMAIN', email: email };
 
   return { email: email };
@@ -598,6 +607,42 @@ function checkCacheStatus() {
              '주차: ' + (j.weeks || []).map(function (w) { return w.key; }).join(', ') + '\n' +
              '채널: ' + (j.channels || []).join(', ') + '\n' +
              '경고: ' + ((j.warnings || []).length ? '\n  - ' + j.warnings.join('\n  - ') : '없음'));
+}
+
+// 점검용 — 실제 토큰으로 tokeninfo 응답 필드를 눈으로 확인한다.
+//
+//   브라우저에서 대시보드에 로그인한 뒤 개발자도구 콘솔에
+//     sessionStorage.getItem('dfus_token')
+//   로 토큰을 복사해 아래 TOKEN 에 붙여넣고 실행한다.
+//
+// 🛑 토큰은 1시간짜리 접근 자격이다. 로그로 남기거나 이 파일에 저장한 채 두지 말 것.
+//    확인이 끝나면 TOKEN 을 다시 빈 문자열로 되돌린다.
+function checkToken() {
+  var TOKEN = '';   // ← 여기에 붙여넣고 실행, 끝나면 지운다
+
+  if (!TOKEN) { Logger.log('TOKEN 을 채우고 실행하세요.'); return; }
+  var res = UrlFetchApp.fetch(
+    'https://www.googleapis.com/oauth2/v2/tokeninfo?access_token=' + encodeURIComponent(TOKEN),
+    { muteHttpExceptions: true });
+  var code = res.getResponseCode();
+  var body = res.getContentText();
+  var info = {};
+  try { info = JSON.parse(body); } catch (e) {}
+
+  var aud = info.audience || info.issued_to || '';
+  Logger.log(
+    'HTTP ' + code + '\n' +
+    '응답 필드: ' + Object.keys(info).join(', ') + '\n' +
+    '  audience   : ' + (info.audience   || '(없음)') + '\n' +
+    '  issued_to  : ' + (info.issued_to  || '(없음)') + '\n' +
+    '  email      : ' + (info.email      || '(없음)') + '\n' +
+    '  verified   : ' + info.verified_email + '\n' +
+    '  expires_in : ' + info.expires_in + '\n' +
+    '  scope      : ' + (info.scope || '(없음)') + '\n' +
+    '─────────────────────────────\n' +
+    'audience 가 이 대시보드 클라이언트 ID와 일치하는가: ' +
+      (aud === GOOGLE_CLIENT_ID ? '예 ✔' : '아니오 ✘  (' + (aud || '필드 없음') + ')') + '\n' +
+    'verifyToken_() 판정: ' + JSON.stringify(verifyToken_(TOKEN)));
 }
 
 // 점검용 — 어느 시트를 보고 있는지 · 탭과 헤더가 스펙과 맞는지
