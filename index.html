@@ -533,7 +533,13 @@ body{
 var GOOGLE_CLIENT_ID = '549092732127-gl1eesou2gi3s89mc088qgid3j369cl1.apps.googleusercontent.com';
 var ALLOWED_DOMAIN   = 'wyattcorp.com';
 var REDIRECT_URI     = 'https://mhlee-collab.github.io/df-us-sephora-dashboard/';
-var EXEC_URL         = 'https://script.google.com/a/macros/wyattcorp.com/s/AKfycbza7OyvL54Jup2djWbH-D-9vAZWHmfFlByxXegtK8vWN4gLaO75G15SsI9sYHGCNRN6/exec';
+// 🛑 반드시 일반형 /macros/s/<ID>/exec 를 쓴다. 배포 ID 는 동일하다.
+//    도메인 제한형 /a/macros/wyattcorp.com/s/<ID>/exec 는 구글 로그인 페이지로 302 를
+//    쏘면서 Access-Control-Allow-Origin 을 주지 않아 브라우저 fetch 가
+//    "Failed to fetch" 로 떨어진다 (2026-08-14 실측 — 상단 이동은 쿠키가 실려 되지만
+//    cross-origin fetch 는 기본값이 credentials:'same-origin' 이라 쿠키가 안 실린다).
+//    접근 게이트는 Code.gs 의 verifyToken_() 이다 — audience + 확인된 이메일 + 도메인.
+var EXEC_URL         = 'https://script.google.com/macros/s/AKfycbza7OyvL54Jup2djWbH-D-9vAZWHmfFlByxXegtK8vWN4gLaO75G15SsI9sYHGCNRN6/exec';
 var CACHE_KEY        = 'dfus_data_cache';
 var AUTO_REFRESH_MS  = 30 * 60 * 1000;
 
@@ -1744,13 +1750,22 @@ function loadData(isSilent){
   }).then(function(data){
     if (!data) throw new Error('응답이 비어 있습니다.');
     if (data.error){
-      if (data.error === 'NO_TOKEN' || data.error === 'INVALID_TOKEN'){
+      // 인증 계열 오류는 전부 로그인 화면으로 되돌린다 (서버 게이트 = verifyToken_)
+      var AUTH_ERR = {
+        NO_TOKEN:            '세션이 만료되었습니다. 다시 로그인해 주세요.',
+        INVALID_TOKEN:       '세션이 만료되었습니다. 다시 로그인해 주세요.',
+        WRONG_AUDIENCE:      '이 대시보드에서 발급한 로그인이 아닙니다. 다시 로그인해 주세요.',
+        UNVERIFIED_EMAIL:    '확인되지 않은 계정입니다. 다시 로그인해 주세요.',
+        UNAUTHORIZED_DOMAIN: '@' + ALLOWED_DOMAIN + ' 계정만 접근 가능합니다'
+                             + (data.email ? ' (' + data.email + ')' : '') + '.'
+      };
+      if (AUTH_ERR[data.error]){
         sessionStorage.removeItem('dfus_auth');
         sessionStorage.removeItem('dfus_token');
         if (autoRefreshTimer) clearInterval(autoRefreshTimer);
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('loginOverlay').style.display = 'flex';
-        document.getElementById('loginErr').textContent = '세션이 만료되었습니다. 다시 로그인해 주세요.';
+        document.getElementById('loginErr').textContent = AUTH_ERR[data.error];
         return;
       }
       throw new Error(data.error + (data.detail ? ': ' + data.detail : ''));

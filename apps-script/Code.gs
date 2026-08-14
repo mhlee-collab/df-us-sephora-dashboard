@@ -29,6 +29,16 @@ var SPREADSHEET_PROP_KEY = 'SPREADSHEET_ID';
 var ALLOWED_DOMAIN = 'wyattcorp.com';
 var USD_TO_KRW     = 1500;               // 환율 기준: $1 = 1,500원 (수동 갱신)
 
+// 🛑 이 대시보드의 접근 게이트는 아래 verifyToken_() 이 전부다.
+//    배포 액세스가 「모든 사용자」인 이유는 그래야 CORS 가 열리기 때문이지
+//    아무나 데이터를 볼 수 있게 하려는 게 아니다.
+//    (액세스를 「도메인 내 사용자」로 두면 /a/macros/<도메인>/ 주소가 발급되고,
+//     그 주소는 구글 로그인 페이지로 302 를 쏘면서 Access-Control-Allow-Origin 을
+//     주지 않아 브라우저 fetch 가 "Failed to fetch" 로 떨어진다. 2026-08-14 실측.)
+//    ⚠️ 실행 계정은 반드시 「나(MJ)」로 둔다 — 웹앱이 MJ 권한으로 시트를 읽는다.
+// 클라이언트 ID 는 공개 가능한 값이다 (index.html 에도 그대로 들어 있다).
+var GOOGLE_CLIENT_ID = '549092732127-gl1eesou2gi3s89mc088qgid3j369cl1.apps.googleusercontent.com';
+
 var CACHE_FILE_NAME = 'dfus_dashboard_cache.json';
 var CACHE_PROP_KEY  = 'DFUS_CACHE_FILE_ID';
 
@@ -70,20 +80,9 @@ function doGet(e) {
   var token = p.token || '';
   if (!token) return jsonOut_({ error: 'NO_TOKEN' });
 
-  var email;
-  try {
-    var res = UrlFetchApp.fetch(
-      'https://www.googleapis.com/oauth2/v2/tokeninfo?access_token=' + encodeURIComponent(token),
-      { muteHttpExceptions: true }
-    );
-    var info = JSON.parse(res.getContentText());
-    if (res.getResponseCode() !== 200 || !info.email) return jsonOut_({ error: 'INVALID_TOKEN' });
-    if (!endsWith_(info.email, '@' + ALLOWED_DOMAIN))
-      return jsonOut_({ error: 'UNAUTHORIZED_DOMAIN', email: info.email });
-    email = info.email;
-  } catch (err) {
-    return jsonOut_({ error: 'TOKEN_VERIFY_FAILED', detail: err.message });
-  }
+  var auth = verifyToken_(token);
+  if (auth.error) return jsonOut_(auth);
+  var email = auth.email;
 
   // ── 2. 단일 섹션 경량 경로 (캐시 미경유 — 수정 시 새 버전 배포 필요) ────────
   var only = String(p.only || '').trim();
@@ -129,6 +128,50 @@ function doGet(e) {
   } catch (err) {
     return jsonOut_({ error: 'DATA_READ_FAILED', detail: err.message });
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  토큰 검증 — 이 대시보드의 유일한 접근 게이트
+//
+//  통과 조건 4개를 전부 만족해야 한다.
+//   1. 구글이 유효하다고 답하는 액세스 토큰인가            (tokeninfo 200)
+//   2. 🛑 그 토큰이 **이 대시보드의 클라이언트 ID로 발급**됐는가 (audience)
+//   3. 확인된(verified) 이메일인가
+//   4. @wyattcorp.com 계정인가
+//
+//  🛑 2번이 없으면 도메인 검증이 사실상 무력해진다.
+//     와이어트 직원이 구글 로그인으로 접속한 **아무 제3자 사이트**가 그 직원의
+//     액세스 토큰을 갖게 되고, 그 토큰을 이 엔드포인트에 그대로 넣으면
+//     tokeninfo 는 여전히 email: …@wyattcorp.com 을 돌려준다.
+//     audience 를 확인해야 「우리 앱에서 로그인한 사람」으로 좁혀진다.
+//     배포 액세스가 「도메인 내 사용자」였을 때는 구글 세션이 이 구멍을 가려주고 있었다.
+// ═══════════════════════════════════════════════════════════════════════════════
+function verifyToken_(token) {
+  var info;
+  try {
+    var res = UrlFetchApp.fetch(
+      'https://www.googleapis.com/oauth2/v2/tokeninfo?access_token=' + encodeURIComponent(token),
+      { muteHttpExceptions: true }
+    );
+    if (res.getResponseCode() !== 200) return { error: 'INVALID_TOKEN' };
+    info = JSON.parse(res.getContentText());
+  } catch (err) {
+    return { error: 'TOKEN_VERIFY_FAILED', detail: err.message };
+  }
+
+  // 2. 발급처 확인 — v2 tokeninfo 는 audience 와 issued_to 를 함께 준다
+  var aud = info.audience || info.issued_to || '';
+  if (aud !== GOOGLE_CLIENT_ID) return { error: 'WRONG_AUDIENCE' };
+
+  // 3·4. 이메일 확인
+  if (!info.email) return { error: 'INVALID_TOKEN' };
+  if (info.verified_email === false) return { error: 'UNVERIFIED_EMAIL' };
+
+  var email = String(info.email).trim().toLowerCase();
+  if (!endsWith_(email, '@' + ALLOWED_DOMAIN))
+    return { error: 'UNAUTHORIZED_DOMAIN', email: email };
+
+  return { email: email };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

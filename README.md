@@ -18,8 +18,38 @@ GitHub Pages  ──  index.html (단일 파일)
 | Pages | https://mhlee-collab.github.io/df-us-sephora-dashboard/ |
 | 접근 | Google OAuth · `@wyattcorp.com` 계정 전용 |
 | Apps Script | `DF_US 대시보드 API` (RAW 시트 컨테이너 바인딩) |
-| 배포 설정 | 실행: MJ 계정 / 액세스: wyattcorp.com 도메인 내 사용자 |
+| 배포 설정 | **실행: 나(MJ) / 액세스: 모든 사용자** — 아래 「접근 게이트」 참고 |
 | 환율 | $1 = 1,500원 |
+
+## 접근 게이트
+
+🛑 **액세스는 「모든 사용자」로 둔다. 「도메인 내 사용자」로 두면 대시보드가 아예 안 뜬다.**
+
+「도메인 내 사용자」면 `/a/macros/wyattcorp.com/s/<ID>/exec` 주소가 발급되는데,
+이 주소는 구글 로그인 페이지로 302 를 쏘면서 `Access-Control-Allow-Origin` 을 주지 않는다.
+브라우저 주소창으로 직접 열면 쿠키가 실려 정상 응답이 오지만,
+cross-origin `fetch` 는 기본값이 `credentials:'same-origin'` 이라 쿠키가 안 실려
+**`Failed to fetch`** 로 떨어진다. (2026-08-14 실측 · 운영 중인 UNOVE 배포도 「모든 사용자」다.)
+
+**「모든 사용자」라도 데이터는 열리지 않는다.** 진짜 게이트는 `Code.gs` 의 `verifyToken_()` 이고,
+아래 4개를 **전부** 만족해야 통과한다.
+
+| # | 검사 | 실패 시 |
+|---|---|---|
+| 1 | 구글이 유효하다고 답하는 액세스 토큰인가 | `INVALID_TOKEN` |
+| 2 | **이 대시보드의 클라이언트 ID로 발급된 토큰인가** (`audience`) | `WRONG_AUDIENCE` |
+| 3 | 확인된(verified) 이메일인가 | `UNVERIFIED_EMAIL` |
+| 4 | `@wyattcorp.com` 계정인가 | `UNAUTHORIZED_DOMAIN` |
+
+🛑 **2번을 빼지 말 것.** 없으면 도메인 검증이 사실상 무력해진다 — 와이어트 직원이
+구글 로그인으로 접속한 아무 제3자 사이트가 그 직원의 액세스 토큰을 갖게 되고,
+그 토큰을 이 엔드포인트에 넣으면 `tokeninfo` 는 여전히 `@wyattcorp.com` 을 돌려준다.
+액세스가 「도메인 내 사용자」였을 때는 구글 세션이 이 구멍을 가려주고 있었다.
+
+⚠️ **실행 계정은 반드시 「나(MJ)」** — 웹앱이 MJ 권한으로 시트를 읽으므로
+팀원에게 시트를 개별 공유할 필요가 없다.
+
+프런트는 반드시 **일반형** `/macros/s/<ID>/exec` 를 부른다. 배포 ID 는 두 형태가 동일하다.
 
 ## 파일
 
@@ -43,7 +73,16 @@ GitHub Pages  ──  index.html (단일 파일)
    · 로그에 **「캐시 갱신 완료: N bytes, N초」** 가 떠야 진짜 성공이다.
      「실행이 완료됨」만 뜬 건 성공이 아니다
 5. **`checkTotals`** 실행 → 합계가 `test/README.md` 의 기대값과 맞는지 대조
-6. 배포 → **배포 관리 → 연필 → 버전: 새 버전 → 배포**
+6. 배포 → **배포 관리 → 연필 → 버전: 새 버전 → 액세스: 모든 사용자 → 배포**
+   (실행: 나 는 그대로 둔다. `/exec` 배포 ID 는 바뀌지 않고 주소 형태만
+   `/a/macros/wyattcorp.com/s/…` → `/macros/s/…` 로 바뀐다)
+7. CORS 가 열렸는지 확인 — 아래가 `Access-Control-Allow-Origin: *` 를 뱉어야 한다
+
+```bash
+curl -s -o /dev/null -D - -H "Origin: https://mhlee-collab.github.io" \
+  "https://script.google.com/macros/s/<배포ID>/exec?token=DUMMY" \
+  | grep -i "^HTTP/\|^access-control-allow-origin:"
+```
 
 ## 재배포
 
