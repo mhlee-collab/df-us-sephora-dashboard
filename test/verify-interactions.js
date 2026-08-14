@@ -163,6 +163,42 @@ assert('NA 만 선택 시 계열 0 + 안내', charts[charts.length-1].data.datas
 assert('NA 만 선택 시 표도 안내로 대체', /표시할 채널이 없습니다/.test(els['chTable'].innerHTML), 'ok');
 step('채널 해제', () => { sandbox.clearFilter('chChan'); sandbox._chModeTouched = true; sandbox.setChMode('sum'); });
 
+console.log('\n── NA 카드·경고의 기준 구간 ──');
+// KPI 카드는 「기준 기간」(필터 없으면 최신 기간 1개), 경고 배너는 「필터 범위 전체」다.
+// 두 기준이 섞이면 화면끼리 어긋나 보인다. 라벨과 값이 각자의 기준과 맞는지 본다.
+step('필터 전부 해제', () => {
+  sandbox.selChMonths.clear(); sandbox.selChWeeks.clear(); sandbox.selChChans.clear();
+  sandbox.buildChWeekOptions(); sandbox.refreshChannel(true);
+});
+const naByWeek = {}, salesByWeek = {};
+let naAll = 0, salesAll = 0;
+payload.channel.forEach(r => {
+  salesByWeek[r.week] = (salesByWeek[r.week] || 0) + r.sales;
+  salesAll += r.sales;
+  if (r.channel === 'NA') { naByWeek[r.week] = (naByWeek[r.week] || 0) + r.sales; naAll += r.sales; }
+});
+const LASTW = WK[WK.length - 1];
+const usd = v => '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const naHtml = els['chKpiRow'].innerHTML;
+
+assert('NA 카드 본값 = 최신 기간 NA 합계',
+  naHtml.includes(usd(naByWeek[LASTW])), usd(naByWeek[LASTW]) + ` (${LASTW})`);
+assert('보조줄에 필터 범위 누계도 함께 표시',
+  naHtml.includes(usd(naAll)), usd(naAll));
+assert('🛑 「전체 매출의」로 오라벨하지 않는다',
+  !naHtml.includes('전체 매출의'), 'ok');
+assert('  기준을 「기준 기간 매출의」로 명시',
+  naHtml.includes('기준 기간 매출의'), 'ok');
+assert('카드 비율 = 최신 기간 기준',
+  naHtml.includes((naByWeek[LASTW] / salesByWeek[LASTW] * 100).toFixed(2) + '%'),
+  (naByWeek[LASTW] / salesByWeek[LASTW] * 100).toFixed(2) + '%');
+
+const alertHtml = els['chAlert'].innerHTML;
+assert('경고 배너는 필터 범위 기준',
+  !alertHtml.includes('선택 기간 미귀속') || alertHtml.includes('필터 범위 미귀속'), 'ok');
+assert('  일별 초과 경고가 조건부로만 뜬다',
+  (naAll / salesAll * 100 > 15) === alertHtml.includes('필터 범위 미귀속'), 'ok');
+
 console.log('\n── 채널별 표 ──');
 step('표 Visits', () => sandbox.setChTblMetric(btn(), 'visits'));
 let html = els['chTable'].innerHTML;

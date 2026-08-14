@@ -1231,6 +1231,17 @@ function renderChKPI(periods){
 
   var naPct = cur.sales > 0 ? cur.na / cur.sales * 100 : 0;
 
+  // 필터 범위 전체(기준 기간이 아니라) 기준의 NA 누계 — 카드 보조줄과 경고 배너가 함께 쓴다.
+  // 두 곳의 기준이 다르면 화면끼리 어긋나 보인다.
+  var rangeNa = (function(){
+    var t = 0, na = 0;
+    chTimeFiltered().forEach(function(r){
+      t += r.sales;
+      if (isExcluded(r.channel)) na += r.sales;
+    });
+    return { na: na, total: t, pct: t > 0 ? na / t * 100 : 0 };
+  })();
+
   var cards = [
     { label:'TOTAL VISITS', val: fmtInt(cur.visits), sub:'유입 기준 방문 (RAW_유입)',
       d: badge(cur.visits, cmp && cmp.visits) },
@@ -1238,8 +1249,13 @@ function renderChKPI(periods){
       d: badge(cur.sales, cmp && cmp.sales) },
     { label:'AVG CVR', val: cur.cvr === null ? '-' : fmtPct(cur.cvr), sub:'방문 가중 · 원본 Conversion TY',
       d: (cur.cvr === null || !cmp || cmp.cvr === null) ? null : badge(cur.cvr, cmp.cvr) },
+    // 🛑 이 카드도 다른 카드와 같은 「기준 기간」 값이다.
+    //    「전체 매출의 …%」로 쓰면 누계와 대조할 때 어긋나 보인다. 기준을 명시한다.
+    //    누계는 따로 붙여 두 값을 한눈에 비교할 수 있게 한다.
     { label:'미귀속(NA) 매출', val: fmtUsd(cur.na),
-      sub: '전체 매출의 ' + naPct.toFixed(2) + '% · 차트·표에서는 제외', d: null }
+      sub: '기준 기간 매출의 ' + naPct.toFixed(2) + '% · 차트·표에서는 제외'
+         + '<br><span style="color:#c9c9d0;">필터 범위 누계 ' + fmtUsd(rangeNa.na)
+         + ' (' + rangeNa.pct.toFixed(2) + '%)</span>', d: null }
   ];
 
   document.getElementById('chKpiRow').innerHTML = cards.map(function(k){
@@ -1252,15 +1268,17 @@ function renderChKPI(periods){
       + '</div>';
   }).join('');
 
-  renderNaAlert(naPct, basePeriods);
+  renderNaAlert(rangeNa);
 }
 
 // 🛑 조건부 경고 — 조건을 만족할 때만 그린다.
-function renderNaAlert(naPct, basePeriods){
+//    기준은 **필터 범위 전체**로 통일한다. 카드의 「기준 기간」과 섞으면
+//    배너와 카드가 서로 다른 구간을 말하게 된다.
+function renderNaAlert(rangeNa){
   var el = document.getElementById('chAlert');
   var msgs = [];
-  if (naPct > 15){
-    msgs.push('선택 기간 미귀속(NA) 매출 비중이 <strong>' + naPct.toFixed(1) + '%</strong> 입니다 (기준 15%). '
+  if (rangeNa.pct > 15){
+    msgs.push('필터 범위 미귀속(NA) 매출 비중이 <strong>' + rangeNa.pct.toFixed(1) + '%</strong> 입니다 (기준 15%). '
             + '채널별 수치 해석에 주의하세요.');
   }
   // 일별로 15%를 넘긴 날 — 기간 필터가 걸린 범위 안에서만 센다
