@@ -31,7 +31,7 @@
 // 상태가 될 수 있다. 토큰 없이 /exec 를 호출하면 이 값이 돌아오므로
 // 밖에서 배포 상태를 바로 확인할 수 있다.
 // 🛑 Code.gs 를 고치면 이 값을 함께 올린다.
-var CODE_VERSION = '2026-08-14c';
+var CODE_VERSION = '2026-08-16a';
 
 // 이 배포가 실제로 거는 검사 목록. 토큰 없이 /exec 를 부르면 함께 돌아온다.
 // audience 가 빠져 있으면 옛 코드가 배포돼 있다는 뜻이다 (→ 새 버전으로 재배포).
@@ -200,7 +200,8 @@ function verifyToken_(token) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function buildPayload_() {
   var ss = openSS_();
-  var warnings = [];
+  var warnings = [];        // 화면에 그려진다 — 데이터가 실제로 깨진 경우에만
+  var diagnostics = [];     // 화면에 안 그린다 — 로그·하네스 대조용 내부 진단
 
   var meta     = parseMeta_(ss, warnings);
   var commerce = parseCommerce_(ss, warnings);
@@ -217,7 +218,7 @@ function buildPayload_() {
 
   // ── 결측 채널 0 채우기 ────────────────────────────────────────────────────
   // 값 0인 채널은 원본에서 행 자체가 빠진다(일별 13~15행) → 계열이 끊기지 않게 채운다.
-  channel = fillMissingChannelRows_(channel, channels, warnings);
+  channel = fillMissingChannelRows_(channel, channels, diagnostics);
 
   // ── 주차 목록 (전부 데이터 파생 — 화면 문구에 주차 수를 박지 않기 위함) ────
   var weeks = buildWeeks_(commerce.concat(channel));
@@ -241,6 +242,7 @@ function buildPayload_() {
     commerce:  commerce,
     channel:   channel,
     warnings:  warnings,
+    diagnostics: diagnostics,
     updatedAt: nowIso_()
   };
 }
@@ -376,7 +378,7 @@ function parseChannel_(ss, warnings) {
 // ── 결측 채널 0 채우기 ───────────────────────────────────────────────────────
 // 값 0인 채널은 원본에서 행 자체가 빠진다 → 날짜 × 채널 격자를 0으로 메워
 // 차트 계열이 중간에 끊기지 않게 한다. 채워 넣은 행은 filled:true 로 표시한다.
-function fillMissingChannelRows_(rows, channels, warnings) {
+function fillMissingChannelRows_(rows, channels, diagnostics) {
   var byDate = {}, dateMeta = {};
   rows.forEach(function (r) {
     if (!byDate[r.date]) { byDate[r.date] = {}; dateMeta[r.date] = r; }
@@ -397,7 +399,12 @@ function fillMissingChannelRows_(rows, channels, warnings) {
       added++;
     });
   });
-  if (added) warnings.push('[RAW_유입] 결측 채널 ' + added + '행을 0으로 채웠습니다 (원본은 값 0인 채널의 행을 생략함).');
+  // 🛑 warnings 로 올리지 않는다 — warnings 는 화면에 그려진다.
+  //    세포라가 값 0인 채널의 행을 생략하는 것을 우리가 0으로 메우는 것은 **내부 처리 규칙**이지
+  //    대시보드를 보는 경영진·BM팀이 알아야 할 정보가 아니다. 오히려 데이터가 부실하다는
+  //    오해를 준다 (MJ 결정 2026-08-16). 감시는 test/ 하네스와 Cowork 주간 검증이 맡는다.
+  //    warnings 는 「데이터가 실제로 깨진 경우」(필수 헤더 누락·열 개수 불일치)에만 쓴다.
+  if (added) diagnostics.push('[RAW_유입] 결측 채널 ' + added + '행을 0으로 채움 (원본은 값 0인 채널의 행을 생략함).');
 
   rows.sort(function (a, b) {
     if (a.date !== b.date) return a.date < b.date ? -1 : 1;
@@ -692,5 +699,7 @@ function checkTotals() {
              'commerce — 방문 ' + cv + ' / 매출 $' + cs.toFixed(2) + ' / 주문 ' + co + '\n' +
              'channel  — 방문 ' + hv + ' / 매출 $' + hs.toFixed(2) + '\n' +
              'NA 매출 $' + na.toFixed(2) + ' (' + (hs > 0 ? (na / hs * 100).toFixed(2) : '0') + '%)\n' +
-             '주차: ' + p.weeks.map(function (w) { return w.key + '(' + w.start + '~' + w.end + ')'; }).join(', '));
+             '주차: ' + p.weeks.map(function (w) { return w.key + '(' + w.start + '~' + w.end + ')'; }).join(', ') + '\n' +
+             // 화면에서 뺀 내부 진단은 여기로만 남긴다 (MJ 결정 2026-08-16)
+             '진단: ' + ((p.diagnostics || []).length ? '\n  - ' + p.diagnostics.join('\n  - ') : '없음'));
 }

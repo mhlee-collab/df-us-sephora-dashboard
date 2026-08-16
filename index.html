@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dr.FORHAIR US — Sephora Dashboard</title>
+<title>DF_US Sephora Dashboard</title>
+<!-- 파비콘 · 브랜드 마크는 스크립트 하단의 DF_MARK (symbol_01_red 원본 data URL) 로 주입한다.
+     같은 27KB 문자열이 head·사이드바·로그인에 세 번 박히지 않게 한 곳에만 둔다. -->
+<link rel="icon" id="favicon" type="image/png" href="data:,">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -31,9 +34,22 @@ body{
    메인 레드 #DD061A · 레드(짙음) #D41112 · 서브 블루 #156FB8 · 서브 블루(보조) #0070C0
    서서브 퍼플 #6C237C · 서서브 퍼플(짙음) #5E137B
    세포라 레드 #c8102e = 상단 헤더 하단 3px 보더 (세포라 공통이라 브랜드 무관 · 유지) */
+/* 🎨 색 배분 (MJ 결정 2026-08-16) — 두 가지를 동시에 만족시킨다.
+   ① **사이드바는 차콜**(B안). 소개서에서 레드는 로고·헤드라인 같은 포인트에 쓰이지
+      대면적 배경으로 쓰이지 않는데, 200px × 화면 높이를 메인 레드로 칠하고 있어 눈이 아팠다.
+   ② **붉은 계열은 CI 레드 #DD061A 하나만.** 한때 막대를 채도 낮춘 단(#C2183A), 토글을
+      옅은 레드(#FDECEF/#C40416)로 갈라 봤으나 붉은색이 여러 단으로 보여 혼잡했다.
+   → 결과: 큰 면적은 차콜이 받고, 레드는 CI 레드 한 종류가 「지금 선택됨 · 매출」만 가리킨다.
+   되돌리려면 아래 토큰 값만 바꾸면 된다 — 사용처는 전부 토큰을 본다. */
 :root{
   --brand:#DD061A;
-  --brand-dk:#D41112;
+  --brand-dk:#D41112;    /* 소개서의 짙은 레드. 지금 화면에서는 쓰지 않는다 —
+                            🛑 붉은 계열은 CI 레드 한 종류만 쓴다 (MJ 결정 2026-08-16). */
+  --sidebar:#22222A;      /* 사이드바 배경 = 차콜 (레드 대면적 제거) */
+  --bar:#DD061A;          /* 매출 막대 = CI 레드 */
+  --tgl-on-bg:#DD061A;    /* 토글 active = CI 레드 채움 + 흰 글자 */
+  --tgl-on-bd:#DD061A;
+  --tgl-on-fg:#ffffff;
   --sub:#156FB8;
   --sub-lt:#0070C0;
   --acc:#6C237C;
@@ -46,23 +62,25 @@ body{
 /* ── 레이아웃 ───────────────────────────────────────────────────────────── */
 .app-layout{display:flex;height:100vh;overflow:hidden;}
 .sidebar{
-  width:200px;background:var(--brand);display:flex;flex-direction:column;
+  width:200px;background:var(--sidebar);display:flex;flex-direction:column;
   transition:width .22s ease;flex-shrink:0;overflow:hidden;
   border-right:0.5px solid rgba(0,0,0,0.10);
 }
 .sidebar.collapsed{width:54px;}
 .sb-top{
   display:flex;align-items:center;justify-content:space-between;
-  padding:16px 12px 14px;border-bottom:0.5px solid rgba(255,255,255,0.20);min-height:56px;
+  padding:16px 12px 14px;border-bottom:0.5px solid rgba(255,255,255,0.12);min-height:56px;
 }
 .sb-logo{display:flex;align-items:center;gap:9px;overflow:hidden;white-space:nowrap;min-width:0;}
 .sb-logo-mark{
-  width:28px;height:28px;border-radius:6px;background:#fff;color:var(--brand-dk);
+  width:28px;height:28px;border-radius:6px;background:#fff;color:var(--brand);
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  font-size:11px;font-weight:800;letter-spacing:0.5px;
+  font-size:11px;font-weight:800;letter-spacing:0.5px;overflow:hidden;
 }
+/* 브랜드 심볼 원본은 여백이 넉넉해 그대로 넣으면 작아 보인다 → 살짝 확대해 채운다 */
+.sb-logo-mark img{width:26px;height:26px;object-fit:contain;display:block;transform:scale(1.18);}
 .sb-logo-text{
-  font-size:12px;font-weight:700;color:#fff;letter-spacing:2px;white-space:nowrap;
+  font-size:10.5px;font-weight:700;color:#fff;letter-spacing:1.2px;white-space:nowrap;
   transition:opacity .2s;
 }
 .sidebar.collapsed .sb-logo-text{opacity:0;pointer-events:none;width:0;overflow:hidden;}
@@ -85,12 +103,13 @@ body{
   white-space:nowrap;overflow:hidden;
 }
 .sb-item:hover{background:rgba(255,255,255,0.14);color:#fff;}
-.sb-item.active{background:var(--brand-dk);color:#fff;box-shadow:inset 3px 0 0 #fff;}
+/* 차콜 배경 위이므로 짙은 레드가 아니라 CI 레드를 그대로 쓴다 — 붉은색은 한 종류만. */
+.sb-item.active{background:var(--brand);color:#fff;box-shadow:inset 3px 0 0 #fff;}
 .sb-icon{flex-shrink:0;width:18px;display:flex;align-items:center;justify-content:center;}
 .sb-text{font-size:11px;font-weight:500;transition:opacity .2s;white-space:nowrap;}
 .sidebar.collapsed .sb-text{opacity:0;pointer-events:none;width:0;overflow:hidden;}
 .sb-footer{
-  padding:10px 8px;border-top:0.5px solid rgba(255,255,255,0.20);
+  padding:10px 8px;border-top:0.5px solid rgba(255,255,255,0.12);
   display:flex;flex-direction:column;gap:7px;overflow:hidden;
 }
 .sb-user{display:flex;align-items:center;gap:8px;overflow:hidden;}
@@ -107,7 +126,7 @@ body{
 .sidebar.collapsed .sb-refresh{opacity:0;pointer-events:none;}
 .sb-upd{font-size:8.5px;color:rgba(255,255,255,0.75);white-space:nowrap;}
 .sb-btn{
-  padding:4px 10px;background:#fff;color:var(--brand-dk);border:none;
+  padding:4px 10px;background:#fff;color:var(--brand);border:none;
   font-size:9px;font-weight:700;letter-spacing:.5px;cursor:pointer;border-radius:3px;
   white-space:nowrap;font-family:inherit;
 }
@@ -143,6 +162,16 @@ body{
 .kpi-value{font-size:24px;font-weight:700;color:#111827;line-height:1.1;margin-bottom:6px;}
 .kpi-sub{font-size:9px;color:#aaa;line-height:1.8;}
 .kpi-vs{font-size:10px;color:#9ca3af;}
+/* 최근 기간 비교줄 — 큰 숫자(누계)와 다른 구간을 말하므로 기간 라벨을 반드시 함께 보여준다 */
+.kpi-recent{
+  font-size:10px;color:#8b8b96;line-height:1.6;margin-top:6px;
+  padding-top:6px;border-top:0.5px solid var(--line);
+}
+.kpi-recent strong{color:#444;font-weight:700;}
+.kpi-recent-hd{
+  font-size:8px;font-weight:700;letter-spacing:1px;color:#b9b9c2;
+  border:0.5px solid var(--line);border-radius:3px;padding:1px 4px;margin-right:2px;
+}
 .kpi-info-btn{
   position:absolute;top:14px;right:14px;width:16px;height:16px;border-radius:50%;
   background:rgba(0,0,0,0.07);border:none;cursor:pointer;font-size:9px;font-weight:700;
@@ -215,7 +244,7 @@ body{
   font-family:inherit;display:flex;align-items:center;gap:4px;
 }
 .tgl:hover{border-color:#999;color:#444;}
-.tgl.active{background:var(--brand);border-color:var(--brand);color:#fff;}
+.tgl.active{background:var(--tgl-on-bg);border-color:var(--tgl-on-bd);color:var(--tgl-on-fg);}
 .tgl:disabled{opacity:.35;cursor:not-allowed;}
 .seg{display:flex;gap:4px;align-items:center;flex-shrink:0;}
 .vdiv{width:1px;height:13px;background:var(--line);margin:0 2px;}
@@ -246,10 +275,74 @@ body{
 }
 .ch-tbl tr:last-child td{font-weight:700;background:#F5F5F8;border-top:1px solid #E0E0E4;}
 .ch-tbl tr:last-child td:first-child{background:#F5F5F8;}
+/* 합계 행이 없는 표(통합 탭 데이터 테이블)는 마지막 행을 강조하지 않는다.
+   🛑 position 은 다시 선언하지 않는다 — 뒤쪽 선언이 위의 sticky 를 덮어쓴다. */
+.ch-tbl.no-total tr:last-child td{font-weight:400;background:transparent;border-top:0.5px solid #EBEBEF;}
+.ch-tbl.no-total tr:last-child td:first-child{background:#fff;font-weight:600;}
 .ch-tbl .wow-up{color:#16a34a;font-weight:700;}
 .ch-tbl .wow-dn{color:#dc2626;font-weight:700;}
-.ch-tbl .muted{color:#c4c4c4;}
 .ch-tbl .dash{color:#c4c4c4;}
+
+/* ── 채널별 차트 그리드 (UNOVE 배치 — 지표별 차트 + 오른쪽 세로 범례) ─────── */
+.split-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media (max-width:1100px){
+  .split-grid{grid-template-columns:1fr;}
+  .split-grid > .chart-card{grid-column:auto !important;}
+}
+.split-title{
+  font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:#9ca3af;margin-bottom:8px;
+}
+.split-body{display:flex;align-items:stretch;gap:10px;min-width:0;}
+.split-body .chart-wrap{flex:1;min-width:0;}
+/* 범례는 계열이 많아도 카드를 밀지 않게 폭을 묶고 넘치면 자체 스크롤 */
+.split-leg{
+  width:130px;flex-shrink:0;display:flex;flex-direction:column;gap:3px;
+  overflow-y:auto;padding:2px 0;align-self:center;max-height:290px;
+}
+.split-leg .leg{font-size:10px;color:#666;gap:6px;}
+.split-leg .leg-dot{width:9px;height:9px;}
+.split-leg .leg span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.split-empty{font-size:10px;color:#bbb;padding:4px 0;}
+
+/* ── 채널 랭킹 박스 (best 3 / worst 3) ───────────────────────────────────── */
+.rank-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+@media (max-width:980px){ .rank-grid{grid-template-columns:1fr;} }
+.rank-card{
+  background:#ffffff;border:0.5px solid var(--line);border-radius:14px;
+  padding:14px 16px 12px;box-shadow:0 1px 6px rgba(0,0,0,0.05);
+}
+.rank-title{
+  font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:#9ca3af;margin-bottom:10px;
+}
+.rank-side{margin-bottom:10px;}
+.rank-side:last-child{margin-bottom:0;}
+.rank-side-lbl{
+  font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  margin-bottom:5px;display:flex;align-items:center;gap:6px;
+}
+.rank-side-lbl::after{content:'';flex:1;height:1px;background:var(--line);}
+.rank-side.best .rank-side-lbl{color:#16a34a;}
+.rank-side.worst .rank-side-lbl{color:#dc2626;}
+.rank-item{
+  display:flex;align-items:center;gap:7px;padding:3px 0;font-size:11px;color:#555;
+}
+.rank-no{
+  width:14px;height:14px;border-radius:3px;background:#F0F0F4;color:#999;flex-shrink:0;
+  font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;
+}
+.rank-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.rank-nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rank-val{font-weight:700;color:#333;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.rank-empty{font-size:10px;color:#bbb;padding:4px 0;}
+
+/* ── 표 안의 지표 구분 행 ─────────────────────────────────────────────────── */
+.ch-tbl tr.grp td{
+  background:#EEEEF2;color:#555;font-weight:700;font-size:8.5px;
+  letter-spacing:1.5px;text-transform:uppercase;padding:6px 8px;text-align:left;
+}
+.ch-tbl tr.grp td:first-child{background:#EEEEF2;color:#555;}
 
 /* ── 경고 배너 (조건부로만 그린다) ───────────────────────────────────────── */
 .alert{
@@ -281,6 +374,10 @@ body{
 .ld-txt{font-size:12px;font-weight:700;color:#fff;letter-spacing:2px;text-transform:uppercase;}
 .ld-sub{font-size:10px;color:#999;margin-top:6px;letter-spacing:1px;}
 .login-box{text-align:center;padding:48px 40px;max-width:380px;width:100%;}
+.login-symbol{
+  width:64px;height:64px;object-fit:contain;display:block;margin:0 auto 16px;
+  border-radius:12px;background:#fff;padding:6px;
+}
 .login-logo{font-size:24px;font-weight:900;letter-spacing:3px;color:#fff;margin-bottom:6px;}
 .login-mark{
   display:inline-block;width:44px;height:3px;background:var(--brand);margin:0 auto 18px;border-radius:2px;
@@ -309,9 +406,10 @@ body{
 <!-- ═══════════ 로그인 ═══════════ -->
 <div id="loginOverlay">
   <div class="login-box">
-    <div class="login-logo">Dr.FORHAIR</div>
+    <img class="login-symbol" data-df-mark alt="Dr.FORHAIR">
+    <div class="login-logo">DF_US</div>
     <div class="login-mark"></div>
-    <div class="login-sub">US · Sephora Dashboard</div>
+    <div class="login-sub">Sephora Dashboard</div>
     <div class="login-desc">와이어트 Google 계정으로 로그인하세요.<br><strong style="color:#ccc;">@wyattcorp.com</strong> 계정만 접근 가능합니다.</div>
     <button class="login-btn" id="btnGoogleLogin" onclick="startGoogleLogin()">
       <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.34-8.16 2.34-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
@@ -343,8 +441,8 @@ body{
 <nav class="sidebar" id="sidebar">
   <div class="sb-top">
     <div class="sb-logo">
-      <span class="sb-logo-mark">DF</span>
-      <span class="sb-logo-text">SEPHORA</span>
+      <span class="sb-logo-mark"><img data-df-mark alt="Dr.FORHAIR"></span>
+      <span class="sb-logo-text">DF_US SEPHORA</span>
     </div>
     <button class="sb-toggle" onclick="toggleSidebar()" title="접기/펼치기">‹</button>
   </div>
@@ -412,21 +510,30 @@ body{
         <div class="sec-hdr" style="margin-bottom:0;flex:1;">통합 성과 그래프</div>
         <div class="seg">
           <button class="tgl" data-main-period="monthly" onclick="setMainPeriod(this,'monthly')">월</button>
-          <button class="tgl active" data-main-period="weekly" onclick="setMainPeriod(this,'weekly')">주</button>
-          <button class="tgl" data-main-period="daily" onclick="setMainPeriod(this,'daily')">일</button>
+          <button class="tgl" data-main-period="weekly" onclick="setMainPeriod(this,'weekly')">주</button>
+          <button class="tgl active" data-main-period="daily" onclick="setMainPeriod(this,'daily')">일</button>
+          <div class="vdiv"></div>
+          <!-- 통화 칩 — 기본 선택 = KRW(백만원). 축·데이터 테이블·툴팁이 함께 따라간다.
+               🛑 환율은 코드 상수($1 = 1,500원)다. 시트에 수식으로 두지 않는다. -->
+          <button class="tgl active" data-cur="KRW" onclick="setCurrency(this,'KRW')">KRW(백만원)</button>
+          <button class="tgl" data-cur="USD" onclick="setCurrency(this,'USD')">USD</button>
         </div>
       </div>
       <div class="chart-card">
         <div class="leg-row">
-          <div class="leg"><div class="leg-dot" style="background:#DD061A;"></div>Sales (USD)</div>
+          <div class="leg"><div class="leg-dot" style="background:#DD061A;"></div><span id="legSales">Sales</span></div>
           <button class="tgl active" id="btnVisits" onclick="toggleSeries(this,'visits')"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#156FB8;"></span>Visits</button>
           <button class="tgl" id="btnOrders" onclick="toggleSeries(this,'orders')"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#0070C0;"></span>주문 수량</button>
           <button class="tgl" id="btnCvr" onclick="toggleSeries(this,'cvr')"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#6C237C;"></span>CVR</button>
-          <div class="vdiv"></div>
-          <button class="tgl" id="btnKrw" onclick="toggleKrw(this)">₩ 환산</button>
         </div>
         <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
-        <div class="chart-note" id="mainChartNote"></div>
+      </div>
+
+      <!-- 그래프를 구성한 데이터 그대로. 기간 토글·통화 칩을 그래프와 함께 따라간다.
+           기준 열(지표명)은 가로 스크롤에도 고정된다 — .ch-tbl th/td:first-child 의 sticky.
+           🛑 설명 주석은 붙이지 않는다 — 단위는 기준 열의 지표명이 진다. -->
+      <div class="chart-card" style="margin-top:10px;">
+        <div class="tbl-wrap"><div id="mainTable"></div></div>
       </div>
     </div>
 
@@ -457,33 +564,28 @@ body{
           </div>
         </div>
       </div>
-      <div class="filter-block">
-        <div class="filter-lbl">Channel (Multi · AND)</div>
-        <div class="dd-wrap" id="ddWrap-chChan">
-          <div class="dd-btn" id="ddBtn-chChan" onclick="toggleDD('chChan')"><span id="ddLabel-chChan">ALL</span><span class="arr">▾</span></div>
-          <div class="dd-panel" id="ddPanel-chChan" style="min-width:230px;">
-            <div class="dd-all" onclick="clearFilter('chChan')"><input type="checkbox" id="chk-chChan-all" checked disabled> ALL</div>
-          </div>
-        </div>
-      </div>
+      <!-- 🛑 상단 CHANNEL 필터는 제거했다 (MJ 결정 2026-08-16).
+           채널 선택은 아래 각 그래프 블록이 자기 드롭다운으로 따로 가진다 — 그래야 Visits·Sales 와
+           CVR 을 서로 다른 채널 조합으로 놓고 볼 수 있다. 상단에 하나만 두면 전부 같이 움직인다.
+           덕분에 Overview 는 언제나 전체 합산 형태로 고정된다. -->
     </div>
 
+    <!-- ── Overview ────────────────────────────────────────────────────────────
+         🛑 언제나 전체 채널 합산 — Sales=Bar · Visits=Area · CVR=Line 고정.
+            채널 드롭다운을 상단에서 뺐으므로 이 그래프의 형태가 바뀔 일이 없다.
+            채널을 갈라 보는 것은 아래 두 블록이 각자 맡는다.
+         기간 토글(월/주/일)은 이 탭 전체에 걸린다. -->
     <div class="chart-sec">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap;">
-        <div class="sec-hdr" style="margin-bottom:0;flex:1;min-width:180px;">Visits · Sales · CVR</div>
+        <div class="sec-hdr" style="margin-bottom:0;flex:1;min-width:180px;">Overview</div>
         <div class="seg">
-          <button class="tgl active" id="btnChModeSum" onclick="setChMode('sum')">합산</button>
-          <button class="tgl" id="btnChModeSplit" onclick="setChMode('split')">채널별</button>
-          <div class="vdiv"></div>
-          <span id="chMetricSeg" style="display:none;gap:4px;">
-            <button class="tgl active" data-ch-metric="visits" onclick="setChMetric(this,'visits')">Visits</button>
-            <button class="tgl" data-ch-metric="sales" onclick="setChMetric(this,'sales')">Sales</button>
-            <button class="tgl" data-ch-metric="cvr" onclick="setChMetric(this,'cvr')">CVR</button>
-          </span>
-          <div class="vdiv"></div>
           <button class="tgl" data-ch-period="monthly" onclick="setChPeriod(this,'monthly')">월</button>
-          <button class="tgl active" data-ch-period="weekly" onclick="setChPeriod(this,'weekly')">주</button>
-          <button class="tgl" data-ch-period="daily" onclick="setChPeriod(this,'daily')">일</button>
+          <button class="tgl" data-ch-period="weekly" onclick="setChPeriod(this,'weekly')">주</button>
+          <button class="tgl active" data-ch-period="daily" onclick="setChPeriod(this,'daily')">일</button>
+          <div class="vdiv"></div>
+          <!-- 통합 탭 칩과 같은 값을 가리킨다 (통화는 대시보드 공용). 이 탭의 모든 매출 그래프·표가 따른다. -->
+          <button class="tgl active" data-cur="KRW" onclick="setCurrency(this,'KRW')">KRW(백만원)</button>
+          <button class="tgl" data-cur="USD" onclick="setCurrency(this,'USD')">USD</button>
         </div>
       </div>
       <div class="chart-card">
@@ -493,17 +595,82 @@ body{
       </div>
     </div>
 
+    <!-- ── 채널 랭킹 (기준 기간 기준 · best 3 / worst 3) ───────────────────── -->
     <div class="chart-sec">
-      <div class="sec-hdr">채널별 표</div>
-      <div class="chart-card">
-        <div class="leg-row" style="margin-bottom:8px;">
-          <button class="tgl active" data-ch-tbl="visits" onclick="setChTblMetric(this,'visits')">Visits</button>
-          <button class="tgl" data-ch-tbl="sales" onclick="setChTblMetric(this,'sales')">Sales</button>
-          <button class="tgl" data-ch-tbl="cvr" onclick="setChTblMetric(this,'cvr')">CVR</button>
+      <div class="sec-hdr" id="chRankHdr">유입 채널 랭킹</div>
+      <div class="rank-grid" id="chRankGrid"></div>
+    </div>
+
+    <!-- ── ① Visits · Sales by Channel ──────────────────────────────────────
+         좌 Visits · 우 Sales 를 나란히 놓고 **바로 아래에 그 두 지표의 표**를 붙인다.
+         그래프와 표가 같은 블록 안에 있어야 눈이 위아래로만 움직인다 (MJ 결정 2026-08-16).
+         🛑 이 블록의 채널 드롭다운은 아래 CVR 블록과 **독립**이다 — Visits·Sales 와 CVR 을
+            서로 다른 채널 조합으로 놓고 보려는 것이 드롭다운을 나눈 이유다.
+         🛑 영역명에 기간 단위(WEEKLY 등)를 박지 않는다 — 월/주/일 토글에 따라 단위가 달라진다. -->
+    <div class="chart-sec">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px;gap:12px;flex-wrap:wrap;">
+        <div class="sec-hdr" style="margin-bottom:0;flex:1;min-width:180px;">Visits · Sales by Channel</div>
+        <div class="filter-block">
+          <div class="filter-lbl">Channel</div>
+          <div class="dd-wrap" id="ddWrap-vsChan">
+            <div class="dd-btn" id="ddBtn-vsChan" onclick="toggleDD('vsChan')"><span id="ddLabel-vsChan">ALL</span><span class="arr">▾</span></div>
+            <div class="dd-panel" id="ddPanel-vsChan" style="min-width:230px;">
+              <div class="dd-all" onclick="clearFilter('vsChan')"><input type="checkbox" id="chk-vsChan-all" checked disabled> ALL</div>
+            </div>
+          </div>
         </div>
-        <div class="tbl-wrap"><div id="chTable"></div></div>
-        <div class="chart-note" id="chTableNote"></div>
       </div>
+      <div class="split-grid">
+        <div class="chart-card">
+          <div class="split-title">VISITS TY</div>
+          <div class="split-body">
+            <div class="chart-wrap" style="height:300px;"><canvas id="chSplitVisits"></canvas></div>
+            <div class="split-leg" id="chSplitLegV"></div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <!-- 단위는 통화 칩을 따라 스크립트가 채운다 -->
+          <div class="split-title" id="chSplitTitleS">SALES TY</div>
+          <div class="split-body">
+            <div class="chart-wrap" style="height:300px;"><canvas id="chSplitSales"></canvas></div>
+            <div class="split-leg" id="chSplitLegS"></div>
+          </div>
+        </div>
+      </div>
+      <!-- 🛑 VISITS TY 와 SALES TY 를 한 행에 나란히 두지 않는다. 지표별로 행 블록을 나눈다.
+           한 행에 두면 기간이 늘었을 때 VISITS 를 끝까지 가로 스크롤해야 SALES 가 나온다. -->
+      <div class="chart-card" style="margin-top:12px;">
+        <div class="tbl-wrap"><div id="chVsTable"></div></div>
+      </div>
+      <div class="chart-note" id="chVsNote" style="padding:0 4px;"></div>
+    </div>
+
+    <!-- ── ② Conversion TY (%) by Channel ───────────────────────────────────
+         CVR 은 분모(방문)가 작은 채널이 100% 로 치솟아 전체를 눌러버린다. 그래서 Visits·Sales 와
+         한 화면에 겹치지 않게 블록을 분리하고, 자기 채널 드롭다운을 따로 준다 (MJ 지적 2026-08-16). -->
+    <div class="chart-sec">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px;gap:12px;flex-wrap:wrap;">
+        <div class="sec-hdr" style="margin-bottom:0;flex:1;min-width:180px;">Conversion TY (%) by Channel</div>
+        <div class="filter-block">
+          <div class="filter-lbl">Channel</div>
+          <div class="dd-wrap" id="ddWrap-cvrChan">
+            <div class="dd-btn" id="ddBtn-cvrChan" onclick="toggleDD('cvrChan')"><span id="ddLabel-cvrChan">ALL</span><span class="arr">▾</span></div>
+            <div class="dd-panel" id="ddPanel-cvrChan" style="min-width:230px;">
+              <div class="dd-all" onclick="clearFilter('cvrChan')"><input type="checkbox" id="chk-cvrChan-all" checked disabled> ALL</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="split-body">
+          <div class="chart-wrap" style="height:320px;"><canvas id="chSplitCvr"></canvas></div>
+          <div class="split-leg" id="chSplitLegC"></div>
+        </div>
+      </div>
+      <div class="chart-card" style="margin-top:12px;">
+        <div class="tbl-wrap"><div id="chCvrTable"></div></div>
+      </div>
+      <div class="chart-note" id="chCvrNote" style="padding:0 4px;"></div>
     </div>
 
     <div class="note" id="chNote"></div>
@@ -545,7 +712,8 @@ var AUTO_REFRESH_MS  = 30 * 60 * 1000;
 
 // ── 브랜드 색 ────────────────────────────────────────────────────────────────
 var C = {
-  brand:  '#DD061A',   // 메인 레드 — 매출(주인공 계열)
+  brand:  '#DD061A',   // 메인 레드 — 강조 신호
+  bar:    '#DD061A',   // 매출 막대 = CI 레드 (CSS --bar 와 같은 값)
   brandDk:'#D41112',
   sub:    '#156FB8',   // 서브 블루 — 방문
   subLt:  '#0070C0',   // 서브 블루(보조) — 주문 수량
@@ -558,6 +726,13 @@ var C = {
 // 채널 색은 브랜드 색과 별개 축이다. Brand Media(#CC0000)가 메인 레드와 가까우므로
 // 유입 채널 탭의 「채널별」 모드에서는 브랜드 레드 계열을 어떤 계열에도 쓰지 않는다.
 // NA 는 차트·표에서 제외하므로 색이 필요 없다.
+//
+// 🛑 이 14색은 UNOVE 세포라 대시보드와 **완전히 동일한 값**이다. 두 대시보드를 나란히 보는
+//    사람이 같은 채널을 같은 색으로 인식해야 하므로 통일을 우선한다 (MJ 결정 2026-08-16).
+//    ⚠️ 알고 받아들인 트레이드오프 — Push(#E06666)와 Brand Media(#CC0000)는 색각 시뮬레이션에서
+//       ΔE 가 기준 미달이라 적록색약에서 구분이 어렵고, 14계열을 한 화면에 다 켜면 하위
+//       채널끼리도 겹쳐 보인다. 그래서 각 그래프에 채널 드롭다운을 달아 켜는 계열 수를
+//       사용자가 줄일 수 있게 했다. 색을 바꾸는 대신 계열 수로 푼다.
 var CH_COLORS = {
   'Direct':'#2F5496', 'Organic Social':'#6AA84F', 'Push':'#E06666', 'Paid Search':'#9673A6',
   'Affiliate':'#E69138', 'Brand Media':'#CC0000', 'Email':'#F4B942', 'Organic Search':'#3D85C6',
@@ -583,19 +758,23 @@ var _prefetchPromise = null;
 
 // ── 통합 탭 상태 ─────────────────────────────────────────────────────────────
 var selMonths = new Set(), selWeeks = new Set();
-var mainPeriod = 'weekly';
+var mainPeriod = 'daily';   // 🛑 기본 = 일 보기 (MJ 결정 2026-08-16)
 var showSeries = { visits:true, orders:false, cvr:false };
-var showKrw = false;
+// 통화 — 'KRW'(백만원) | 'USD'. 🛑 기본 선택은 KRW(백만원) (지시서 A1).
+//   통합 탭의 차트 축 · 툴팁 · 데이터 테이블이 이 값을 함께 따라간다.
+//   칩을 바꿔도 선택 중인 기간·필터는 건드리지 않는다 (차트만 다시 그린다).
+var curCurrency = 'KRW';
 var mainChart = null;
 
 // ── 유입 채널 탭 상태 ────────────────────────────────────────────────────────
-var selChMonths = new Set(), selChWeeks = new Set(), selChChans = new Set();
-var chPeriod = 'weekly';
-var chMode = 'sum';          // sum | split
-var chMetric = 'visits';     // split 모드에서 그릴 지표
-var chTblMetric = 'visits';
-var chChart = null;
-var _chModeTouched = false;  // 사용자가 합산/채널별을 직접 눌렀는가
+var selChMonths = new Set(), selChWeeks = new Set();
+// 🛑 상단 CHANNEL 필터는 없앴다. 채널 선택은 아래 두 블록이 각자 따로 가진다.
+var selVsChans  = new Set();   // Visits · Sales 블록
+var selCvrChans = new Set();   // Conversion TY (%) 블록
+var chPeriod = 'daily';     // 🛑 기본 = 일 보기 (MJ 결정 2026-08-16)
+// 🛑 Overview 는 언제나 전체 채널 합산이다. 채널 드롭다운이 상단에 없으므로 형태가 바뀔 일이 없다.
+var chChart = null;                                  // Overview
+var chSplitCharts = { visits:null, sales:null, cvr:null };   // 채널별 지표 차트 3종
 
 Chart.defaults.color = '#666';
 Chart.defaults.font.family = "'Pretendard','Helvetica Neue',Arial,sans-serif";
@@ -608,11 +787,62 @@ function fmtUsd(v){ return '$' + (v || 0).toLocaleString('en-US', {minimumFracti
 function fmtUsd0(v){ return '$' + Math.round(v || 0).toLocaleString('en-US'); }
 function fmtKrw(v){ return '₩' + Math.round((v || 0) * D.usdToKrw).toLocaleString('ko-KR'); }
 function fmtPct(v, digits){ return (v || 0).toFixed(digits === undefined ? 2 : digits) + '%'; }
-function money(v){ return showKrw ? fmtKrw(v) : fmtUsd0(v); }
+
+// ── 통화 변환 ────────────────────────────────────────────────────────────────
+// 원천은 언제나 USD. KRW 는 코드 상수 환율($1 = 1,500원)로 환산한 뒤 **백만원 단위**로 쓴다.
+// ⚠️ 음수(반품·환불)도 그대로 통과시킨다 — 축만 0에서 자르고 값은 숨기지 않는다 (지시서 C1).
+function curIsKrw(){ return curCurrency === 'KRW'; }
+// 차트에 실제로 얹는 수치 (KRW 는 백만원 단위 값)
+function curVal(usd){ return curIsKrw() ? (usd || 0) * D.usdToKrw / 1e6 : (usd || 0); }
+// 백만원 단위 표시 — 자릿수는 크기에 따라. 100 이상은 정수, 10 이상은 1자리, 그 미만은 2자리
+function fmtMKrwFromUnit(m){
+  var a = Math.abs(m || 0);
+  var d = a >= 100 ? 0 : (a >= 10 ? 1 : 2);
+  return (m || 0).toLocaleString('ko-KR', { minimumFractionDigits:d, maximumFractionDigits:d }) + '백만원';
+}
+// USD 원값을 선택 통화 표시 문자열로
+function fmtCur(usd){ return curIsKrw() ? fmtMKrwFromUnit(curVal(usd)) : fmtUsd(usd); }
+// 축 눈금 — 단위는 축 제목이 지고 눈금은 숫자만 (KRW), USD 는 기존대로 $K 축약
+function curTick(v){
+  if (curIsKrw()) return (v || 0).toLocaleString('ko-KR', { maximumFractionDigits: Math.abs(v) >= 10 ? 0 : 1 });
+  return Math.abs(v) >= 1000 ? '$' + (v/1000).toFixed(1) + 'K' : '$' + v;
+}
+function curAxisTitle(){ return curIsKrw() ? 'Sales (백만원)' : 'Sales (USD)'; }
+function curLegLabel(){ return curIsKrw() ? 'Sales (백만원)' : 'Sales (USD)'; }
+// 유입 채널 탭 셀용 — 단위는 지표명이 지므로 「백만원」을 붙이지 않는다.
+// ⚠️ 다만 **소수점까지 버리면 안 된다.** 채널 하나의 주간 매출은 $92 (=0.14백만원) 수준이라
+//    정수로 자르면 대부분 0 이 되고 랭킹 1위마저 3 으로 뭉갠다 (2026-08-16 실측).
+//    통합 탭 데이터 테이블은 값이 커서(주 1·15·13) 정수로 두지만, 채널 단위는 자릿수를 살린다.
+function fmtCurCell(usd){
+  if (!curIsKrw()) return fmtUsd0(usd);
+  var m = curVal(usd), a = Math.abs(m);
+  var d = a >= 100 ? 0 : (a >= 10 ? 1 : 2);
+  return m.toLocaleString('ko-KR', { minimumFractionDigits:d, maximumFractionDigits:d });
+}
+// KPI·랭킹처럼 단위를 함께 읽어야 하는 자리 — 단위를 붙인다
+function fmtCurFull(usd){ return curIsKrw() ? fmtMKrwFromUnit(curVal(usd)) : fmtUsd(usd); }
+// 차트에 얹힌 값(이미 선택 통화 단위)을 툴팁 문자열로
+function fmtCurPlotted(v){ return curIsKrw() ? fmtMKrwFromUnit(v) : fmtUsd(v); }
 function hexToRgba(hex, a){
   var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
   return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
 }
+// ── 면(area) 채움 그라디에이션 ───────────────────────────────────────────────
+// 단색 면은 진해서 위에 얹힌 막대·선을 눌러 읽기를 방해한다 (MJ 지적 2026-08-16).
+// 위는 살짝 남기고 아래로 갈수록 투명해지는 세로 그라디에이션으로 낮춘다.
+// 🛑 backgroundColor 를 함수로 주면 Chart.js 가 레이아웃 확정 후 호출한다. 다만 최초 1회는
+//    chartArea 가 아직 없으므로 반드시 가드하고 단색으로 폴백한다 (없으면 렌더가 통째로 죽는다).
+function areaFill(hex, topAlpha, bottomAlpha){
+  return function(ctx){
+    var area = ctx.chart.chartArea;
+    if (!area) return hexToRgba(hex, bottomAlpha);
+    var g = ctx.chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+    g.addColorStop(0, hexToRgba(hex, topAlpha));
+    g.addColorStop(1, hexToRgba(hex, bottomAlpha));
+    return g;
+  };
+}
+
 function mdLabel(dateStr){
   if (!dateStr) return '';
   var p = dateStr.split('-');
@@ -661,7 +891,8 @@ var FILTER_SETS = {
   week:     function(){ return selWeeks; },
   chMonth:  function(){ return selChMonths; },
   chWeek:   function(){ return selChWeeks; },
-  chChan:   function(){ return selChChans; }
+  vsChan:   function(){ return selVsChans; },
+  cvrChan:  function(){ return selCvrChans; }
 };
 
 function toggleDD(name){
@@ -839,26 +1070,85 @@ function renderKPI(){
   var dO = delta(cur.orders, pv && pv.orders, fmtInt);
   var dC = delta(cur.cvr,    pv && pv.cvr,    function(v){ return fmtPct(v); });
 
+  // ── 최근 기간 비교줄 (방안 A) ─────────────────────────────────────────────
+  // 🛑 큰 숫자는 「필터 범위 전체 누계」 그대로 둔다. 그 아래에 월/주/일 토글을 따르는
+  //    「최근 기간 vs 직전 기간」을 한 줄 덧붙인다. 두 숫자가 서로 다른 구간을 말하므로
+  //    비교줄에는 기간 라벨을 반드시 함께 적는다 — 안 적으면 큰 숫자의 증감으로 오독된다.
+  var rec = mainRecent();
+
   var items = [
-    { key:'visits', label:'TOTAL VISITS', val: fmtInt(cur.visits), sub:'', d:dV },
+    { key:'visits', label:'TOTAL VISITS', val: fmtInt(cur.visits), sub:'', d:dV, r: rec && rec.visits },
     { key:'sales',  label:'TOTAL SALES',  val: fmtUsd(cur.sales),
       sub:'<span style="color:#888;font-weight:700;">₩</span> ' + fmtKrw(cur.sales).slice(1)
-          + ' <span style="color:#ccc;">($1 = ' + D.usdToKrw.toLocaleString('ko-KR') + '원)</span>', d:dS },
-    { key:'orders', label:'TOTAL ORDERS', val: fmtInt(cur.orders), sub:'', d:dO },
-    { key:'cvr',    label:'CVR (주문/방문)', val: fmtPct(cur.cvr), sub:'', d:dC }
+          + ' <span style="color:#ccc;">($1 = ' + D.usdToKrw.toLocaleString('ko-KR') + '원)</span>',
+      d:dS, r: rec && rec.sales },
+    { key:'orders', label:'TOTAL ORDERS', val: fmtInt(cur.orders), sub:'', d:dO, r: rec && rec.orders },
+    { key:'cvr',    label:'CVR (주문/방문)', val: fmtPct(cur.cvr), sub:'', d:dC, r: rec && rec.cvr }
   ];
 
   document.getElementById('kpiRow').innerHTML = items.map(function(k){
     return '<div class="kpi">'
       + '<div class="kpi-header"><div class="kpi-label">' + k.label + '</div>'
-      + (k.d ? '<span class="kpi-badge ' + k.d.cls + '">' + k.d.badge + '</span>' : '') + '</div>'
+      + (k.r ? '<span class="kpi-badge ' + k.r.cls + '">' + k.r.badge + '</span>'
+             : (k.d ? '<span class="kpi-badge ' + k.d.cls + '">' + k.d.badge + '</span>' : '')) + '</div>'
       + '<div class="kpi-value">' + k.val + '</div>'
       + (k.sub ? '<div class="kpi-sub">' + k.sub + '</div>' : '')
-      + (k.d ? '<div class="kpi-vs">' + k.d.vs + '</div>' : '')
+      + (k.r
+          ? '<div class="kpi-recent">'
+            + '<span class="kpi-recent-hd">' + rec.cmpName + '</span> '
+            + rec.curLabel + ' <strong>' + k.r.cur + '</strong>'
+            + ' <span style="color:#c9c9d0;">vs ' + rec.prevLabel + ' ' + k.r.prev + '</span></div>'
+          : (k.d ? '<div class="kpi-vs">' + k.d.vs + '</div>' : ''))
       + '<button class="kpi-info-btn" tabindex="-1" type="button">i</button>'
       + '<div class="kpi-tooltip">' + KPI_NOTES[k.key] + '</div>'
       + '</div>';
   }).join('');
+}
+
+// 최근 기간 vs 직전 기간 — 월/주/일 토글을 따른다 (DoD · WoW · MoM).
+// 기준 = 화면에 그려진 마지막 기간. 직전 기간은 **필터 밖에서도** 찾는다
+// (주차 1개만 골랐을 때도 직전 주와 비교할 수 있어야 한다).
+function mainRecent(){
+  var shown = mainChartData();
+  if (!shown.length) return null;
+  var curKey = shown[shown.length - 1].key;
+
+  // 전체 데이터 기준 기간 순서
+  var all = uniqSorted(D.commerce.map(function(r){ return periodKey(r, mainPeriod); }))
+    .sort(function(a,b){
+      var ka = periodSortKey(a, mainPeriod), kb = periodSortKey(b, mainPeriod);
+      return ka < kb ? -1 : (ka > kb ? 1 : 0);
+    });
+  var i = all.indexOf(curKey);
+  if (i <= 0) return null;                       // 🛑 직전 기간이 없으면 비교줄을 아예 그리지 않는다
+  var prevKey = all[i - 1];
+
+  function agg(key){
+    var rows = D.commerce.filter(function(r){ return periodKey(r, mainPeriod) === key; });
+    return sumRows(rows);
+  }
+  var c = agg(curKey), p = agg(prevKey);
+
+  function pair(cv, pvv, fmt){
+    if (pvv === 0 || pvv === null || pvv === undefined) return null;
+    var d = (cv - pvv) / pvv * 100;
+    return { cur: fmt(cv), prev: fmt(pvv),
+             badge: (d >= 0 ? '▲ +' : '▼ ') + d.toFixed(1) + '%', cls: d >= 0 ? 'up' : 'dn' };
+  }
+
+  return {
+    cmpName: mainPeriod === 'daily' ? 'DoD' : mainPeriod === 'monthly' ? 'MoM' : 'WoW',
+    curLabel:  mainPeriodLabelLong(curKey),
+    prevLabel: mainPeriodLabelLong(prevKey),
+    visits: pair(c.visits, p.visits, fmtInt),
+    sales:  pair(c.sales,  p.sales,  fmtUsd0),
+    orders: pair(c.orders, p.orders, fmtInt),
+    cvr:    pair(c.cvr,    p.cvr,    function(v){ return fmtPct(v); })
+  };
+}
+// 주차는 회차 키까지 붙여 어느 주인지 분명히 한다 (전부 D.weeks 파생)
+function mainPeriodLabelLong(key){
+  return mainPeriod === 'weekly' ? weekLabel(key) : periodLabel(key, mainPeriod);
 }
 
 function mainChartData(){
@@ -895,9 +1185,9 @@ function renderMainChart(){
   ds.push({
     label: 'Sales',
     type: 'bar',
-    data: data.map(function(d){ return showKrw ? d.sales * D.usdToKrw : d.sales; }),
-    backgroundColor: hexToRgba(C.brand, 0.85),
-    hoverBackgroundColor: C.brand,
+    data: data.map(function(d){ return curVal(d.sales); }),
+    backgroundColor: hexToRgba(C.bar, 0.85),
+    hoverBackgroundColor: C.bar,
     borderWidth: 0,
     yAxisID: 'yS', order: 3,
     barPercentage: 0.55, categoryPercentage: 0.85
@@ -907,7 +1197,7 @@ function renderMainChart(){
     type: 'line',
     data: data.map(function(d){ return d.visits; }),
     borderColor: C.sub,
-    backgroundColor: hexToRgba(C.sub, 0.12),
+    backgroundColor: areaFill(C.sub, 0.16, 0.01),
     borderWidth: 1.8, pointRadius: n > 40 ? 0 : 2.5, pointHoverRadius: 4,
     pointBackgroundColor: C.sub,
     fill: true, tension: 0.25,
@@ -936,11 +1226,6 @@ function renderMainChart(){
     yAxisID: 'yC', order: 0
   });
 
-  var moneyTick = function(v){
-    if (showKrw) return v >= 1000000 ? '₩' + (v/1000000).toFixed(1) + 'M' : (v >= 1000 ? '₩' + Math.round(v/1000) + 'K' : '₩' + v);
-    return v >= 1000 ? '$' + (v/1000).toFixed(1) + 'K' : '$' + v;
-  };
-
   var cfg = {
     type: 'bar',
     data: { labels: labels, datasets: ds },
@@ -958,7 +1243,10 @@ function renderMainChart(){
             label: function(ctx){
               var v = ctx.parsed.y;
               if (v === null || v === undefined) return null;
-              if (ctx.dataset.label === 'Sales')    return '  Sales: ' + (showKrw ? '₩' + Math.round(v).toLocaleString('ko-KR') : fmtUsd(v));
+              // 🛑 툴팁은 실제 값을 그대로 보여준다 — 음수(반품·환불)도 숨기지 않는다.
+              //    차트에 얹힌 v 는 이미 선택 통화 단위이므로 여기서 다시 환산하지 않는다.
+              if (ctx.dataset.label === 'Sales')
+                return '  Sales: ' + (curIsKrw() ? fmtMKrwFromUnit(v) : fmtUsd(v));
               if (ctx.dataset.label === 'Visits')   return '  Visits: ' + fmtInt(v);
               if (ctx.dataset.label === '주문 수량') return '  주문 수량: ' + fmtInt(v);
               if (ctx.dataset.label === 'CVR')      return '  CVR: ' + fmtPct(v);
@@ -984,8 +1272,8 @@ function renderMainChart(){
           type: 'linear', position: 'right',
           min: 0, beginAtZero: true,
           grid: { drawOnChartArea: false },
-          ticks: { color: '#888', font: { size: 9 }, callback: moneyTick },
-          title: { display: true, text: showKrw ? 'Sales (₩)' : 'Sales (USD)', color: C.brand, font: { size: 9 } }
+          ticks: { color: '#888', font: { size: 9 }, callback: curTick },
+          title: { display: true, text: curAxisTitle(), color: C.bar, font: { size: 9 } }
         },
         yV: {
           type: 'linear', position: 'left', display: showSeries.visits,
@@ -1016,8 +1304,47 @@ function renderMainChart(){
   if (mainChart) mainChart.destroy();
   mainChart = new Chart(ctx, cfg);
 
-  document.getElementById('mainChartNote').innerHTML =
-    '* CVR = 주문 수량 / Visits TY × 100 · 매출은 RAW_commerce 의 Sales TY 합계';
+  var legSales = document.getElementById('legSales');
+  if (legSales) legSales.textContent = curLegLabel();
+}
+
+// ── 그래프 하단 데이터 테이블 ────────────────────────────────────────────────
+//  그래프를 구성한 데이터를 그대로 옮긴다. 기간 토글·통화 칩을 그래프와 함께 따라간다.
+//  ⚠️ 축은 0에서 자르지만(C1) 이 표에는 **실제 값**을 그대로 쓴다 — 음수(반품·환불)도
+//     숨기지 않는다. 「이 날 왜 낮지?」에 답할 수 있어야 한다.
+function renderMainTable(){
+  var el = document.getElementById('mainTable');
+  if (!el) return;
+  var data = mainChartData();
+  if (!data.length){
+    el.innerHTML = '<div style="padding:18px 4px;color:#aaa;font-size:11px;">표시할 데이터가 없습니다.</div>';
+    return;
+  }
+
+  // 행 = 그래프의 계열. 시리즈 토글과 무관하게 4개를 전부 보여준다
+  // (토글은 그래프 가독성용이고, 표는 데이터 원본 역할이다).
+  // 단위는 기준 열의 지표명이 진다 → 셀에는 「백만원」·소수점을 붙이지 않는다.
+  var rows = [
+    { label: curIsKrw() ? 'SALES (백만원)' : 'SALES (USD)',
+      fmt: function(d){ return curIsKrw() ? fmtInt(curVal(d.sales)) : fmtUsd0(d.sales); } },
+    { label: 'VISITS',      fmt: function(d){ return fmtInt(d.visits); } },
+    { label: 'ORDERS',      fmt: function(d){ return fmtInt(d.orders); } },
+    { label: 'CVR (%)',     fmt: function(d){ return d.visits > 0 ? fmtPct(d.cvr) : '-'; } }
+  ];
+
+  var html = '<table class="ch-tbl no-total"><thead><tr><th>지표</th>';
+  data.forEach(function(d){ html += '<th>' + d.label + '</th>'; });
+  html += '</tr></thead><tbody>';
+  rows.forEach(function(r){
+    html += '<tr><td>' + r.label + '</td>';
+    data.forEach(function(d){
+      var v = r.fmt(d);
+      html += '<td' + (v === '-' ? ' class="dash"' : '') + '>' + v + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
 }
 
 function setMainPeriod(btn, period){
@@ -1025,18 +1352,28 @@ function setMainPeriod(btn, period){
   mainPeriod = period;
   var bs = document.querySelectorAll('[data-main-period]');
   for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('active', bs[i].dataset.mainPeriod === period);
+  // 🛑 KPI 도 함께 다시 그린다 — 비교줄(DoD/WoW/MoM)이 기간 토글을 따라야 한다.
+  //    이걸 빼면 일·월로 바꿔도 「WoW …」가 그대로 남는다 (2026-08-16 실제로 그랬다).
+  renderKPI();
   renderMainChart();
+  renderMainTable();
 }
 function toggleSeries(btn, key){
   showSeries[key] = !showSeries[key];
   btn.classList.toggle('active', showSeries[key]);
   renderMainChart();
 }
-function toggleKrw(btn){
-  showKrw = !showKrw;
-  btn.classList.toggle('active', showKrw);
-  renderKPI();
+// 🛑 통화만 바꾼다. 선택 중인 기간 토글·필터는 그대로 둔다 (지시서 A1).
+//    통화는 **대시보드 공용**이다 — 통합 탭에서 USD 로 바꾸고 유입 탭으로 넘어갔는데
+//    거기만 KRW 면 같은 화면을 두 단위로 읽게 된다. 두 탭의 칩이 같은 값을 가리킨다.
+function setCurrency(btn, cur){
+  if (curCurrency === cur) return;
+  curCurrency = cur;
+  var bs = document.querySelectorAll('[data-cur]');
+  for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('active', bs[i].dataset.cur === cur);
   renderMainChart();
+  renderMainTable();
+  refreshChannel(true);
 }
 
 // force=true 면 캐시로 이미 그린 화면이라도 무조건 다시 그린다.
@@ -1048,39 +1385,26 @@ function refreshMain(force){
   _mainBooted = true;
   renderKPI();
   renderMainChart();
+  renderMainTable();
   renderMainNote();
 }
 
+// 🛑 통합 탭 하단 설명 주석은 전부 걷어냈다 (MJ 결정 2026-08-16).
+//    매출 원천·CVR 정의·백만원 기준·매출 0인 날의 사정은 MJ 와 Claude 가 알면 되는 내용이지
+//    대시보드를 보는 사람이 매번 읽어야 할 내용이 아니다. 근거는 이 파일의 주석과 기준 문서에 남긴다.
+//    ⚠️ 단, 「데이터가 실제로 깨진 경우」의 시트 경고는 남긴다 — 이건 설명이 아니라 사고 신호다.
+//       (결측 채널 0 채우기 같은 내부 처리 경고는 isInternalWarning 으로 계속 걸러낸다.)
 function renderMainNote(){
   var el = document.getElementById('mainNote');
-  var parts = [];
-  if (D.range.start){
-    parts.push('기간 ' + D.range.start + ' ~ ' + D.range.end + ' (' + D.range.days + '일 · '
-             + D.weeks.map(function(w){ return w.key; }).join('·') + ')');
-  }
-  parts.push('매출 원천은 RAW_commerce 의 Sales TY 입니다. 별도 실매출 시트가 붙기 전까지 이 값을 씁니다.');
-  // 조건부 안내 — 조건 없이 항상 그리지 않는다
-  var zeroSalesDays = zeroSalesDates();
-  if (zeroSalesDays.length){
-    parts.push('매출 0 · 방문 정상인 날: ' + zeroSalesDays.map(mdLabel).join(', ')
-             + ' — 세포라 입점 직후 정상값이라 결측 처리하지 않습니다.');
-  }
-  if (D.warnings && D.warnings.length){
-    parts.push('<span style="color:#b45309;">시트 경고 — ' + D.warnings.join(' / ') + '</span>');
-  }
-  el.innerHTML = parts.join('<br>');
+  var shownWarnings = (D.warnings || []).filter(function(w){ return !isInternalWarning(w); });
+  if (!shownWarnings.length){ el.innerHTML = ''; el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML = '<span style="color:#b45309;">시트 경고 — ' + shownWarnings.join(' / ') + '</span>';
 }
 
-function zeroSalesDates(){
-  var byDate = {};
-  D.commerce.forEach(function(r){
-    if (!byDate[r.date]) byDate[r.date] = { sales:0, visits:0 };
-    byDate[r.date].sales  += r.sales;
-    byDate[r.date].visits += r.visits;
-  });
-  return Object.keys(byDate).sort().filter(function(d){
-    return byDate[d].sales === 0 && byDate[d].visits > 0;
-  });
+// 화면에 올리지 않는 내부 처리 경고 (옛 캐시 페이로드 대비 방어)
+function isInternalWarning(w){
+  return typeof w === 'string' && w.indexOf('결측 채널') >= 0;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1092,6 +1416,29 @@ function zeroSalesDates(){
 //     · 전환율                 → 분모 0이라 '-' 표시. 0으로 찍지 않는다
 //     · NA 매출 ÷ 전체 매출 > 15% 면 화면에 경고 (조건부로만 그린다)
 // ═══════════════════════════════════════════════════════════════════════════════
+// 지표별 단일 축 — 개별 라인 차트가 공통으로 쓴다.
+// 🛑 축 최솟값 0 고정. offset:true 는 쓰지 않는다 (0 기준선이 17~21px 뜬다).
+// title·fmt·tick 을 함수로 둔다 — 매출은 선택 통화에 따라 셋 다 바뀌므로 정적 문자열로 굳히면 안 된다.
+var METRIC_META = {
+  visits: { title:function(){ return 'Visits'; }, fmt:fmtInt,
+            tick:function(v){ return Math.abs(v) >= 1000 ? (v/1000).toFixed(0)+'K' : v; } },
+  sales:  { title:curAxisTitle, fmt:fmtCurPlotted, tick:curTick },
+  cvr:    { title:function(){ return 'CVR (%)'; }, fmt:function(v){ return fmtPct(v); },
+            tick:function(v){ return v.toFixed(1)+'%'; } }
+};
+// 차트에 얹을 값 — 매출만 선택 통화로 환산한다 (KRW 는 백만원 단위)
+function metricPlotVal(cell, metric){
+  var v = cellVal(cell, metric);
+  return (metric === 'sales' && v !== null) ? curVal(v) : v;
+}
+function metricScale(metric){
+  var m = METRIC_META[metric];
+  return { type:'linear', position:'left', min:0, beginAtZero:true,
+           grid:{ color:'rgba(0,0,0,0.07)' },
+           ticks:{ color:'#888', font:{size:9}, callback:m.tick },
+           title:{ display:true, text:m.title(), color:'#666', font:{size:9} } };
+}
+
 function isExcluded(ch){ return D.excludedChannels.indexOf(ch) >= 0; }
 function chartChannels(){ return D.channels.filter(function(c){ return !isExcluded(c); }); }
 
@@ -1117,15 +1464,16 @@ function buildChWeekOptions(){
 }
 
 function buildChChanOptions(){
-  fillOptions('ddPanel-chChan', 'chChan',
-    D.channels.map(function(c){
-      return {
-        value: c,
-        label: c + (isExcluded(c) ? ' <span style="color:#bbb;font-size:9px;">(차트·표 제외)</span>' : ''),
-        dot: isExcluded(c) ? '#DDD' : (CH_COLORS[c] || '#888')
-      };
-    }),
-    function(){ autoChMode(); refreshChannel(true); });
+  var opts = D.channels.map(function(c){
+    return {
+      value: c,
+      label: c + (isExcluded(c) ? ' <span style="color:#bbb;font-size:9px;">(차트·표 제외)</span>' : ''),
+      dot: isExcluded(c) ? '#DDD' : (CH_COLORS[c] || '#888')
+    };
+  });
+  // 두 블록이 각자 자기 드롭다운을 가진다 — 서로 독립이다.
+  fillOptions('ddPanel-vsChan',  'vsChan',  opts, function(){ refreshChannel(true); });
+  fillOptions('ddPanel-cvrChan', 'cvrChan', opts, function(){ refreshChannel(true); });
 }
 
 // 기간 필터만 적용 (채널 필터 제외) — KPI·NA 비율 계산용
@@ -1136,17 +1484,22 @@ function chTimeFiltered(){
     return mOk && wOk;
   });
 }
-// 기간 + 채널 AND 필터
+// 기간 + 채널 필터 — 선택한 채널 중 하나라도 맞으면 통과(OR). AND 가 아니다.
 function chFiltered(){
   return chTimeFiltered().filter(function(r){
-    return selChChans.size === 0 || selChChans.has(r.channel);
+    return true;
   });
 }
-// 차트·표에 쓸 채널 (NA 제외 + 선택 필터)
+// 차트·표에 쓸 채널 (NA 제외 + 선택 필터). 선택은 OR — 고른 채널 중 하나라도 맞으면 통과.
 function activeChannels(){
   var base = chartChannels();
-  if (selChChans.size === 0) return base;
-  return base.filter(function(c){ return selChChans.has(c); });
+  return base;
+}
+// 채널별 차트 영역 전용 채널 (상단 필터와 독립)
+function blockChannels(set){
+  var base = chartChannels();
+  if (set.size === 0) return base;
+  return base.filter(function(c){ return set.has(c); });
 }
 
 // 기간 축 — 데이터에 실제로 있는 키만
@@ -1184,9 +1537,19 @@ function cellVal(cell, metric){
   return cell.v > 0 ? cell.cw / cell.v * 100 : null;
 }
 
+// 기준 기간 = 기간 필터를 걸었으면 그 구간 전체, 안 걸었으면 가장 최근 기간 1개.
+// KPI 카드와 채널 랭킹이 같은 기준을 써야 화면끼리 어긋나지 않는다.
+function chBasePeriods(periods){
+  return (selChWeeks.size > 0 || selChMonths.size > 0) ? periods : periods.slice(-1);
+}
+function chBaseLabel(basePeriods){
+  if (!basePeriods.length) return '—';
+  if (basePeriods.length <= 2) return basePeriods.map(function(p){ return periodLabel(p, chPeriod); }).join(', ');
+  return periodLabel(basePeriods[0], chPeriod) + '~' + periodLabel(basePeriods[basePeriods.length-1], chPeriod);
+}
+
 function renderChKPI(periods){
-  // 기준 기간 = 선택 시 그 구간, 미선택 시 가장 최근 기간 1개
-  var basePeriods = (selChWeeks.size > 0 || selChMonths.size > 0) ? periods : periods.slice(-1);
+  var basePeriods = chBasePeriods(periods);
   var cmpPeriods  = [];
   if (basePeriods.length){
     var all = uniqSorted(D.channel.map(function(r){ return periodKey(r, chPeriod); }))
@@ -1207,17 +1570,14 @@ function renderChKPI(periods){
     return { visits:v, sales:s, cvr: v > 0 ? cw / v * 100 : null, na:na };
   }
 
-  var chanFilter = selChChans.size === 0 ? null : function(c){ return selChChans.has(c); };
+  var chanFilter = null;   // 상단 채널 필터 제거 — KPI 는 언제나 전체 채널 기준
   // 현재 값은 기간 필터가 걸린 행에서, 비교 값은 전체 행에서 뽑는다.
   // (W1처럼 두 달에 걸친 주차가 있어 필터된 행으로 비교 구간을 만들면 구간이 잘린다)
   var cur = agg(chTimeFiltered(), basePeriods, chanFilter);
   var cmp = cmpPeriods.length ? agg(D.channel, cmpPeriods, chanFilter) : null;
 
   var cmpName = chPeriod === 'daily' ? 'DoD' : chPeriod === 'monthly' ? 'MoM' : 'WoW';
-  var baseLbl = basePeriods.length
-    ? (basePeriods.length <= 2 ? basePeriods.map(function(p){ return periodLabel(p, chPeriod); }).join(', ')
-       : periodLabel(basePeriods[0], chPeriod) + '~' + periodLabel(basePeriods[basePeriods.length-1], chPeriod))
-    : '—';
+  var baseLbl = chBaseLabel(basePeriods);
   var cmpLbl = cmpPeriods.length
     ? 'vs ' + (cmpPeriods.length <= 2 ? cmpPeriods.map(function(p){ return periodLabel(p, chPeriod); }).join(', ')
        : periodLabel(cmpPeriods[0], chPeriod) + '~' + periodLabel(cmpPeriods[cmpPeriods.length-1], chPeriod))
@@ -1231,8 +1591,7 @@ function renderChKPI(periods){
 
   var naPct = cur.sales > 0 ? cur.na / cur.sales * 100 : 0;
 
-  // 필터 범위 전체(기준 기간이 아니라) 기준의 NA 누계 — 카드 보조줄과 경고 배너가 함께 쓴다.
-  // 두 곳의 기준이 다르면 화면끼리 어긋나 보인다.
+  // 필터 범위 전체(기준 기간이 아니라) 기준의 NA 누계 — 카드 보조줄이 쓴다.
   var rangeNa = (function(){
     var t = 0, na = 0;
     chTimeFiltered().forEach(function(r){
@@ -1245,16 +1604,16 @@ function renderChKPI(periods){
   var cards = [
     { label:'TOTAL VISITS', val: fmtInt(cur.visits), sub:'유입 기준 방문 (RAW_유입)',
       d: badge(cur.visits, cmp && cmp.visits) },
-    { label:'TOTAL SALES', val: fmtUsd(cur.sales), sub:'미귀속(NA) 매출 포함',
+    { label:'TOTAL SALES', val: fmtCurFull(cur.sales), sub:'미귀속(NA) 매출 포함',
       d: badge(cur.sales, cmp && cmp.sales) },
     { label:'AVG CVR', val: cur.cvr === null ? '-' : fmtPct(cur.cvr), sub:'방문 가중 · 원본 Conversion TY',
       d: (cur.cvr === null || !cmp || cmp.cvr === null) ? null : badge(cur.cvr, cmp.cvr) },
     // 🛑 이 카드도 다른 카드와 같은 「기준 기간」 값이다.
     //    「전체 매출의 …%」로 쓰면 누계와 대조할 때 어긋나 보인다. 기준을 명시한다.
     //    누계는 따로 붙여 두 값을 한눈에 비교할 수 있게 한다.
-    { label:'미귀속(NA) 매출', val: fmtUsd(cur.na),
+    { label:'미귀속(NA) 매출', val: fmtCurFull(cur.na),
       sub: '기준 기간 매출의 ' + naPct.toFixed(2) + '% · 차트·표에서는 제외'
-         + '<br><span style="color:#c9c9d0;">필터 범위 누계 ' + fmtUsd(rangeNa.na)
+         + '<br><span style="color:#c9c9d0;">필터 범위 누계 ' + fmtCurFull(rangeNa.na)
          + ' (' + rangeNa.pct.toFixed(2) + '%)</span>', d: null }
   ];
 
@@ -1268,49 +1627,19 @@ function renderChKPI(periods){
       + '</div>';
   }).join('');
 
-  renderNaAlert(rangeNa);
 }
 
-// 🛑 조건부 경고 — 조건을 만족할 때만 그린다.
-//    기준은 **필터 범위 전체**로 통일한다. 카드의 「기준 기간」과 섞으면
-//    배너와 카드가 서로 다른 구간을 말하게 된다.
-function renderNaAlert(rangeNa){
-  var el = document.getElementById('chAlert');
-  var msgs = [];
-  if (rangeNa.pct > 15){
-    msgs.push('필터 범위 미귀속(NA) 매출 비중이 <strong>' + rangeNa.pct.toFixed(1) + '%</strong> 입니다 (기준 15%). '
-            + '채널별 수치 해석에 주의하세요.');
-  }
-  // 일별로 15%를 넘긴 날 — 기간 필터가 걸린 범위 안에서만 센다
-  var byDate = {};
-  chTimeFiltered().forEach(function(r){
-    if (!byDate[r.date]) byDate[r.date] = { t:0, na:0 };
-    byDate[r.date].t += r.sales;
-    if (isExcluded(r.channel)) byDate[r.date].na += r.sales;
-  });
-  var overDays = Object.keys(byDate).sort().filter(function(d){
-    return byDate[d].t > 0 && byDate[d].na / byDate[d].t * 100 > 15;
-  });
-  if (overDays.length){
-    msgs.push('일별 NA 비중이 15%를 넘은 날: <strong>'
-            + overDays.map(function(d){ return mdLabel(d) + ' (' + (byDate[d].na / byDate[d].t * 100).toFixed(1) + '%)'; }).join(', ')
-            + '</strong>');
-  }
-  el.innerHTML = msgs.length
-    ? '<div class="alert"><span class="ic">⚠️</span><span>' + msgs.join('<br>') + '</span></div>'
-    : '';
-}
+// 🛑 NA 비중 경고 배너는 화면에서 제거했다 (MJ 결정 2026-08-16).
+//    「필터 범위 NA 비중 15% 초과」·「일별 NA 비중 15% 초과일」 두 문구 모두 해당한다.
+//    NA 계산 규칙 자체(차트·표에서 제외 · 매출·KPI에는 포함)는 그대로 유지한다 — 아래
+//    isExcluded / renderChKPI 참조. 감시는 화면이 아니라 Cowork 의 raw 확인 · 누적관리
+//    업데이트 단계와 Apps Script checkTotals 로그가 맡는다.
+//    #chAlert 는 「데이터가 실제로 깨진 경우」용 자리로 비워 둔다.
 
-// ── 콤보 차트 ────────────────────────────────────────────────────────────────
-//  합산  = Sales(막대) + Visits(면) + CVR(선) 3축 오버레이
-//  채널별 = 선택 지표 하나를 채널 고정색 라인으로 분리
-//
-//  ▸ 채널 멀티선택 시 라인 분리 방식 — UNOVE 미결 항목의 Dr.FORHAIR 설계안
-//    지표 3개 × 채널 N개를 3축에 한꺼번에 얹으면 축이 서로를 눌러 아무것도 안 읽힌다.
-//    그래서 「채널별」모드에서는 축을 하나로 고정하고 지표를 하나만 고른다.
-//    채널을 2개 이상 고르면 자동으로 채널별로 넘어가되, 사용자가 직접 모드를
-//    누른 뒤에는 자동 전환하지 않는다(_chModeTouched).
-//    검증 후 UNOVE로 역이식한다.
+// ── Overview 차트 ────────────────────────────────────────────────────────────
+//  🛑 언제나 전체 채널 합산 — Sales(Bar) + Visits(Area) + CVR(Line) 3축 오버레이 고정.
+//     상단 CHANNEL 드롭다운을 없앴으므로(MJ 결정 2026-08-16) 이 그래프의 형태와 대상은
+//     기간 토글 말고는 바뀌지 않는다. 채널을 갈라 보는 것은 아래 두 블록이 맡는다.
 function renderChCombo(periods, pivot){
   var labels = periods.map(function(p){ return periodLabel(p, chPeriod); });
   var chans  = activeChannels();
@@ -1318,14 +1647,15 @@ function renderChCombo(periods, pivot){
   var ds = [], scales = {}, leg = [];
 
   if (!chans.length){
-    // 그릴 채널이 하나도 없다 (예: NA 만 선택). 0으로 채운 계열을 그리면
+    // 그릴 채널이 하나도 없다. 0으로 채운 계열을 그리면
     // 「매출이 0이다」로 오독되므로 아무 계열도 만들지 않는다.
     ds = [];
     scales = { y: { display:false } };
     leg = [];
-  } else if (chMode === 'sum'){
+  } else {
     var totV = periods.map(function(p){ return chans.reduce(function(s,c){ return s + pivot[c][p].v; }, 0); });
-    var totS = periods.map(function(p){ return chans.reduce(function(s,c){ return s + pivot[c][p].s; }, 0); });
+    // 매출만 선택 통화로 환산 (KRW 는 백만원 단위)
+    var totS = periods.map(function(p){ return curVal(chans.reduce(function(s,c){ return s + pivot[c][p].s; }, 0)); });
     var totC = periods.map(function(p){
       var v  = chans.reduce(function(s,c){ return s + pivot[c][p].v;  }, 0);
       var cw = chans.reduce(function(s,c){ return s + pivot[c][p].cw; }, 0);
@@ -1333,10 +1663,10 @@ function renderChCombo(periods, pivot){
     });
     ds = [
       { type:'bar', label:'Sales', data: totS,
-        backgroundColor: hexToRgba(C.brand, 0.85), hoverBackgroundColor: C.brand,
+        backgroundColor: hexToRgba(C.bar, 0.85), hoverBackgroundColor: C.bar,
         borderWidth: 0, yAxisID:'yS', order:3, barPercentage:0.55, categoryPercentage:0.85 },
       { type:'line', label:'Visits', data: totV,
-        borderColor: C.sub, backgroundColor: hexToRgba(C.sub, 0.15),
+        borderColor: C.sub, backgroundColor: areaFill(C.sub, 0.16, 0.01),
         borderWidth:2, pointRadius: periods.length > 40 ? 0 : 2.5, pointBackgroundColor: C.sub,
         fill:true, tension:0.3, yAxisID:'yV', order:2 },
       { type:'line', label:'CVR', data: totC,
@@ -1351,45 +1681,18 @@ function renderChCombo(periods, pivot){
             title:{ display:true, text:'Visits', color:C.sub, font:{size:9} } },
       yS: { type:'linear', position:'right', min:0, beginAtZero:true,
             grid:{ drawOnChartArea:false },
-            ticks:{ color:'#888', font:{size:9}, callback:function(v){ return v >= 1000 ? '$'+(v/1000).toFixed(1)+'K' : '$'+v; } },
-            title:{ display:true, text:'Sales (USD)', color:C.brand, font:{size:9} } },
+            ticks:{ color:'#888', font:{size:9}, callback:curTick },
+            title:{ display:true, text:curAxisTitle(), color:C.bar, font:{size:9} } },
       yC: { type:'linear', position:'right', min:0, beginAtZero:true,
             grid:{ drawOnChartArea:false },
             ticks:{ color:C.acc, font:{size:9}, callback:function(v){ return v.toFixed(1)+'%'; } },
             title:{ display:true, text:'CVR (%)', color:C.acc, font:{size:9} } }
     };
     leg = [
-      { color:C.brand, label:'Sales (Bar)' },
+      { color:C.bar, label:curLegLabel() + ' (Bar)' },
       { color:C.sub,   label:'Visits (Area)' },
       { color:C.acc,   label:'CVR % (Line)' }
     ];
-  } else {
-    // 채널별 — 축 하나, 지표 하나, 채널 고정색 라인
-    ds = chans.map(function(c){
-      return {
-        type:'line', label:c,
-        data: periods.map(function(p){
-          var v = cellVal(pivot[c][p], chMetric);
-          return v === null ? null : (chMetric === 'cvr' ? +v.toFixed(2) : v);
-        }),
-        borderColor: CH_COLORS[c] || '#888',
-        backgroundColor: CH_COLORS[c] || '#888',
-        borderWidth:2, pointRadius: periods.length > 40 ? 0 : 2.5, pointHoverRadius:4,
-        fill:false, tension:0.3, spanGaps:false, yAxisID:'y'
-      };
-    });
-    var mLabel = chMetric === 'visits' ? 'Visits' : chMetric === 'sales' ? 'Sales (USD)' : 'CVR (%)';
-    scales = {
-      y: { type:'linear', position:'left', min:0, beginAtZero:true,
-           grid:{ color:'rgba(0,0,0,0.07)' },
-           ticks:{ color:'#888', font:{size:9}, callback:function(v){
-             if (chMetric === 'visits') return v >= 1000 ? (v/1000).toFixed(0)+'K' : v;
-             if (chMetric === 'sales')  return v >= 1000 ? '$'+(v/1000).toFixed(1)+'K' : '$'+v;
-             return v.toFixed(1)+'%';
-           } },
-           title:{ display:true, text:mLabel, color:'#666', font:{size:9} } }
-    };
-    leg = chans.map(function(c){ return { color: CH_COLORS[c] || '#888', label:c }; });
   }
 
   scales.x = {
@@ -1400,7 +1703,7 @@ function renderChCombo(periods, pivot){
 
   var cfg = {
     // 데이터셋마다 type 을 주더라도 Chart.js v4 는 config.type 을 요구한다. 반드시 명시한다.
-    type: chMode === 'sum' ? 'bar' : 'line',
+    type: 'bar',   // 🛑 합산 콤보 고정
     data: { labels: labels, datasets: ds },
     options: {
       responsive: true,
@@ -1412,18 +1715,15 @@ function renderChCombo(periods, pivot){
           backgroundColor:'#fff', titleColor:'#222', bodyColor:'#555',
           borderColor:'#E0E0E4', borderWidth:1, padding:10,
           callbacks: {
+            // ⚠️ 툴팁에는 실제 값을 그대로 — 축만 0에서 자른다 (지시서 C1)
             label: function(ctx){
               var v = ctx.parsed.y;
               if (v === null || v === undefined) return null;
               var lbl = ctx.dataset.label;
-              if (chMode === 'sum'){
-                if (lbl === 'Sales')  return '  Sales: ' + fmtUsd(v);
-                if (lbl === 'Visits') return '  Visits: ' + fmtInt(v);
-                return '  CVR: ' + fmtPct(v);
-              }
-              if (chMetric === 'visits') return '  ' + lbl + ': ' + fmtInt(v);
-              if (chMetric === 'sales')  return '  ' + lbl + ': ' + fmtUsd(v);
-              return '  ' + lbl + ': ' + fmtPct(v);
+              // ⚠️ 차트에 얹힌 v 는 이미 선택 통화 단위다 — 여기서 다시 환산하지 않는다
+              if (lbl === 'Sales')  return '  Sales: ' + fmtCurPlotted(v);
+              if (lbl === 'Visits') return '  Visits: ' + fmtInt(v);
+              return '  CVR: ' + fmtPct(v);
             }
           }
         }
@@ -1442,79 +1742,263 @@ function renderChCombo(periods, pivot){
 
   var notes = ['* 차트·표는 미귀속(NA) 채널을 제외합니다. KPI 매출에는 포함됩니다.'];
   // 조건부 안내 — NA만 선택하면 차트에 그릴 계열이 남지 않는다
-  if (!chans.length && selChChans.size > 0){
-    notes.unshift('<span style="color:#b45309;">* 선택한 채널이 전부 차트 제외 대상(NA)이라 그릴 계열이 없습니다.</span>');
-  }
-  if (chMode === 'split'){
-    notes.push('* 채널별 모드는 축을 하나로 고정하고 지표를 하나만 그립니다 — 지표 3개 × 채널 N개를 3축에 얹으면 서로를 눌러 읽히지 않습니다.');
-  }
   notes.push('* CVR 은 원본 Conversion TY 를 방문으로 가중한 값입니다. 방문 0인 구간은 선을 잇지 않습니다.');
   document.getElementById('chComboNote').innerHTML = notes.join('<br>');
 }
 
-// ── 채널별 표 ────────────────────────────────────────────────────────────────
-function renderChTable(periods, pivot){
-  var chans = activeChannels();
-  if (!chans.length){
-    document.getElementById('chTable').innerHTML =
-      '<div style="padding:18px 4px;color:#aaa;font-size:11px;">표시할 채널이 없습니다. '
-      + '선택한 채널이 전부 차트·표 제외 대상(NA)입니다.</div>';
-    document.getElementById('chTableNote').innerHTML = '';
-    return;
-  }
-  var metric = chTblMetric;
-  var fmt = metric === 'visits' ? fmtInt : metric === 'sales' ? fmtUsd0 : function(v){ return fmtPct(v); };
-  var cmpName = chPeriod === 'daily' ? 'DoD' : chPeriod === 'monthly' ? 'MoM' : 'WoW';
+// ── 채널별 차트 — 지표별로 차트를 나눠 나란히 (UNOVE 배치) ───────────────────
+//  ▸ 채널 멀티선택 시 라인 분리 방식 — UNOVE 미결 항목의 Dr.FORHAIR 설계안.
+//    지표 3개 × 채널 N개를 3축에 한꺼번에 얹으면 축이 서로를 눌러 아무것도 안 읽힌다.
+//    그래서 **지표마다 차트를 따로** 두고 각 차트는 축 하나만 쓴다. 지표 칩이 필요 없어지고
+//    Visits 와 Sales 를 눈으로 나란히 대조할 수 있다. 검증 후 UNOVE로 역이식한다.
+//  ▸ 채널은 **블록마다 자기 드롭다운**이 정한다 — Visits·Sales 블록과 CVR 블록이 서로 독립.
+//    전체 선택 · 단독 선택 · 다중 선택을 모두 지원한다.
+//  ⚠️ 색으로 구분되는 계열 수에는 물리적 한계가 있다 (검증 통과 최대 8색).
+//    14개를 전부 켜면 하위 채널끼리는 색이 겹쳐 보인다 — 그래서 드롭다운이 필요하다.
+function renderChSplit(periods, pivot){
+  var labels  = periods.map(function(p){ return periodLabel(p, chPeriod); });
+  var isDaily = chPeriod === 'daily';
 
-  // 마지막 기간 값 기준 내림차순
+  // 블록마다 채널 집합이 다르다. Sales 는 유입 탭 기준 USD (통합 탭 통화 칩과 무관).
+  var PANES = [
+    { metric:'visits', canvas:'chSplitVisits', leg:'chSplitLegV', set: selVsChans },
+    { metric:'sales',  canvas:'chSplitSales',  leg:'chSplitLegS', set: selVsChans },
+    { metric:'cvr',    canvas:'chSplitCvr',    leg:'chSplitLegC', set: selCvrChans }
+  ];
+
+  // 카드 제목이 단위를 진다 (축 제목과 중복되지 않게 카드 쪽은 지표명 + 단위)
+  var titleS = document.getElementById('chSplitTitleS');
+  if (titleS) titleS.textContent = curIsKrw() ? 'SALES TY (백만원)' : 'SALES TY (USD)';
+
+  PANES.forEach(function(pane){
+    var metric = pane.metric;
+    var chans  = blockChannels(pane.set);
+    var ds = chans.map(function(c){
+      return {
+        label: c,
+        data: periods.map(function(p){ return metricPlotVal(pivot[c][p], metric); }),
+        borderColor: CH_COLORS[c] || '#888',
+        backgroundColor: CH_COLORS[c] || '#888',
+        borderWidth: 2, pointRadius: periods.length > 40 ? 0 : 2.5, pointHoverRadius: 4,
+        fill: false, tension: 0.3, spanGaps: false, yAxisID: 'y'
+      };
+    });
+
+    var cfg = {
+      type: 'line',
+      data: { labels: labels, datasets: ds },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode:'index', intersect:false },
+        plugins: {
+          legend: { display: false },      // 범례는 카드 오른쪽에 직접 그린다
+          tooltip: {
+            backgroundColor:'#fff', titleColor:'#222', bodyColor:'#555',
+            borderColor:'#E0E0E4', borderWidth:1, padding:10,
+            callbacks: {
+              // ⚠️ 실제 값 그대로 — 축만 0에서 자른다 (지시서 C1)
+              label: function(ctx){
+                var v = ctx.parsed.y;
+                if (v === null || v === undefined) return null;
+                return '  ' + ctx.dataset.label + ': ' + METRIC_META[metric].fmt(v);
+              }
+            }
+          }
+        },
+        scales: {
+          y: metricScale(metric),
+          x: { grid:{ display:false },
+               ticks:{ color:'#888', font:{ size:9 },
+                       maxRotation: isDaily ? 90 : 0, minRotation: isDaily ? 90 : 0, autoSkip:false } }
+        }
+      }
+    };
+
+    var el = document.getElementById(pane.canvas);
+    if (!el) return;
+    if (chSplitCharts[metric]) chSplitCharts[metric].destroy();
+    chSplitCharts[metric] = new Chart(el.getContext('2d'), cfg);
+
+    document.getElementById(pane.leg).innerHTML = chans.length
+      ? chans.map(function(c){
+          return '<div class="leg"><div class="leg-dot" style="background:' + (CH_COLORS[c] || '#888')
+               + ';"></div><span title="' + c + '">' + c + '</span></div>';
+        }).join('')
+      : '<div class="split-empty">표시할 채널 없음</div>';
+  });
+
+  // 🛑 기본은 **NA 를 뺀 전 채널 표시**다 (MJ 결정 2026-08-16).
+  //    계열이 많다고 줄이라고 권하지 않는다 — 드롭다운은 필요할 때 골라 보라고 둔 도구이지
+  //    기본값을 좁히라는 뜻이 아니다. 그래서 「좁혀 보세요」류 안내는 두지 않는다.
+  [['chVsNote', selVsChans], ['chCvrNote', selCvrChans]].forEach(function(pair){
+    var el = document.getElementById(pair[0]);
+    if (!el) return;
+    var n = blockChannels(pair[1]).length;
+    el.innerHTML = n
+      ? '* 미귀속(NA) 채널은 차트·표에서 제외합니다. KPI 매출에는 포함됩니다.'
+      : '<span style="color:#b45309;">* 그릴 채널이 없습니다 — 고른 채널이 전부 차트·표 제외 대상(NA)입니다.</span>';
+  });
+}
+
+// ── 표 공통 ──────────────────────────────────────────────────────────────────
+function chCmpName(){ return chPeriod === 'daily' ? 'DoD' : chPeriod === 'monthly' ? 'MoM' : 'WoW'; }
+
+// 채널을 마지막 기간 값 기준 내림차순으로
+function chansSortedBy(chans, pivot, periods, metric){
   var lastP = periods.length ? periods[periods.length - 1] : null;
-  var sorted = chans.slice().sort(function(a,b){
+  return chans.slice().sort(function(a,b){
     var va = lastP ? (cellVal(pivot[a][lastP], metric) || 0) : 0;
     var vb = lastP ? (cellVal(pivot[b][lastP], metric) || 0) : 0;
     return vb - va;
   });
+}
+function chTotCells(chans, pivot, periods){
+  var tot = {};
+  periods.forEach(function(p){
+    var v = 0, s = 0, cw = 0;
+    chans.forEach(function(c){ v += pivot[c][p].v; s += pivot[c][p].s; cw += pivot[c][p].cw; });
+    tot[p] = { v:v, s:s, cw:cw };
+  });
+  return tot;
+}
+function chChannelNameCell(c){
+  return '<td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'
+       + (CH_COLORS[c] || '#888') + ';margin-right:6px;vertical-align:middle;"></span>' + c + '</td>';
+}
+function chEmptyTable(tableId){
+  document.getElementById(tableId).innerHTML =
+    '<div style="padding:18px 4px;color:#aaa;font-size:11px;">표시할 채널이 없습니다. '
+    + '선택한 채널이 전부 차트·표 제외 대상(NA)입니다.</div>';
+}
 
+// ── 채널별 표 ────────────────────────────────────────────────────────────────
+//  각 그래프 블록 **바로 아래**에 그 블록의 표를 붙인다 (MJ 결정 2026-08-16) —
+//  그래프와 표가 떨어져 있으면 눈이 화면을 오르내려야 한다.
+//  🛑 VISITS TY 와 SALES TY 를 한 행에 나란히 두지 않는다 — 지표별로 행 블록을 나눈다.
+//     열은 언제나 「기간」 하나뿐이라, 기간이 늘어도 위 그래프와 나란히 놓고 볼 수 있다.
+//  🛑 영역명에 기간 단위를 박지 않는다. 단위가 필요하면 토글 값에서 파생시킨다.
+// 🛑 셀에는 단위를 붙이지 않으므로 **지표명이 단위를 진다** → 통화 칩을 따라 바뀌어야 한다.
+var TBL_METRICS = {
+  visits: { key:'visits', label:function(){ return 'Visits TY'; }, fmt:fmtInt },
+  sales:  { key:'sales',  label:function(){ return curIsKrw() ? 'Sales TY (백만원)' : 'Sales TY (USD)'; },
+            fmt:fmtCurCell },
+  cvr:    { key:'cvr',    label:function(){ return 'Conversion TY (%)'; }, fmt:function(v){ return fmtPct(v); } }
+};
+
+function renderChTable(periods, pivot){
+  // Visits · Sales 블록과 CVR 블록은 채널 집합이 서로 다르므로 표도 따로 그린다.
+  renderChMetricTable('chVsTable',  blockChannels(selVsChans),
+                      ['visits', 'sales'], periods, pivot);
+  renderChMetricTable('chCvrTable', blockChannels(selCvrChans),
+                      ['cvr'], periods, pivot);
+}
+
+function renderChMetricTable(tableId, chans, metricKeys, periods, pivot){
+  var el = document.getElementById(tableId);
+  if (!el) return;
+  if (!chans.length){ chEmptyTable(tableId); return; }
+
+  var cmpName = chCmpName();
   var html = '<table class="ch-tbl"><thead><tr><th>Channel</th>';
   periods.forEach(function(p){ html += '<th>' + periodLabel(p, chPeriod) + '</th>'; });
   html += '<th>' + cmpName + '</th></tr></thead><tbody>';
 
-  sorted.forEach(function(c){
-    html += '<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:'
-          + (CH_COLORS[c] || '#888') + ';margin-right:6px;vertical-align:middle;"></span>' + c + '</td>';
-    periods.forEach(function(p){
-      var cell = pivot[c][p];
-      var v = cellVal(cell, metric);
-      if (v === null){ html += '<td class="dash">-</td>'; return; }
-      // 방문 표본이 아주 작은 CVR 은 흐리게 (예: 방문 1 · 주문 1 → 100%)
-      var low = metric === 'cvr' && cell.v > 0 && cell.v < 5;
-      html += '<td' + (low ? ' class="muted" title="방문 ' + cell.v + '건 — 표본이 작아 전환율이 과대하게 보일 수 있습니다"' : '') + '>'
-            + fmt(v) + (low ? ' <span style="font-size:8px;">·n=' + cell.v + '</span>' : '') + '</td>';
+  metricKeys.map(function(k){ return TBL_METRICS[k]; }).forEach(function(m){
+    var sorted = chansSortedBy(chans, pivot, periods, m.key);
+    // 지표 구분행도 기준 열은 170px 고정 칸으로 둔다 — colspan 으로 한 칸에 몰면
+    // 그 칸이 표 전체 폭이 되어 sticky 가 무의미해지고 가로 스크롤 때 라벨이 사라진다.
+    html += '<tr class="grp"><td>' + m.label() + '</td>'
+          + '<td colspan="' + (periods.length + 1) + '"></td></tr>';
+    sorted.forEach(function(c){
+      html += '<tr>' + chChannelNameCell(c);
+      periods.forEach(function(p){
+        var v = cellVal(pivot[c][p], m.key);
+        // ⚠️ 실제 값 그대로 — 음수(반품·환불)도 표에서는 숨기지 않는다 (지시서 C1)
+        html += v === null ? '<td class="dash">-</td>' : '<td>' + m.fmt(v) + '</td>';
+      });
+      html += cmpCell(pivot[c], periods, m.key) + '</tr>';
     });
-    html += cmpCell(pivot[c], periods, metric);
-    html += '</tr>';
+    var tot = chTotCells(sorted, pivot, periods);
+    html += '<tr><td>' + (m.key === 'cvr' ? 'AVG (방문 가중)' : 'TOTAL') + ' — ' + m.label() + '</td>';
+    periods.forEach(function(p){
+      var v = cellVal(tot[p], m.key);
+      html += v === null ? '<td class="dash">-</td>' : '<td>' + m.fmt(v) + '</td>';
+    });
+    html += cmpCell(tot, periods, m.key) + '</tr>';
   });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
 
-  // 합계/평균 행
-  var totCells = {};
-  periods.forEach(function(p){
+// ── 채널 랭킹 (best 3 / worst 3) ─────────────────────────────────────────────
+//  기준 = KPI 카드와 같은 「기준 기간」. 기간 토글·채널 필터에 함께 연동된다.
+//  🛑 NA 는 랭킹에서 제외한다 (차트·표와 같은 규칙 — activeChannels()).
+//  🛑 채널 수가 3개 미만이면 있는 만큼만 그린다. N=0 이어도 폭 계산이 도는 자리가 없다.
+function renderChRanking(periods, pivot){
+  var grid = document.getElementById('chRankGrid');
+  var hdr  = document.getElementById('chRankHdr');
+  if (!grid) return;
+
+  var basePeriods = chBasePeriods(periods);
+  // 🛑 영역명에 기간을 박지 않는다 (MJ 결정 2026-08-16). 기준 기간은 바로 위 KPI 카드가 이미 달고 있다.
+  hdr.textContent = '유입 채널 랭킹';
+
+  var chans = activeChannels();
+  if (!chans.length || !basePeriods.length){
+    grid.innerHTML = '<div class="rank-card"><div class="rank-empty">'
+      + '표시할 채널이 없습니다. 선택한 채널이 전부 차트·표 제외 대상(NA)입니다.</div></div>';
+    return;
+  }
+
+  // 기준 기간 합산 — CVR 은 방문 가중(cw/v)이라 기간을 합쳐도 원본 정의와 어긋나지 않는다
+  var agg = chans.map(function(c){
     var v = 0, s = 0, cw = 0;
-    sorted.forEach(function(c){ v += pivot[c][p].v; s += pivot[c][p].s; cw += pivot[c][p].cw; });
-    totCells[p] = { v:v, s:s, cw:cw };
+    basePeriods.forEach(function(p){
+      var cell = pivot[c][p];
+      if (!cell) return;
+      v += cell.v; s += cell.s; cw += cell.cw;
+    });
+    return { ch:c, visits:v, sales:s, cvr: v > 0 ? cw / v * 100 : null };
   });
-  html += '<tr><td>' + (metric === 'cvr' ? 'AVG (방문 가중)' : 'TOTAL') + '</td>';
-  periods.forEach(function(p){
-    var v = cellVal(totCells[p], metric);
-    html += v === null ? '<td class="dash">-</td>' : '<td>' + fmt(v) + '</td>';
-  });
-  html += cmpCell(totCells, periods, metric);
-  html += '</tr></tbody></table>';
 
-  document.getElementById('chTable').innerHTML = html;
+  var METRICS = [
+    { key:'visits', title:'VISITS', fmt:fmtInt },
+    { key:'sales',  title: curIsKrw() ? 'SALES (백만원)' : 'SALES (USD)', fmt:fmtCurCell },
+    { key:'cvr',    title:'CVR (%)', fmt:function(v){ return fmtPct(v); } }
+  ];
 
-  var notes = ['* 미귀속(NA) 채널은 표에서 제외합니다.'];
-  if (metric === 'cvr') notes.push('* 방문 5건 미만 구간은 흐리게 표시합니다 (표본 과소).');
-  notes.push('* ' + cmpName + ' = 마지막 두 기간 비교. 비교 대상이 없으면 «-».');
-  document.getElementById('chTableNote').innerHTML = notes.join('<br>');
+  grid.innerHTML = METRICS.map(function(m){
+    // CVR 은 분모 0이라 값이 없는 채널을 랭킹에 올리지 않는다 (0위로 찍으면 오독된다)
+    var pool = agg.filter(function(a){ return a[m.key] !== null && a[m.key] !== undefined; })
+                  .sort(function(a,b){ return b[m.key] - a[m.key]; });
+    var take = Math.min(3, pool.length);
+    var best = pool.slice(0, take);
+    // 상·하위가 같은 채널을 두 번 세지 않게, 채널이 6개 미만이면 겹치는 만큼 잘라 낸다
+    var worstAll = pool.slice().reverse();
+    var worst = worstAll.slice(0, Math.min(take, Math.max(0, pool.length - take)));
+
+    function list(items, cls, lbl){
+      if (!items.length) return '';
+      return '<div class="rank-side ' + cls + '"><div class="rank-side-lbl">' + lbl + '</div>'
+        + items.map(function(a, i){
+            return '<div class="rank-item">'
+              + '<span class="rank-no">' + (i + 1) + '</span>'
+              + '<span class="rank-dot" style="background:' + (CH_COLORS[a.ch] || '#888') + ';"></span>'
+              + '<span class="rank-nm" title="' + a.ch + '">' + a.ch + '</span>'
+              + '<span class="rank-val">' + m.fmt(a[m.key]) + '</span></div>';
+          }).join('')
+        + '</div>';
+    }
+
+    var body = pool.length
+      ? list(best, 'best', 'BEST ' + take) + list(worst, 'worst', 'WORST ' + worst.length)
+      : '<div class="rank-empty">값이 있는 채널이 없습니다.</div>';
+    if (pool.length && !worst.length){
+      body += '<div class="rank-empty">채널이 ' + pool.length + '개라 상·하위가 겹쳐 하위는 생략했습니다.</div>';
+    }
+    return '<div class="rank-card"><div class="rank-title">' + m.title + '</div>' + body + '</div>';
+  }).join('');
 }
 
 // 마지막 두 기간 비교 셀. 🛑 기간이 2개 미만이면 계산하지 않는다 (N개 구간 계산의 N=0 가드).
@@ -1535,34 +2019,8 @@ function setChPeriod(btn, pd){
   for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('active', bs[i].dataset.chPeriod === pd);
   refreshChannel(true);
 }
-function setChMode(mode){
-  _chModeTouched = true;
-  applyChMode(mode);
-  refreshChannel(true);
-}
-function applyChMode(mode){
-  chMode = mode;
-  document.getElementById('btnChModeSum').classList.toggle('active', mode === 'sum');
-  document.getElementById('btnChModeSplit').classList.toggle('active', mode === 'split');
-  document.getElementById('chMetricSeg').style.display = mode === 'split' ? 'inline-flex' : 'none';
-}
-// 채널을 2개 이상 고르면 자동으로 채널별로. 사용자가 직접 모드를 누른 뒤엔 건드리지 않는다.
-function autoChMode(){
-  if (_chModeTouched) return;
-  applyChMode(selChChans.size >= 2 ? 'split' : 'sum');
-}
-function setChMetric(btn, m){
-  chMetric = m;
-  var bs = document.querySelectorAll('[data-ch-metric]');
-  for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('active', bs[i].dataset.chMetric === m);
-  refreshChannel(true);
-}
-function setChTblMetric(btn, m){
-  chTblMetric = m;
-  var bs = document.querySelectorAll('[data-ch-tbl]');
-  for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('active', bs[i].dataset.chTbl === m);
-  refreshChannel(true);
-}
+// 지표 칩은 이 탭에 없다 — 지표마다 차트를 따로 두므로 고를 것이 없다.
+// 채널 선택은 각 그래프 블록의 Channel 드롭다운이 맡는다.
 
 var _chBooted = false;
 function refreshChannel(force){
@@ -1573,6 +2031,8 @@ function refreshChannel(force){
   var pivot   = chPivot(periods);
   renderChKPI(periods);
   renderChCombo(periods, pivot);
+  renderChRanking(periods, pivot);
+  renderChSplit(periods, pivot);
   renderChTable(periods, pivot);
   renderChNote();
 }
@@ -1833,15 +2293,15 @@ function applyPayload(data){
   D.servedFrom = data.servedFrom || null;
 
   // 선택돼 있던 값이 새 데이터에 없으면 떨어뜨린다
-  pruneSet(selWeeks,    D.weeks.map(function(w){ return w.key; }));
-  pruneSet(selChWeeks,  D.weeks.map(function(w){ return w.key; }));
-  pruneSet(selChChans,  D.channels);
+  pruneSet(selWeeks,      D.weeks.map(function(w){ return w.key; }));
+  pruneSet(selChWeeks,    D.weeks.map(function(w){ return w.key; }));
+  pruneSet(selVsChans,  D.channels);
+  pruneSet(selCvrChans, D.channels);
 
   buildMainOptions();
   buildChMonthOptions();
   buildChWeekOptions();
   buildChChanOptions();
-  autoChMode();
 
   document.getElementById('topMeta').textContent =
     (D.range.start ? D.range.start + ' ~ ' + D.range.end + ' · ' + D.range.days + '일' : '—')
@@ -1855,6 +2315,21 @@ function pruneSet(set, allowed){
   Array.from(set).forEach(function(v){ if (allowed.indexOf(v) < 0) set.delete(v); });
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+//  브랜드 마크 — 0.DF_브랜드가이드/DF_Logo&Symbol/symbol_01_red(1200X1200).png 원본
+//
+//  단일 파일 원칙을 지키려고 data URL 로 인라인한다 (브랜드 로고는 비밀값이 아니므로
+//  공개 리포에 들어가도 무방하다 — 지시서 C2). 같은 문자열이 head·사이드바·로그인에
+//  세 번 박히지 않도록 여기 한 번만 두고 파비콘까지 스크립트로 주입한다.
+// ═══════════════════════════════════════════════════════════════════════════════
+var DF_MARK = 'data:image/png;base64,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';
+(function applyBrandMark(){
+  var ic = document.getElementById('favicon');
+  if (ic) ic.href = DF_MARK;
+  var els = document.querySelectorAll('[data-df-mark]');
+  for (var i = 0; i < els.length; i++) els[i].src = DF_MARK;
+})();
+
 // onclick 참조용 전역 등록 (strict mode 에서 함수 선언은 자동 전역이 되지 않는다)
 window.startGoogleLogin = startGoogleLogin;
 window.signOut          = signOut;
@@ -1866,11 +2341,8 @@ window.toggleDD         = toggleDD;
 window.clearFilter      = clearFilter;
 window.setMainPeriod    = setMainPeriod;
 window.toggleSeries     = toggleSeries;
-window.toggleKrw        = toggleKrw;
+window.setCurrency  = setCurrency;
 window.setChPeriod      = setChPeriod;
-window.setChMode        = setChMode;
-window.setChMetric      = setChMetric;
-window.setChTblMetric   = setChTblMetric;
 </script>
 </body>
 </html>

@@ -198,6 +198,9 @@ eq('결측 채널 채움',
    E.channel.channelCount * E.range.days - hRows.length);
 
 console.log('\n── 차트·표 렌더 ──');
+// 🛑 기본 기간은 일(day) 보기다 (MJ 결정 2026-08-16). 주차 축을 보려면 명시적으로 바꾼다.
+eq('기본 기간 = 일', sandbox.chPeriod, 'daily');
+sandbox.chPeriod = 'weekly';
 const periods = sandbox.activePeriods();
 const pivot = sandbox.chPivot(periods);
 eq('기간 축 (주)', periods.join(','), E.weekKeys.join(','));
