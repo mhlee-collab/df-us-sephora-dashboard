@@ -344,6 +344,40 @@ body{
 }
 .ch-tbl tr.grp td:first-child{background:#EEEEF2;color:#555;}
 
+/* ── 표 안 스파크라인 (매장·SKU 추이) ────────────────────────────────────────
+   차트 인스턴스를 셀마다 만들면 수십 개가 되어 리사이즈 캐스케이드가 걸린다.
+   정적 inline SVG 로 그린다 — 리스너도 옵저버도 붙지 않는다. */
+.spark{display:block;overflow:visible;}
+.ch-tbl td.spark-td{padding:2px 8px;width:74px;min-width:74px;}
+
+/* SKU·재고 표는 기준 열이 길다(친숙명). 폭을 넓혀 잘리지 않게 한다.
+   🛑 position 은 다시 선언하지 않는다 — 뒤쪽 선언이 .ch-tbl 의 sticky 를 덮어쓴다. */
+.ch-tbl.wide-first th:first-child,
+.ch-tbl.wide-first td:first-child{width:210px;min-width:210px;max-width:210px;}
+
+/* 요약행이 여러 줄인 표(채널 구성)는 마지막 행만 강조하면 나머지가 본문처럼 보인다 */
+.ch-tbl tr.sum td{font-weight:700;background:#F5F5F8;border-top:1px solid #E0E0E4;color:#444;}
+.ch-tbl tr.sum td:first-child{background:#F5F5F8;}
+
+.tbl-empty{padding:18px 4px;color:#aaa;font-size:11px;}
+
+/* 영역명 옆 흐린 보조 문구 — 「기준 주차」·「일별 제공 불가」처럼 제목이 아니라 조건을 말하는 자리.
+   🛑 내용은 전부 데이터에서 파생시킨다. 기간·주차를 문자열로 박지 않는다.
+   .sec-hdr 은 flex + ::after 구분선이라 이 span 은 제목과 선 사이에 들어간다. */
+.hdr-note{
+  font-size:9px;font-weight:500;letter-spacing:0.3px;text-transform:none;
+  color:#b9b9c2;white-space:nowrap;
+}
+.split-title .hdr-note{margin-left:6px;}
+
+/* 닷컴전용(온라인 전용) 표식 — 이 SKU 들은 매장에 배치되지 않아 매장재고·In-Stock% 가
+   구조적으로 0·«-» 다. 표식이 없으면 재고 사고로 오독된다. */
+.tag-dot{
+  display:inline-block;margin-left:6px;padding:0 5px;border-radius:9px;
+  font-size:8px;font-weight:700;letter-spacing:0.5px;
+  color:var(--sub);background:#EAF2FA;border:0.5px solid #CFE0F0;vertical-align:middle;
+}
+
 /* ── 경고 배너 (조건부로만 그린다) ───────────────────────────────────────── */
 .alert{
   margin:12px 28px 0;padding:10px 14px;border-radius:10px;
@@ -453,6 +487,12 @@ body{
     </div>
     <div class="sb-item" data-tab="channel" onclick="switchTab('channel')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" style="display:block;flex-shrink:0"><ellipse cx="7" cy="7" rx="6" ry="6"/><ellipse cx="7" cy="7" rx="2.5" ry="6"/><line x1="1" y1="7" x2="13" y2="7"/></svg></span><span class="sb-text">유입 채널별</span>
+    </div>
+    <div class="sb-item" data-tab="bm" onclick="switchTab('bm')">
+      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" style="display:block;flex-shrink:0"><path d="M1 4.2 7 1.2l6 3v5.6l-6 3-6-3z"/><path d="M1 4.2 7 7.2l6-3"/><line x1="7" y1="7.2" x2="7" y2="12.8"/></svg></span><span class="sb-text">B&amp;M · 재고</span>
+    </div>
+    <div class="sb-item" data-tab="sku" onclick="switchTab('sku')">
+      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" style="display:block;flex-shrink:0"><line x1="4.5" y1="2.5" x2="13" y2="2.5"/><line x1="4.5" y1="7" x2="13" y2="7"/><line x1="4.5" y1="11.5" x2="13" y2="11.5"/><circle cx="1.6" cy="2.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="1.6" cy="7" r="1.1" fill="currentColor" stroke="none"/><circle cx="1.6" cy="11.5" r="1.1" fill="currentColor" stroke="none"/></svg></span><span class="sb-text">SKU 실매출</span>
     </div>
   </div>
   <div class="sb-footer">
@@ -677,6 +717,182 @@ body{
     <div style="height:28px;"></div>
   </div>
 
+  <!-- ─────────── B&M · 재고 탭 ───────────
+       원천 = 세포라 실매출 리포트(주 단위 수급). 포털(RAW_commerce·RAW_유입)과는 정의가 다르다 —
+       포털은 당일 오더 gross, 실매출은 환불·반품을 처리일 기준으로 차감한 값이다.
+       🛑 두 계열을 일 단위로 비교·합산하는 지표를 이 탭에 만들지 않는다.
+       🛑 UNOVE 임계값(재고보유율 80% 경보선 · WOS 4주 미만 필터)은 쓰지 않는다 (MJ 결정 2026-08-19).
+          DF_US 자체 기준이 정해지면 그때 넣는다 — 임의의 다른 숫자를 대신 넣지 않는다.
+       🛑 연간 목표 진척 배지 · 매장 등급(Tier) 은 이 라운드에서 제외한다 (MJ 결정 2026-08-19). -->
+  <div id="tabBm" style="display:none;">
+    <div id="bmEmpty" style="display:none;padding:40px 28px;color:#aaa;font-size:12px;"></div>
+    <div id="bmBody">
+      <div class="kpi-row" id="bmKpiRow" style="grid-template-columns:repeat(3,1fr);"></div>
+
+      <div class="chart-sec">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap;">
+          <div class="sec-hdr" style="margin-bottom:0;flex:1;min-width:180px;">채널별 매출 추이</div>
+          <div class="seg">
+            <button class="tgl" data-bm-period="monthly" onclick="setBmPeriod(this,'monthly')">월</button>
+            <button class="tgl active" data-bm-period="weekly" onclick="setBmPeriod(this,'weekly')">주</button>
+            <button class="tgl" data-bm-period="daily" onclick="setBmPeriod(this,'daily')">일</button>
+            <div class="vdiv"></div>
+            <button class="tgl active" data-cur="KRW" onclick="setCurrency(this,'KRW')">KRW(백만원)</button>
+            <button class="tgl" data-cur="USD" onclick="setCurrency(this,'USD')">USD</button>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="leg-row">
+            <button class="tgl active" id="btnBmSerBm"    onclick="toggleBmSeries(this,'bm')"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#DD061A;"></span>B&amp;M</button>
+            <button class="tgl active" id="btnBmSerCom"   onclick="toggleBmSeries(this,'com')"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#156FB8;"></span>.COM</button>
+            <button class="tgl"        id="btnBmSerShare" onclick="toggleBmSeries(this,'share')"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#6C237C;"></span>B&amp;M 비중</button>
+          </div>
+          <div class="chart-wrap"><canvas id="bmTrendChart"></canvas></div>
+        </div>
+        <!-- 그래프를 구성한 데이터 그대로. 기간 토글·통화 칩을 그래프와 함께 따라간다. -->
+        <div class="chart-card" style="margin-top:10px;">
+          <div class="tbl-wrap"><div id="bmTrendTable"></div></div>
+        </div>
+      </div>
+
+      <!-- 🛑 아래 블록들은 재고 계열이라 세포라가 주 단위로만 준다. 제목 옆 흐린 문구로 그 사실을 밝힌다
+           (위 「채널별 매출 추이」는 `Raw_실매출` 덕에 일·주·월 전부 된다 — 그래서 그쪽엔 안 붙인다). -->
+      <div class="chart-sec">
+        <div class="split-grid">
+          <div class="chart-card">
+            <div class="split-title" id="bmInStockTitle">B&amp;M 재고보유율 (매출 가중 IN-STOCK %)</div>
+            <div class="chart-wrap" style="height:280px;"><canvas id="bmInStockChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="split-title" id="bmComInvTitle">.COM 재고 (ON-HAND) · 매출</div>
+            <div class="chart-wrap" style="height:280px;"><canvas id="bmComInvChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-sec">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap;">
+          <!-- 제목 뒤 「기준 주차 …」는 스크립트가 최신 주차에서 파생해 채운다. 문자열로 박지 않는다. -->
+          <div class="sec-hdr" id="bmSkuHdr" style="margin-bottom:0;flex:1;min-width:180px;">SKU별 재고 건전성</div>
+          <div class="seg">
+            <!-- 「주요 SKU」의 선정 기준은 화면에서 바로 확인할 수 있어야 한다 (MJ 질문 2026-08-19). -->
+            <button class="tgl active" data-bm-scope="top6" onclick="setBmSkuScope(this,'top6')"
+                    title="최신 주차 TTL매출(B&amp;M + .COM) 상위 6종 · 닷컴전용 제외 (매장 배치가 없어 재고 지표가 비어 있음)">주요 SKU</button>
+            <button class="tgl" data-bm-scope="all" onclick="setBmSkuScope(this,'all')"
+                    title="최신 주차 TTL매출 내림차순 전체 · 닷컴전용 포함">전체 SKU</button>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="tbl-wrap"><div id="bmSkuTable"></div></div>
+        </div>
+      </div>
+
+      <div class="chart-sec">
+        <div class="sec-hdr" id="bmStoreHdr">매장별 실적 · 재고</div>
+        <div class="chart-card">
+          <div class="split-title" id="bmRegionTitle">권역별 매장당 주간매출</div>
+          <div class="chart-wrap" style="height:260px;"><canvas id="bmRegionChart"></canvas></div>
+        </div>
+        <div class="chart-card" style="margin-top:12px;">
+          <!-- 🛑 권역 드롭다운은 **이 표 바로 위**에 둔다 (MJ 결정 2026-08-19 4차).
+               위 차트 옆에 있으면 차트에도 걸리는 것처럼 읽힌다 — 실제로는 표에만 걸린다. -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+            <div class="split-title" style="margin-bottom:0;">매장 리스트</div>
+            <div class="filter-block">
+              <div class="filter-lbl">Region</div>
+              <div class="dd-wrap" id="ddWrap-bmRegion">
+                <div class="dd-btn" id="ddBtn-bmRegion" onclick="toggleDD('bmRegion')"><span id="ddLabel-bmRegion">ALL</span><span class="arr">▾</span></div>
+                <div class="dd-panel" id="ddPanel-bmRegion" style="min-width:220px;right:0;left:auto;">
+                  <div class="dd-all" onclick="clearFilter('bmRegion')"><input type="checkbox" id="chk-bmRegion-all" checked disabled> ALL</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="tbl-wrap"><div id="bmStoreTable"></div></div>
+        </div>
+      </div>
+
+      <div class="note" id="bmNote"></div>
+      <div style="height:28px;"></div>
+    </div>
+  </div>
+
+  <!-- ─────────── SKU 실매출 탭 ───────────
+       원천 = 세포라 실매출 리포트의 SKU × 일별 원장(`Raw_실매출_SKU별_일간`).
+       🛑 B&M · 재고 탭과 같은 원천이라 주 단위 합계가 소수점까지 일치한다.
+          포털 매출과는 정의가 달라 일 단위로 비교하지 않는다. -->
+  <div id="tabSku" style="display:none;">
+    <div id="skuEmpty" style="display:none;padding:40px 28px;color:#aaa;font-size:12px;"></div>
+    <div id="skuBody">
+      <div class="kpi-row" id="skuKpiRow"></div>
+
+      <div class="filter-row" style="align-items:flex-end;">
+        <div class="filter-block">
+          <div class="filter-lbl">Period</div>
+          <div class="seg">
+            <button class="tgl" data-sku-period="monthly" onclick="setSkuPeriod(this,'monthly')">월</button>
+            <button class="tgl active" data-sku-period="weekly" onclick="setSkuPeriod(this,'weekly')">주</button>
+            <button class="tgl" data-sku-period="daily" onclick="setSkuPeriod(this,'daily')">일</button>
+          </div>
+        </div>
+        <div class="filter-block">
+          <div class="filter-lbl">Range</div>
+          <div class="seg">
+            <button class="tgl active" data-sku-range="0" onclick="setSkuRange(this,0)">전체</button>
+            <button class="tgl" data-sku-range="3" onclick="setSkuRange(this,3)">최근 3개월</button>
+            <button class="tgl" data-sku-range="6" onclick="setSkuRange(this,6)">최근 6개월</button>
+            <button class="tgl" data-sku-range="12" onclick="setSkuRange(this,12)">최근 12개월</button>
+          </div>
+        </div>
+        <div class="filter-block">
+          <div class="filter-lbl">Channel</div>
+          <div class="seg">
+            <button class="tgl active" data-sku-chan="all" onclick="setSkuChannel(this,'all')">통합</button>
+            <button class="tgl" data-sku-chan="bm" onclick="setSkuChannel(this,'bm')">B&amp;M</button>
+            <button class="tgl" data-sku-chan="com" onclick="setSkuChannel(this,'com')">.COM</button>
+          </div>
+        </div>
+        <div class="filter-block">
+          <div class="filter-lbl">Metric</div>
+          <div class="seg">
+            <button class="tgl active" data-sku-metric="sales" onclick="setSkuMetric(this,'sales')">매출</button>
+            <button class="tgl" data-sku-metric="units" onclick="setSkuMetric(this,'units')">판매수량</button>
+            <div class="vdiv"></div>
+            <button class="tgl active" data-cur="KRW" onclick="setCurrency(this,'KRW')">KRW(백만원)</button>
+            <button class="tgl" data-cur="USD" onclick="setCurrency(this,'USD')">USD</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-sec">
+        <div class="sec-hdr" id="skuMixHdr">SKU 구성</div>
+        <div class="chart-card">
+          <div class="split-body">
+            <div class="chart-wrap" style="height:340px;"><canvas id="skuMixChart"></canvas></div>
+            <div class="split-leg" id="skuMixLeg"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-sec">
+        <div class="sec-hdr" id="skuRankHdr">SKU 순위</div>
+        <div class="chart-card">
+          <div class="tbl-wrap"><div id="skuRankTable"></div></div>
+        </div>
+      </div>
+
+      <div class="chart-sec">
+        <div class="sec-hdr" id="skuChanHdr">채널 구성</div>
+        <div class="chart-card">
+          <div class="tbl-wrap"><div id="skuChanTable"></div></div>
+        </div>
+      </div>
+
+      <div class="note" id="skuNote"></div>
+      <div style="height:28px;"></div>
+    </div>
+  </div>
+
   </div><!-- /main-scroll -->
 </div><!-- /main-area -->
 </div><!-- /app-layout -->
@@ -748,7 +964,13 @@ var MONTH_NAMES = {'01':'JAN','02':'FEB','03':'MAR','04':'APR','05':'MAY','06':'
 var D = {
   meta: {}, commerce: [], channel: [], channels: [], weeks: [],
   range: {start:null, end:null, days:0}, excludedChannels: ['NA'],
-  usdToKrw: 1500, warnings: [], updatedAt: null, servedFrom: null
+  usdToKrw: 1500, warnings: [], updatedAt: null, servedFrom: null,
+  // ── 세포라 실매출 계열 (B&M · 재고 / SKU 실매출 탭) ────────────────────────
+  // 🛑 포털(commerce·channel)과 원천·정의가 다르다 — 포털은 당일 오더 gross,
+  //    실매출은 환불·반품을 처리일 기준으로 차감한 값이다. 일 단위로 섞지 않는다.
+  bmInv: [], bmStore: [], bmWeek: [], bmWeeks: [],
+  salesDaily: [], salesWeek: [], skuWeek: [], skuDaily: [],
+  dcStoreNos: []
 };
 
 var currentUser = null;
@@ -775,6 +997,45 @@ var chPeriod = 'daily';     // 🛑 기본 = 일 보기 (MJ 결정 2026-08-16)
 // 🛑 Overview 는 언제나 전체 채널 합산이다. 채널 드롭다운이 상단에 없으므로 형태가 바뀔 일이 없다.
 var chChart = null;                                  // Overview
 var chSplitCharts = { visits:null, sales:null, cvr:null };   // 채널별 지표 차트 3종
+
+// ── B&M · 재고 탭 상태 ──────────────────────────────────────────────────────
+// 🛑 기본 = 주 보기. 세포라가 이 리포트를 **토요일 마감 주 단위로만** 제공하기 때문이다
+//    (통합·유입 탭이 일 보기인 것과 다르다 — 원천의 집계 단위가 다르다).
+//    일 보기는 `Raw_실매출`(날짜별 합산)이 있어 가능하지만 재고 계열은 주 단위뿐이다.
+var bmPeriod = 'weekly';
+var bmShow = { bm:true, com:true, share:false };
+var bmSkuScope = 'top6';        // 'top6' = 당주 매출 상위 6 | 'all' = 전체 SKU
+var selBmRegions = new Set();   // 매장별 실적 표·차트 전용 권역 필터 (비어 있으면 전체)
+var bmCharts = { trend:null, inStock:null, comInv:null, region:null };
+
+// 🛑 재고보유율 경보선 — MJ 결정 2026-08-19(2차): UNOVE 와 **같은 80% 를 그대로 쓴다**.
+//    같은 날 앞선 「UNOVE 임계값 미사용」 결정을 MJ 가 뒤집었다. 값은 여기 한 곳만 바꾸면
+//    차트 기준선·KPI 보조줄이 함께 따라간다. (WOS 4주 미만 필터는 여전히 넣지 않는다.)
+var IN_STOCK_ALERT = 80;
+
+// ── 재고 차트 2종 색 — UNOVE 세포라 대시보드와 같은 배색 (MJ 지시 2026-08-19 3차) ──────
+// 🛑 두 대시보드를 나란히 보는 사람이 같은 그래프를 같은 색으로 인식해야 하므로 통일을 우선한다.
+//    유입 채널 14색을 UNOVE와 맞춘 것(2026-08-16)과 같은 이유다.
+//    경보선만 DF_US CI 레드(--bar)를 쓴다 — 붉은 계열은 한 종류라는 규칙이 위에 온다.
+var BM_INSTOCK_LINE  = '#F0AD2E';   // 재고보유율 추이 = 앰버 라인
+var BM_INSTOCK_POINT = '#4C9F45';   // 포인트 = 그린
+var BM_COMINV_BAR    = '#6FB1E3';   // .COM 재고(units) = 라이트 블루 막대
+var BM_COMINV_LINE   = '#E39E8C';   // .COM 매출 = 살몬 라인
+
+// ── SKU 실매출 탭 상태 ──────────────────────────────────────────────────────
+var skuPeriod  = 'weekly';      // 위와 같은 이유로 기본 = 주
+var skuRange   = 0;             // 0 = 전체 | 3 | 6 | 12 (개월 프리셋)
+var skuChannel = 'all';         // 'all' | 'bm' | 'com'
+var skuMetric  = 'sales';       // 'sales' | 'units'
+var skuMixChart = null;
+
+// SKU 스택 색 — 채널색과 별개 축이다. 상위 SKU부터 순서대로 집어 쓴다.
+// 🛑 붉은 계열은 CI 레드 한 종류만 (MJ 결정 2026-08-16) — 다른 붉은 단을 넣지 않는다.
+var SKU_COLORS = ['#DD061A','#156FB8','#6C237C','#E69138','#45818E',
+                  '#6AA84F','#A64D79','#3D85C6','#D5A6BD','#8B8B96'];
+var SKU_ETC_COLOR = '#C9C9D0';
+// 권역 막대 색 — 계열이 아니라 카테고리라 명도 단만 벌린다.
+var REGION_COLORS = ['#156FB8','#3D85C6','#6C237C','#45818E','#E69138','#6AA84F','#8B8B96'];
 
 Chart.defaults.color = '#666';
 Chart.defaults.font.family = "'Pretendard','Helvetica Neue',Arial,sans-serif";
@@ -892,7 +1153,8 @@ var FILTER_SETS = {
   chMonth:  function(){ return selChMonths; },
   chWeek:   function(){ return selChWeeks; },
   vsChan:   function(){ return selVsChans; },
-  cvrChan:  function(){ return selCvrChans; }
+  cvrChan:  function(){ return selCvrChans; },
+  bmRegion: function(){ return selBmRegions; }
 };
 
 function toggleDD(name){
@@ -927,6 +1189,7 @@ function clearFilter(name){
   updateDDLabel(name);
   if (name === 'chMonth') buildChWeekOptions();
   if (name === 'month' || name === 'week') refreshMain(true);
+  else if (name === 'bmRegion') refreshBmStores();
   else refreshChannel(true);
 }
 
@@ -1374,6 +1637,9 @@ function setCurrency(btn, cur){
   renderMainChart();
   renderMainTable();
   refreshChannel(true);
+  // 네 탭이 같은 통화 칩 값을 가리킨다. 한 탭에서 바꾸면 나머지도 같은 단위로 다시 그린다.
+  try { refreshBm(true);  } catch(e){ console.warn(e); }
+  try { refreshSku(true); } catch(e){ console.warn(e); }
 }
 
 // force=true 면 캐시로 이미 그린 화면이라도 무조건 다시 그린다.
@@ -2047,6 +2313,1235 @@ function renderChNote(){
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+//  세포라 실매출 계열 공용 (B&M · 재고 탭 / SKU 실매출 탭)
+//
+//  🛑 이 두 탭의 원천은 세포라 실매출 리포트다. 브랜드포털(RAW_commerce·RAW_유입)과
+//     **정의가 다르다** — 포털은 당일 오더를 그대로 집계한 gross, 실매출은 환불·반품을
+//     처리(정산)일 기준으로 차감한 값이다. 일별로는 양방향으로 크게 어긋나고 주 단위로도
+//     구조적 차이가 남는다. 두 계열을 합치거나 나눈 지표를 여기서 만들지 않는다.
+//  🛑 UNOVE 임계값(재고보유율 80% 경보선 · WOS 4주 미만 필터)은 쓰지 않는다 (MJ 결정 2026-08-19).
+//     숫자 값 자체는 그대로 보여주되 기준선·필터를 그리지 않는다. DF_US 자체 기준이
+//     정해지면 그때 넣는다 — 임의의 다른 숫자를 대신 넣지 않는다.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// 주차 라벨 — 반드시 D.bmWeeks 에서만 만든다 (화면에 주차 수를 박지 않기 위함).
+// `주차별요약` 의 `기간` 이 정본이고, 없으면 일별 행에서 뽑은 최소·최대 날짜로 만든다.
+function bmWeekByKey(key){
+  for (var i = 0; i < D.bmWeeks.length; i++) if (D.bmWeeks[i].key === key) return D.bmWeeks[i];
+  return null;
+}
+function bmWeekSpan(key){
+  var w = bmWeekByKey(key);
+  if (!w) return '';
+  if (w.start && w.end) return mdLabel(w.start) + '–' + mdLabel(w.end);
+  if (w.range) return w.range.replace(/^0/, '').replace('~', '–').replace(/\/0/g, '/');
+  return '';
+}
+function bmWeekKeys(){ return D.bmWeeks.map(function(w){ return w.key; }); }
+
+// 🛑 주차 표기 = 회차 키 + 날짜 구간 (MJ 결정 2026-08-19 4차 — 「W1(기간)」 형태로 다시 명시).
+//    자리에 따라 형태만 다르고 값은 전부 D.bmWeeks 에서 나온다 — 박아 둔 문자열은 없다.
+//      · 차트 축   → 두 줄 ['W1', '7/26–8/1']  (한 줄로 붙이면 주가 늘수록 축이 겹친다)
+//      · 표 헤더   → 한 줄 'W1 (7/26–8/1)'
+//      · KPI 카드  → 회차 키만 'W3'            (카드가 이미 빽빽하고, 축·표가 날짜를 진다)
+function bmWeekAxisLabel(key){
+  var s = bmWeekSpan(key);
+  return s ? [key, s] : key;
+}
+function bmWeekCellLabel(key){
+  var s = bmWeekSpan(key);
+  return s ? key + ' (' + s + ')' : key;
+}
+// 툴팁 제목 — 축 라벨이 배열(두 줄)이면 한 줄로 풀어 준다
+function sellTooltipTitle(){
+  return function(items){
+    if (!items || !items.length) return '';
+    var l = items[0].label;
+    return Array.isArray(l) ? l.join('  ') : l;
+  };
+}
+
+// 기간 키·라벨 — 월/주/일 공통. 실매출 계열은 자체 주차 목록(D.bmWeeks)을 쓴다.
+function sellPeriodKey(row, period){
+  if (period === 'daily')   return row.date;
+  if (period === 'monthly') return row.month || (row.date || '').slice(0,7);
+  return row.week;
+}
+// 짧은 형태 — KPI 카드처럼 자리가 좁은 곳
+function sellPeriodKeyLabel(key, period){
+  if (period === 'daily')   return mdLabel(key);
+  if (period === 'monthly') return monthLabel(key.slice(5,7));
+  return key;                                   // 주차는 회차 키만 (W1·W2…)
+}
+// 표 헤더 — 주차는 'W1 (7/26–8/1)'
+function sellPeriodLabel(key, period){
+  if (period === 'weekly') return bmWeekCellLabel(key);
+  return sellPeriodKeyLabel(key, period);
+}
+// 차트 축 — 주차는 두 줄 ['W1', '7/26–8/1']
+function sellPeriodAxis(key, period){
+  if (period === 'weekly') return bmWeekAxisLabel(key);
+  return sellPeriodKeyLabel(key, period);
+}
+// 기간 축 — 데이터에 실제로 있는 키만. 정렬은 그 기간에 속한 가장 이른 날짜로 한다
+// (주차 라벨 W1·W2… 를 문자열로 정렬하면 W10 이 W2 앞에 온다).
+function sellPeriods(rows, period){
+  var byK = {};
+  rows.forEach(function(r){
+    var k = sellPeriodKey(r, period);
+    if (!k) return;
+    if (!byK[k] || r.date < byK[k]) byK[k] = r.date || k;
+  });
+  return Object.keys(byK)
+    .sort(function(a,b){ return byK[a] < byK[b] ? -1 : (byK[a] > byK[b] ? 1 : 0); })
+    .map(function(k){ return { key:k, label: sellPeriodKeyLabel(k, period) }; });
+}
+function sellCmpName(period){
+  return period === 'daily' ? 'DoD' : period === 'monthly' ? 'MoM' : 'WoW';
+}
+
+// SKU 표시명 — `구분자` 친숙명이 정본, 없으면 리포트의 제품명으로 폴백한다.
+function sellSkuName(sku, fallback){
+  var m = D.meta[sku];
+  return (m && m.friendly) ? m.friendly : (fallback || sku);
+}
+// 🛑 닷컴전용(온라인 전용) SKU — `구분자` 탭의 `닷컴전용` 열이 정본이다.
+//    이 SKU 들은 애초에 매장에 배치되지 않아 배치매장수·매장재고가 0이고 In-Stock% 가 «-» 다.
+//    표식이 없으면 「재고가 비었다」로 오독된다 — 반드시 이름 옆에 붙인다.
+function isDotcomOnly(sku){
+  var m = D.meta[sku];
+  return !!(m && m.dotcom);
+}
+// 표의 기준 열 셀 — 친숙명 + 닷컴전용 배지
+function sellSkuCell(sku, fallback){
+  return '<td title="' + (fallback || sku) + '">' + sellSkuName(sku, fallback)
+       + (isDotcomOnly(sku) ? '<span class="tag-dot">닷컴전용</span>' : '') + '</td>';
+}
+
+// 영역명 옆 흐린 보조 문구. 🛑 문자열을 박지 말고 전부 데이터에서 파생시킬 것.
+function hdrNote(text){ return ' <span class="hdr-note">' + text + '</span>'; }
+// 주 단위로만 수급되는 블록에 붙인다 (세포라가 B&M·재고 리포트를 토요일 마감 주 단위로만 준다).
+var WEEKLY_ONLY_NOTE = '주간 데이터 · 일별 제공 불가';
+
+// 소수(0.9504) → '95.04%'. null 은 '-' (원본이 '-' 이거나 분모가 0인 자리).
+function pctFrac(v, digits){
+  if (v === null || v === undefined) return null;
+  return (v * 100).toFixed(digits === undefined ? 1 : digits) + '%';
+}
+// null 을 '-' 셀로. 🛑 0 과 null 을 같이 취급하지 않는다 — 「재고 0」과 「값 없음」은 다르다.
+function cellOr(v, fmt){
+  return (v === null || v === undefined) ? '<td class="dash">-</td>' : '<td>' + fmt(v) + '</td>';
+}
+
+// ── 표 안 스파크라인 ────────────────────────────────────────────────────────
+// 🛑 「N개 구간」 폭 계산은 N=0 을 반드시 가드한다 (UNOVE 에서 음수 폭 사고가 있었다).
+//    점이 2개 미만이면 선을 그리지 않고 '-' 로 둔다.
+function sparkline(vals, color){
+  var W = 62, H = 16;
+  var v = (vals || []).filter(function(x){ return typeof x === 'number' && isFinite(x); });
+  if (v.length < 2) return '<span class="dash">-</span>';
+  var mn = Math.min.apply(null, v), mx = Math.max.apply(null, v);
+  var span = mx - mn;
+  function py(x){ return span === 0 ? H / 2 : H - 2 - (x - mn) / span * (H - 4); }
+  var pts = v.map(function(x, i){
+    return (i * (W - 2) / (v.length - 1) + 1).toFixed(1) + ',' + py(x).toFixed(1);
+  }).join(' ');
+  return '<svg class="spark" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">'
+       + '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="1.4" '
+       + 'stroke-linejoin="round" stroke-linecap="round"/>'
+       + '<circle cx="' + (W - 1) + '" cy="' + py(v[v.length - 1]).toFixed(1) + '" r="1.7" fill="' + color + '"/>'
+       + '</svg>';
+}
+
+// 시트 경고만 그린다 (설명 주석은 그리지 않는다 — MJ 결정 2026-08-16).
+function renderSheetWarnings(elId, prefixes){
+  var el = document.getElementById(elId);
+  if (!el) return;
+  var ws = (D.warnings || []).filter(function(w){
+    if (isInternalWarning(w)) return false;
+    return prefixes.some(function(p){ return String(w).indexOf(p) >= 0; });
+  });
+  if (!ws.length){ el.innerHTML = ''; el.style.display = 'none'; return; }
+  el.style.display = '';
+  el.innerHTML = '<span style="color:#b45309;">시트 경고 — ' + ws.join(' / ') + '</span>';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  B&M · 재고 탭
+// ═══════════════════════════════════════════════════════════════════════════════
+var BM_KPI_NOTES = {
+  total:   '세포라 실매출 리포트의 당주 전체 매출(B&M + .COM)입니다. 브랜드포털 매출과는 정의가 달라(포털=당일 오더 gross, 실매출=환불·반품 처리일 차감) 값이 다릅니다.',
+  bm:      'Raw_BM주간요약의 당주 B&M(오프라인 매장) 매출입니다.',
+  com:     'Raw_BM주간요약의 당주 .COM 매출입니다. 브랜드포털의 .COM 매출과는 정의가 달라 값이 다릅니다.',
+  instock: '배치매장수 0인 SKU를 뺀 뒤 B&M 매출로 가중평균한 In-Stock%입니다. 경보선 80% 아래로 내려가면 경고 표시가 붙습니다. 닷컴전용 SKU는 매장에 배치되지 않아 이 계산에 들어가지 않습니다.',
+  spd:     'Sales per Door = 당주 B&M 매출 ÷ 판매매장 수. 판매매장 수는 .COM 물류센터 5곳을 제외하고 당주 매출이 발생한 매장만 셉니다.',
+  cominv:  '.COM 창고 재고(On-Hand) 수량입니다. 입고대기(On-Order)는 아직 입고되지 않은 발주 수량입니다.'
+};
+
+function bmHasData(){
+  return D.bmWeek.length > 0 || D.bmInv.length > 0 || D.bmStore.length > 0 || D.salesDaily.length > 0;
+}
+
+// 기준 주차 = 데이터에 있는 마지막 주차. 비교 = 그 직전 주차.
+// 🛑 직전 주차가 없으면 비교 배지를 아예 그리지 않는다 (0으로 찍으면 오독된다).
+function bmBaseWeeks(){
+  var ws = D.bmWeek;
+  return { cur: ws.length ? ws[ws.length - 1] : null, prev: ws.length >= 2 ? ws[ws.length - 2] : null };
+}
+
+function renderBmKPI(){
+  var el = document.getElementById('bmKpiRow');
+  if (!el) return;
+  var b = bmBaseWeeks();
+  if (!b.cur){ el.innerHTML = ''; return; }
+  var c = b.cur, p = b.prev;
+
+  // 상대 증감(%) — 직전 주차가 없거나 분모가 0이면 배지를 그리지 않는다
+  function pctBadge(cv, pv){
+    if (!p || pv === null || pv === undefined || pv === 0) return null;
+    var d = (cv - pv) / pv * 100;
+    return { badge: (d >= 0 ? '▲ +' : '▼ ') + d.toFixed(1) + '%', cls: d >= 0 ? 'up' : 'dn' };
+  }
+  // 퍼센트포인트 증감 — 비율 지표(In-Stock%)는 상대% 가 아니라 pp 로 읽어야 한다
+  function ppBadge(cv, pv){
+    if (!p || cv === null || pv === null || cv === undefined || pv === undefined) return null;
+    var d = (cv - pv) * 100;
+    return { badge: (d >= 0 ? '▲ +' : '▼ ') + d.toFixed(2) + 'pp', cls: d >= 0 ? 'up' : 'dn' };
+  }
+  function vsLine(txt){ return p ? 'vs ' + txt + '  WoW ' + p.week : ''; }
+
+  var share = c.total !== 0 ? { bm: c.bm / c.total * 100, com: c.com / c.total * 100 } : null;
+
+  var cards = [
+    { key:'total', label:'전체 매출', val: fmtCurFull(c.total),
+      sub: curIsKrw() ? fmtUsd(c.total) : '<span style="color:#888;font-weight:700;">₩</span> ' + fmtKrw(c.total).slice(1),
+      d: pctBadge(c.total, p && p.total), vs: vsLine(fmtCurFull(p ? p.total : 0)) },
+    { key:'bm', label:'B&M 매출', val: fmtCurFull(c.bm),
+      sub: share ? '매출 비중 ' + share.bm.toFixed(1) + '%' : '',
+      d: pctBadge(c.bm, p && p.bm), vs: vsLine(fmtCurFull(p ? p.bm : 0)) },
+    { key:'com', label:'.COM 매출', val: fmtCurFull(c.com),
+      sub: share ? '매출 비중 ' + share.com.toFixed(1) + '%' : '',
+      d: pctBadge(c.com, p && p.com), vs: vsLine(fmtCurFull(p ? p.com : 0)) },
+    // 경보선 80% 는 UNOVE 와 같은 값을 쓴다 (MJ 결정 2026-08-19 2차). 아래로 내려가면 표시가 붙는다.
+    { key:'instock', label:'재고보유율', val: pctFrac(c.inPct, 2) || '-',
+      sub: '매출 가중 In-Stock% · 경보선 ' + IN_STOCK_ALERT + '%'
+         + (c.inPct !== null && c.inPct * 100 < IN_STOCK_ALERT
+             ? '<br><span style="color:#dc2626;font-weight:700;">⚠ 경보선 아래</span>' : ''),
+      d: ppBadge(c.inPct, p && p.inPct), vs: p ? 'vs ' + (pctFrac(p.inPct, 2) || '-') + '  WoW ' + p.week : '' },
+    { key:'spd', label:'매장당 주간매출', val: fmtCurFull(c.spd),
+      sub: '판매매장 ' + fmtInt(c.doors) + '곳',
+      d: pctBadge(c.spd, p && p.spd), vs: vsLine(fmtCurFull(p ? p.spd : 0)) },
+    { key:'cominv', label:'.COM 재고', val: fmtInt(c.comOh) + ' <span style="font-size:12px;color:#9ca3af;">units</span>',
+      sub: '입고대기 ' + fmtInt(c.comOo) + ' units',
+      d: pctBadge(c.comOh, p && p.comOh), vs: p ? 'vs ' + fmtInt(p.comOh) + ' units  WoW ' + p.week : '' }
+  ];
+
+  el.innerHTML = cards.map(function(k){
+    return '<div class="kpi">'
+      + '<div class="kpi-header"><div class="kpi-label">' + k.label
+      + ' <span style="color:#c9c9d0;font-weight:600;">(' + c.week + ')</span></div>'
+      + (k.d ? '<span class="kpi-badge ' + k.d.cls + '">' + k.d.badge + '</span>' : '') + '</div>'
+      + '<div class="kpi-value">' + k.val + '</div>'
+      + (k.sub ? '<div class="kpi-sub">' + k.sub + '</div>' : '')
+      + (k.vs ? '<div class="kpi-vs">' + k.vs + '</div>' : '')
+      + '<button class="kpi-info-btn" tabindex="-1" type="button">i</button>'
+      + '<div class="kpi-tooltip">' + BM_KPI_NOTES[k.key] + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+// ── 채널별 매출 추이 ────────────────────────────────────────────────────────
+// 일·주·월 전부 `Raw_실매출`(날짜별 합산)에서 만든다 — 한 원천이라 단위를 바꿔도 합계가 어긋나지 않는다.
+// 🛑 연간 목표 기준선·진척 배지는 그리지 않는다 (Dr.FORHAIR 는 아직 연간 목표가 없다 — MJ 확인 2026-08-19).
+function bmTrendData(){
+  var byK = {};
+  D.salesDaily.forEach(function(r){
+    var k = sellPeriodKey(r, bmPeriod);
+    if (!k) return;
+    if (!byK[k]) byK[k] = { key:k, bm:0, com:0, total:0, sort:r.date };
+    byK[k].bm += r.bm; byK[k].com += r.com; byK[k].total += r.total;
+    if (r.date < byK[k].sort) byK[k].sort = r.date;
+  });
+  return Object.keys(byK).map(function(k){ return byK[k]; })
+    .sort(function(a,b){ return a.sort < b.sort ? -1 : (a.sort > b.sort ? 1 : 0); })
+    .map(function(v){
+      v.label = sellPeriodLabel(v.key, bmPeriod);
+      v.share = v.total > 0 ? v.bm / v.total * 100 : null;   // 분모가 0 이하면 비중은 값 없음
+      return v;
+    });
+}
+
+function renderBmTrendChart(){
+  var cv = document.getElementById('bmTrendChart');
+  if (!cv) return;
+  var data = bmTrendData();
+  var isDaily = bmPeriod === 'daily';
+  var ds = [];
+
+  if (bmShow.bm) ds.push({
+    label: 'B&M', type: 'bar',
+    data: data.map(function(d){ return curVal(d.bm); }),
+    backgroundColor: hexToRgba(C.bar, 0.85), hoverBackgroundColor: C.bar,
+    borderWidth: 0, yAxisID: 'yS', order: 3, barPercentage: 0.8, categoryPercentage: 0.78
+  });
+  if (bmShow.com) ds.push({
+    label: '.COM', type: 'bar',
+    data: data.map(function(d){ return curVal(d.com); }),
+    backgroundColor: hexToRgba(C.sub, 0.85), hoverBackgroundColor: C.sub,
+    borderWidth: 0, yAxisID: 'yS', order: 3, barPercentage: 0.8, categoryPercentage: 0.78
+  });
+  if (bmShow.share) ds.push({
+    label: 'B&M 비중', type: 'line',
+    data: data.map(function(d){ return d.share === null ? null : +d.share.toFixed(2); }),
+    borderColor: C.acc, backgroundColor: hexToRgba(C.acc, 0.10),
+    borderWidth: 2, pointRadius: data.length > 40 ? 0 : 3, pointHoverRadius: 5,
+    pointBackgroundColor: C.acc, fill: false, tension: 0.3, spanGaps: true,
+    yAxisID: 'ySh', order: 0
+  });
+
+  var cfg = {
+    type: 'bar',
+    data: { labels: data.map(function(d){ return sellPeriodAxis(d.key, bmPeriod); }), datasets: ds },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 4 } },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#fff', titleColor: '#222', bodyColor: '#555',
+          borderColor: '#E0E0E4', borderWidth: 1, padding: 10,
+          callbacks: {
+            title: sellTooltipTitle(),
+            label: function(ctx){
+              var v = ctx.parsed.y;
+              if (v === null || v === undefined) return null;
+              // 🛑 차트에 얹힌 값은 이미 선택 통화 단위다. 여기서 다시 환산하지 않는다.
+              if (ctx.dataset.label === 'B&M 비중') return '  B&M 비중: ' + fmtPct(v);
+              return '  ' + ctx.dataset.label + ': ' + fmtCurPlotted(v);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(0,0,0,0.07)' },
+          ticks: { color: '#888', font: { size: 9 },
+                   maxRotation: isDaily ? 90 : 0, minRotation: isDaily ? 90 : 0, autoSkip: false }
+        },
+        // ⚠️ 축은 0에서 자르지만 값은 숨기지 않는다 — 음수(반품)는 아래 데이터 테이블에 그대로 뜬다 (지시서 C1).
+        yS: {
+          type: 'linear', position: 'left', min: 0, beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,0.07)' },
+          ticks: { color: '#888', font: { size: 9 }, callback: curTick },
+          title: { display: true, text: curAxisTitle(), color: C.bar, font: { size: 9 } }
+        },
+        ySh: {
+          type: 'linear', position: 'right', display: bmShow.share, min: 0, max: 100, beginAtZero: true,
+          grid: { drawOnChartArea: false },
+          ticks: { color: C.acc, font: { size: 9 }, callback: function(v){ return v.toFixed(0) + '%'; } },
+          title: { display: true, text: 'B&M 비중 (%)', color: C.acc, font: { size: 9 } }
+        }
+      }
+    }
+  };
+
+  if (bmCharts.trend) bmCharts.trend.destroy();
+  bmCharts.trend = new Chart(cv.getContext('2d'), cfg);
+}
+
+// 그래프를 구성한 데이터 그대로. 기간 토글·통화 칩을 그래프와 함께 따라간다.
+// 단위는 기준 열의 지표명이 진다 → 셀에 단위를 붙이지 않는다.
+function renderBmTrendTable(){
+  var el = document.getElementById('bmTrendTable');
+  if (!el) return;
+  var data = bmTrendData();
+  if (!data.length){ el.innerHTML = '<div class="tbl-empty">표시할 데이터가 없습니다.</div>'; return; }
+
+  var rows = [
+    { label: curIsKrw() ? 'B&M (백만원)' : 'B&M (USD)',   fmt: function(d){ return fmtCurCell(d.bm); } },
+    { label: curIsKrw() ? '.COM (백만원)' : '.COM (USD)', fmt: function(d){ return fmtCurCell(d.com); } },
+    { label: curIsKrw() ? '전체 (백만원)' : '전체 (USD)', fmt: function(d){ return fmtCurCell(d.total); } },
+    { label: 'B&M 비중 (%)', fmt: function(d){ return d.share === null ? '-' : fmtPct(d.share, 1); } }
+  ];
+
+  var html = '<table class="ch-tbl no-total"><thead><tr><th>지표</th>';
+  data.forEach(function(d){ html += '<th>' + d.label + '</th>'; });
+  html += '</tr></thead><tbody>';
+  rows.forEach(function(r){
+    html += '<tr><td>' + r.label + '</td>';
+    data.forEach(function(d){
+      var v = r.fmt(d);
+      html += '<td' + (v === '-' ? ' class="dash"' : '') + '>' + v + '</td>';
+    });
+    html += '</tr>';
+  });
+  el.innerHTML = html + '</tbody></table>';
+}
+
+// ── 재고보유율 추이 ─────────────────────────────────────────────────────────
+// 경보선 80% 를 함께 그린다 (MJ 결정 2026-08-19 2차 — UNOVE 와 같은 값).
+// 🛑 annotation 플러그인은 이 페이지에 없다. 평평한 데이터셋 하나로 그린다
+//    (options.plugins.* 후행 대입은 옵션 프록시 재귀 setter 를 부른다 — 절대 쓰지 않는다).
+// 🛑 붉은 계열은 CI 레드 한 종류만 (MJ 결정 2026-08-16) → 경보선도 같은 레드를 점선으로 쓴다.
+function renderBmInStockChart(){
+  var cv = document.getElementById('bmInStockChart');
+  if (!cv) return;
+  var ws = D.bmWeek;
+  var t = document.getElementById('bmInStockTitle');
+  if (t) t.innerHTML = 'B&M 재고보유율 (매출 가중 IN-STOCK %)' + hdrNote(WEEKLY_ONLY_NOTE);
+  var vals = ws.map(function(w){ return w.inPct === null ? null : +(w.inPct * 100).toFixed(2); });
+
+  // 🛑 축을 0~100 으로 두면 실측이 90%대에 몰려 변화가 안 보인다 (UNOVE 도 65~100 으로 잘라 쓴다).
+  //    다만 하한을 65 로 **박지 않는다** — 실측이 그 아래로 내려가면 선이 잘린다.
+  //    실측 최솟값과 경보선을 둘 다 품는 5% 단위 눈금으로 데이터에서 만든다.
+  var seen = vals.filter(function(v){ return v !== null; });
+  var lo = 100;
+  if (seen.length) lo = Math.min.apply(null, seen);
+  lo = Math.min(lo, IN_STOCK_ALERT);                  // 경보선은 언제나 보이게
+  lo = Math.max(0, Math.floor((lo - 5) / 5) * 5);
+
+  var cfg = {
+    type: 'line',
+    data: {
+      labels: ws.map(function(w){ return bmWeekAxisLabel(w.week); }),
+      datasets: [{
+        label: 'In-Stock %',
+        data: vals,
+        borderColor: BM_INSTOCK_LINE, backgroundColor: 'transparent',
+        borderWidth: 2.2,
+        pointRadius: 3.2, pointHoverRadius: 5,
+        pointBackgroundColor: BM_INSTOCK_POINT, pointBorderColor: BM_INSTOCK_POINT,
+        fill: false, tension: 0, spanGaps: true, order: 1
+      }, {
+        label: '경보선 ' + IN_STOCK_ALERT + '%',
+        data: ws.map(function(){ return IN_STOCK_ALERT; }),
+        borderColor: C.bar, backgroundColor: 'transparent',
+        borderWidth: 1.4, borderDash: [5, 4],
+        pointRadius: 0, pointHoverRadius: 0, fill: false, tension: 0, order: 0
+      }]
+    },
+    // 경보선 이름표를 선 오른쪽 끝에 직접 얹는다 (UNOVE 배치).
+    // 🛑 annotation 플러그인은 이 페이지에 없다. config 안의 인라인 플러그인으로 그린다 —
+    //    생성된 차트에 options.plugins.* 를 후행 대입하면 옵션 프록시 재귀 setter 가 터진다.
+    plugins: [{
+      id: 'bmInStockAlertLabel',
+      afterDatasetsDraw: function(chart){
+        var y = chart.scales.y, area = chart.chartArea;
+        if (!y || !area) return;
+        var py = y.getPixelForValue(IN_STOCK_ALERT);
+        if (py < area.top || py > area.bottom) return;      // 축 밖이면 그리지 않는다
+        var c = chart.ctx;
+        c.save();
+        // ⚠️ canvas 의 ctx.font 는 축약형이 유일한 문법이다. CSS 의 `font:` 축약형 금지 규칙과 무관.
+        c.font = '700 9px Pretendard, Arial, sans-serif';
+        c.fillStyle = C.bar;
+        c.textAlign = 'right';
+        c.textBaseline = 'bottom';
+        c.fillText('경보선 ' + IN_STOCK_ALERT + '%', area.right - 3, py - 4);
+        c.restore();
+      }
+    }],
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { right: 6 } },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        // 경보선 이름표를 선 위에 직접 그리므로 범례를 따로 두지 않는다 (UNOVE 와 같다).
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#fff', titleColor: '#222', bodyColor: '#555',
+          borderColor: '#E0E0E4', borderWidth: 1, padding: 10,
+          callbacks: {
+            title: sellTooltipTitle(),
+            label: function(ctx){
+              if (ctx.parsed.y === null || ctx.parsed.y === undefined) return null;
+              if (ctx.datasetIndex === 1) return null;      // 경보선은 툴팁에 올리지 않는다
+              return '  In-Stock: ' + fmtPct(ctx.parsed.y)
+                   + (ctx.parsed.y < IN_STOCK_ALERT ? '  ⚠ 경보선 아래' : '');
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#888', font: { size: 9 } } },
+        y: {
+          type: 'linear', position: 'left', min: lo, max: 100,
+          grid: { color: 'rgba(0,0,0,0.07)' },
+          ticks: { color: '#888', font: { size: 9 }, stepSize: 5,
+                   callback: function(v){ return v.toFixed(0) + '%'; } }
+        }
+      }
+    }
+  };
+  if (bmCharts.inStock) bmCharts.inStock.destroy();
+  bmCharts.inStock = new Chart(cv.getContext('2d'), cfg);
+}
+
+// ── .COM 재고(On-Hand) · 매출 대비 ──────────────────────────────────────────
+function renderBmComInvChart(){
+  var cv = document.getElementById('bmComInvChart');
+  if (!cv) return;
+  var ws = D.bmWeek;
+  var t = document.getElementById('bmComInvTitle');
+  if (t) t.innerHTML = '.COM 재고 (ON-HAND) · ' + (curIsKrw() ? '매출 (백만원)' : '매출 (USD)')
+                     + hdrNote(WEEKLY_ONLY_NOTE);
+
+  var cfg = {
+    type: 'bar',
+    data: {
+      labels: ws.map(function(w){ return bmWeekAxisLabel(w.week); }),
+      // UNOVE 배치 그대로 계열 2개 — 재고(units) 막대 + .COM 매출 라인.
+      // 🛑 입고대기(On-Order) 막대는 뺐다. UNOVE 도 2계열이고, 값은 위 KPI 카드
+      //    「.COM 재고 → 입고대기 N units」가 이미 지고 있다.
+      datasets: [
+        { label: '재고(units)', type: 'bar',
+          data: ws.map(function(w){ return w.comOh; }),
+          backgroundColor: BM_COMINV_BAR, hoverBackgroundColor: BM_COMINV_BAR,
+          borderWidth: 0, yAxisID: 'yU', order: 3, barPercentage: 0.72, categoryPercentage: 0.8 },
+        { label: '.COM 매출', type: 'line',
+          data: ws.map(function(w){ return curVal(w.com); }),
+          borderColor: BM_COMINV_LINE, backgroundColor: 'transparent',
+          borderWidth: 2, pointRadius: 2.6, pointHoverRadius: 5,
+          pointBackgroundColor: BM_COMINV_LINE, pointBorderColor: BM_COMINV_LINE,
+          fill: false, tension: 0, yAxisID: 'yS', order: 0 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        // UNOVE 와 같은 자리 — 오른쪽 위 가로 범례
+        legend: { display: true, position: 'top', align: 'end',
+                  labels: { boxWidth: 9, boxHeight: 9, font: { size: 9 }, color: '#777',
+                            padding: 12, usePointStyle: false } },
+        tooltip: {
+          backgroundColor: '#fff', titleColor: '#222', bodyColor: '#555',
+          borderColor: '#E0E0E4', borderWidth: 1, padding: 10,
+          callbacks: {
+            title: sellTooltipTitle(),
+            label: function(ctx){
+              var v = ctx.parsed.y;
+              if (v === null || v === undefined) return null;
+              if (ctx.dataset.label === '.COM 매출') return '  .COM 매출: ' + fmtCurPlotted(v);
+              return '  재고: ' + fmtInt(v) + ' units';
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#888', font: { size: 9 } } },
+        yU: {
+          type: 'linear', position: 'left', min: 0, beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,0.07)' },
+          ticks: { color: '#888', font: { size: 9 },
+                   callback: function(v){ return (v / 1000).toFixed(0) + 'K'; } }
+        },
+        yS: {
+          type: 'linear', position: 'right', min: 0, beginAtZero: true,
+          grid: { drawOnChartArea: false },
+          ticks: { color: BM_COMINV_LINE, font: { size: 9 }, callback: curTick }
+        }
+      }
+    }
+  };
+  if (bmCharts.comInv) bmCharts.comInv.destroy();
+  bmCharts.comInv = new Chart(cv.getContext('2d'), cfg);
+}
+
+// ── SKU별 재고 건전성 표 ────────────────────────────────────────────────────
+// 🛑 `WOS`·`.COM WOS`·`In-Stock%` 는 세포라 원본에 텍스트(`/0`·`-`)가 섞여 있다.
+//    파서가 null 로 만들어 두었고 여기서는 '-' 로 그린다. 0 으로 찍지 않는다.
+// 🛑 UNOVE 의 「WOS 4주 미만」 필터는 넣지 않는다 (MJ 결정 2026-08-19).
+function renderBmSkuTable(){
+  var el = document.getElementById('bmSkuTable');
+  if (!el) return;
+  var b = bmBaseWeeks();
+  var wk = b.cur ? b.cur.week : (D.bmInv.length ? D.bmInv[D.bmInv.length - 1].week : null);
+  var rows = D.bmInv.filter(function(r){ return r.week === wk; })
+                    .sort(function(a,b2){ return b2.ttl - a.ttl; });
+
+  // 🛑 제목 뒤에 기간을 달지 않는다 (MJ 결정 2026-08-19 3차). 기준 주차는 표 안의
+  //    「당주」 열 이름과 툴팁이 이미 말한다 — 제목에까지 붙이면 제목처럼 읽혀 오해를 산다.
+  var hdr = document.getElementById('bmSkuHdr');
+  if (hdr) hdr.innerHTML = 'SKU별 재고 건전성'
+    + hdrNote(WEEKLY_ONLY_NOTE);
+
+  if (!rows.length){ el.innerHTML = '<div class="tbl-empty">표시할 SKU가 없습니다.</div>'; return; }
+
+  // 「주요 SKU」 = 최신 주차 TTL매출 상위 6종, 단 **닷컴전용은 제외** (MJ 결정 2026-08-19, C안).
+  // 🛑 닷컴전용은 매장에 배치되지 않아 In-Stock%·품절매장·매장재고·DC재고·WOS 가 전부
+  //    «-»/0 이다. TTL매출만으로 뽑으면 이 표(매장 재고 건전성)의 절반이 재고 신호를
+  //    하나도 못 주는 행으로 채워진다 — 실측 W3 기준 상위 6종 중 3종이 그랬다.
+  //    정렬 기준(TTL매출)은 그대로 두고 **후보에서만** 뺀다. 「전체 SKU」에는 그대로 나온다.
+  var shown;
+  if (bmSkuScope === 'top6'){
+    shown = rows.filter(function(r){ return !isDotcomOnly(r.sku); }).slice(0, 6);
+    // 취급 SKU 가 전부 닷컴전용인 상황도 가능하다 — 빈 표를 그리지 않고 안내한다.
+    if (!shown.length){
+      el.innerHTML = '<div class="tbl-empty">매장에 배치된 SKU가 없습니다 (전부 닷컴전용). '
+                   + '「전체 SKU」로 보세요.</div>';
+      return;
+    }
+  } else {
+    shown = rows;
+  }
+
+  var cols = ['SKU', 'SKU ID', '단가', 'In-Stock%', '품절매장', '매장재고', 'DC재고', 'WOS',
+              '.COM OH', '.COM OO', '.COM WOS',
+              curIsKrw() ? 'B&M 당주 (백만원)' : 'B&M 당주 (USD)',
+              curIsKrw() ? '.COM 당주 (백만원)' : '.COM 당주 (USD)'];
+
+  var html = '<table class="ch-tbl wide-first"><thead><tr>'
+           + cols.map(function(c){ return '<th>' + c + '</th>'; }).join('')
+           + '</tr></thead><tbody>';
+
+  shown.forEach(function(r){
+    // 🛑 닷컴전용 SKU 는 매장 배치가 없어 매장재고·In-Stock% 가 구조적으로 0·«-» 다.
+    //    배지가 없으면 재고 사고로 오독된다.
+    // 🛑 닷컴전용은 매장 배치가 없어 「품절매장 0」이 아니라 **해당 없음**이다 (MJ 지적 2026-08-19).
+    //    0으로 두면 「한 곳도 안 빠졌다 = 재고가 완벽하다」로 읽힌다. In-Stock% 와 같은 «-» 로 둔다.
+    html += '<tr>' + sellSkuCell(r.sku, r.name)
+          + '<td>' + r.sku + '</td>'
+          + '<td>' + fmtUsd0(r.price) + '</td>'
+          + cellOr(r.inPct, function(v){ return pctFrac(v, 1); })
+          + cellOr(isDotcomOnly(r.sku) ? null : r.oos, fmtInt)
+          + '<td>' + fmtInt(r.inv) + '</td>'
+          + '<td>' + fmtInt(r.dcInv) + '</td>'
+          + cellOr(r.wos, function(v){ return v.toFixed(1); })
+          + '<td>' + fmtInt(r.comOh) + '</td>'
+          + '<td>' + fmtInt(r.comOo) + '</td>'
+          + cellOr(r.comWos, function(v){ return v.toFixed(1); })
+          + '<td>' + fmtCurCell(r.bm) + '</td>'
+          + '<td>' + fmtCurCell(r.com) + '</td></tr>';
+  });
+
+  // 합계 — In-Stock% 는 단순 평균이 아니라 **B&M 매출 가중**이다 (주간요약 정의와 같다).
+  var t = { oos:0, inv:0, dc:0, oh:0, oo:0, bm:0, com:0, w:0, wp:0 };
+  shown.forEach(function(r){
+    if (!isDotcomOnly(r.sku)) t.oos += r.oos;      // 닷컴전용은 품절매장 개념 자체가 없다
+    t.inv += r.inv; t.dc += r.dcInv; t.oh += r.comOh; t.oo += r.comOo;
+    t.bm += r.bm; t.com += r.com;
+    if (r.inPct !== null && r.doors > 0 && r.bm > 0){ t.w += r.bm; t.wp += r.inPct * r.bm; }
+  });
+  html += '<tr><td>TOTAL</td><td class="dash">-</td><td class="dash">-</td>'
+        + (t.w > 0 ? '<td>' + pctFrac(t.wp / t.w, 1) + '</td>' : '<td class="dash">-</td>')
+        + '<td>' + fmtInt(t.oos) + '</td><td>' + fmtInt(t.inv) + '</td><td>' + fmtInt(t.dc) + '</td>'
+        + '<td class="dash">-</td>'
+        + '<td>' + fmtInt(t.oh) + '</td><td>' + fmtInt(t.oo) + '</td><td class="dash">-</td>'
+        + '<td>' + fmtCurCell(t.bm) + '</td><td>' + fmtCurCell(t.com) + '</td></tr>';
+
+  el.innerHTML = html + '</tbody></table>';
+}
+
+// ── 매장별 실적 · 재고 ──────────────────────────────────────────────────────
+// 🛑 `.COM` 물류센터 5곳(dc:true)은 매장 집계에서 뺀다 — 넣으면 `.COM` 매출과 이중 계상된다.
+// 🛑 매장 등급(Tier)·등급 필터는 이번 라운드에서 넣지 않는다 (MJ 결정 2026-08-19) —
+//    Dr.FORHAIR 에 아직 매장 등급 체계가 없다. 표는 필터 없이 전체 목록 하나로 나간다.
+// 권역 목록 — 매출이 발생한 매장의 권역만 후보로 올린다 (물류센터 제외).
+// 🛑 목록을 코드에 박지 않는다. 새 권역이 들어오면 저절로 옵션이 는다.
+function bmRegionList(){
+  var seen = {};
+  D.bmStore.forEach(function(r){
+    if (r.dc || !r.sales) return;
+    seen[r.region || '미매핑'] = 1;
+  });
+  return Object.keys(seen).sort();
+}
+function buildBmRegionOptions(){
+  fillOptions('ddPanel-bmRegion', 'bmRegion',
+    bmRegionList().map(function(g){ return { value:g, label:g }; }),
+    function(){ refreshBmStores(); });
+}
+// 선택은 OR — 고른 권역 중 하나라도 맞으면 통과. 비어 있으면 전체.
+function bmRegionOk(region){
+  if (selBmRegions.size === 0) return true;
+  return selBmRegions.has(region || '미매핑');
+}
+
+function bmStoreRollup(){
+  var byNo = {};
+  D.bmStore.forEach(function(r){
+    if (r.dc) return;
+    if (!bmRegionOk(r.region)) return;
+    if (!byNo[r.no]) byNo[r.no] = { no:r.no, name:r.name, region:r.region, byWeek:{}, total:0 };
+    var s = byNo[r.no];
+    s.byWeek[r.week] = (s.byWeek[r.week] || 0) + r.sales;
+    s.total += r.sales;
+    if (!s.name && r.name) s.name = r.name;
+    if (!s.region && r.region) s.region = r.region;
+  });
+  return Object.keys(byNo).map(function(k){ return byNo[k]; });
+}
+
+function renderBmRegionChart(){
+  var cv = document.getElementById('bmRegionChart');
+  if (!cv) return;
+  var b = bmBaseWeeks();
+  var wk = b.cur ? b.cur.week : null;
+  var t  = document.getElementById('bmRegionTitle');
+  // 기준 주차는 데이터의 마지막 주차에서 파생 — 새 주차가 들어오면 저절로 바뀐다.
+  if (t) t.innerHTML = '권역별 매장당 주간매출'
+    + hdrNote(WEEKLY_ONLY_NOTE);
+
+  // 당주 매출이 발생한 매장만 센다 — 미판매 매장을 분모에 넣으면 매장당 매출이 눌린다.
+  // 🛑 권역 드롭다운은 **아래 매장 표에만** 건다 (MJ 결정 2026-08-19 3차).
+  //    이 차트는 권역끼리 비교하는 그림이라 한 권역만 남기면 비교 대상이 사라진다.
+  var byReg = {};
+  D.bmStore.forEach(function(r){
+    if (r.dc || r.week !== wk || !(r.sales > 0)) return;
+    var g = r.region || '미매핑';
+    if (!byReg[g]) byReg[g] = { sales:0, doors:0 };
+    byReg[g].sales += r.sales; byReg[g].doors += 1;
+  });
+  var regs = Object.keys(byReg)
+    .map(function(g){ return { region:g, spd: byReg[g].sales / byReg[g].doors, doors: byReg[g].doors }; })
+    .sort(function(a,b2){ return b2.spd - a.spd; });
+
+  var cfg = {
+    type: 'bar',
+    data: {
+      labels: regs.map(function(r){ return r.region; }),
+      datasets: [{
+        label: '매장당 주간매출',
+        data: regs.map(function(r){ return curVal(r.spd); }),
+        backgroundColor: regs.map(function(r, i){ return hexToRgba(REGION_COLORS[i % REGION_COLORS.length], 0.85); }),
+        hoverBackgroundColor: regs.map(function(r, i){ return REGION_COLORS[i % REGION_COLORS.length]; }),
+        borderWidth: 0, barPercentage: 0.6, categoryPercentage: 0.85
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#fff', titleColor: '#222', bodyColor: '#555',
+          borderColor: '#E0E0E4', borderWidth: 1, padding: 10,
+          callbacks: { label: function(ctx){
+            var r = regs[ctx.dataIndex];
+            return '  ' + fmtCurPlotted(ctx.parsed.y) + ' · 판매매장 ' + fmtInt(r.doors) + '곳';
+          } }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(0,0,0,0.07)' },
+             ticks: { color: '#888', font: { size: 9 }, maxRotation: 0, minRotation: 0, autoSkip: false } },
+        y: { type: 'linear', position: 'left', min: 0, beginAtZero: true,
+             grid: { color: 'rgba(0,0,0,0.07)' },
+             ticks: { color: '#888', font: { size: 9 }, callback: curTick },
+             title: { display: true, text: curAxisTitle(), color: C.sub, font: { size: 9 } } }
+      }
+    }
+  };
+  if (bmCharts.region) bmCharts.region.destroy();
+  bmCharts.region = new Chart(cv.getContext('2d'), cfg);
+}
+
+function renderBmStoreTable(){
+  var el = document.getElementById('bmStoreTable');
+  if (!el) return;
+  var keys = bmWeekKeys();
+  var b = bmBaseWeeks();
+  var wk = b.cur ? b.cur.week : (keys.length ? keys[keys.length - 1] : null);
+  var pk = b.prev ? b.prev.week : (keys.length >= 2 ? keys[keys.length - 2] : null);
+
+  // 최근 4주 — 데이터가 4주에 못 미치면 있는 만큼만 쓴다 (「N개 구간」 N=0 가드 포함).
+  var recentKeys = keys.slice(-4);
+
+  var hdr = document.getElementById('bmStoreHdr');
+  if (hdr) hdr.innerHTML = '매장별 실적 · 재고' + hdrNote(WEEKLY_ONLY_NOTE);
+
+  var stores = bmStoreRollup().filter(function(s){ return s.total !== 0; });
+  if (!stores.length){
+    el.innerHTML = '<div class="tbl-empty">'
+      + (selBmRegions.size ? '고른 권역에 매출이 발생한 매장이 없습니다.' : '매출이 발생한 매장이 없습니다.')
+      + '</div>';
+    return;
+  }
+
+  stores.sort(function(a, b2){ return (b2.byWeek[wk] || 0) - (a.byWeek[wk] || 0); });
+
+  var html = '<table class="ch-tbl wide-first"><thead><tr>'
+           + '<th>매장</th><th>권역</th><th>추이</th>'
+           + '<th>' + (recentKeys.length ? '최근 ' + recentKeys.length + '주 주당' : '주당 평균') + '</th>'
+           + '<th>' + (wk ? bmWeekCellLabel(wk) : '당주') + '</th><th>WoW</th>'
+           + '</tr></thead><tbody>';
+
+  var tCur = 0, tAvg = 0;
+  stores.forEach(function(s){
+    var series = keys.map(function(k){ return s.byWeek[k] || 0; });
+    var cur    = s.byWeek[wk] || 0;
+    var prev   = pk ? (s.byWeek[pk] || 0) : null;
+    var avg    = recentKeys.length
+      ? recentKeys.reduce(function(t, k){ return t + (s.byWeek[k] || 0); }, 0) / recentKeys.length
+      : null;
+    tCur += cur; if (avg !== null) tAvg += avg;
+
+    var wow = '<td class="dash">-</td>';
+    if (prev !== null && prev !== 0){
+      var d = (cur - prev) / prev * 100;
+      wow = '<td class="' + (d >= 0 ? 'wow-up' : 'wow-dn') + '">' + (d >= 0 ? '+' : '') + d.toFixed(1) + '%</td>';
+    }
+    html += '<tr><td title="' + s.name + '">' + s.name + '</td>'
+          + '<td style="text-align:left;">' + (s.region || '미매핑') + '</td>'
+          + '<td class="spark-td">' + sparkline(series, C.bar) + '</td>'
+          + (avg === null ? '<td class="dash">-</td>' : '<td>' + fmtCurCell(avg) + '</td>')
+          + '<td>' + fmtCurCell(cur) + '</td>' + wow + '</tr>';
+  });
+
+  html += '<tr><td>TOTAL — ' + fmtInt(stores.length) + '곳</td><td class="dash">-</td><td class="dash">-</td>'
+        + '<td>' + fmtCurCell(tAvg) + '</td><td>' + fmtCurCell(tCur) + '</td><td class="dash">-</td></tr>';
+  el.innerHTML = html + '</tbody></table>';
+}
+
+// ── B&M 탭 컨트롤 ───────────────────────────────────────────────────────────
+function setBmPeriod(btn, pd){
+  if (bmPeriod === pd) return;
+  bmPeriod = pd;
+  var bs = document.querySelectorAll('[data-bm-period]');
+  for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('active', bs[i].dataset.bmPeriod === pd);
+  renderBmTrendChart();
+  renderBmTrendTable();
+}
+function toggleBmSeries(btn, key){
+  bmShow[key] = !bmShow[key];
+  btn.classList.toggle('active', bmShow[key]);
+  renderBmTrendChart();
+}
+function setBmSkuScope(btn, scope){
+  if (bmSkuScope === scope) return;
+  bmSkuScope = scope;
+  var bs = document.querySelectorAll('[data-bm-scope]');
+  for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('active', bs[i].dataset.bmScope === scope);
+  renderBmSkuTable();
+}
+// 🛑 권역 필터는 **매장 표 하나만** 다시 그린다 (MJ 결정 2026-08-19 3차).
+//    위 KPI·SKU 표는 물론이고 권역별 차트도 건드리지 않는다 — 그 차트는 권역끼리
+//    비교하는 그림이라 한 권역만 남기면 비교 자체가 성립하지 않는다.
+function refreshBmStores(){
+  if (!bmHasData()) return;
+  renderBmStoreTable();
+}
+
+var _bmBooted = false;
+function refreshBm(force){
+  if (_bmBooted && !force) return;
+  var body  = document.getElementById('bmBody');
+  var empty = document.getElementById('bmEmpty');
+  if (!bmHasData()){
+    if (body)  body.style.display = 'none';
+    if (empty){ empty.style.display = ''; empty.textContent = 'B&M · 재고 데이터가 아직 없습니다.'; }
+    return;
+  }
+  if (body)  body.style.display = '';
+  if (empty) empty.style.display = 'none';
+  _bmBooted = true;
+  renderBmKPI();
+  renderBmTrendChart();
+  renderBmTrendTable();
+  renderBmInStockChart();
+  renderBmComInvChart();
+  renderBmSkuTable();
+  renderBmRegionChart();
+  renderBmStoreTable();
+  renderSheetWarnings('bmNote', ['Raw_BM', 'Raw_실매출', '주차별요약']);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  SKU 실매출 탭
+// ═══════════════════════════════════════════════════════════════════════════════
+var SKU_KPI_NOTES = {
+  recent: '선택한 기간 단위의 마지막 구간 값입니다. 비교 배지는 그 직전 구간 대비 증감이며, 직전 구간이 없으면 그리지 않습니다.',
+  count:  '선택한 범위·채널에서 실제로 판매가 발생한(값 > 0) SKU 종수입니다. 취급 SKU 수가 아닙니다.',
+  price:  '평균 판매단가 = 선택 범위의 매출 ÷ 판매수량 (USD). 정가가 아니라 실제 판매 평균입니다.',
+  sum:    '선택한 범위·채널의 누적 합계입니다. 세포라 실매출 기준이라 브랜드포털 매출과는 값이 다릅니다.'
+};
+
+function skuHasData(){ return D.skuDaily.length > 0; }
+
+// 범위 프리셋 — 데이터의 마지막 달을 기준으로 N개월을 남긴다.
+function skuRangeRows(){
+  var rows = D.skuDaily;
+  if (!rows.length || skuRange <= 0) return rows;
+  var maxM = rows.reduce(function(m, r){ return r.month > m ? r.month : m; }, rows[0].month);
+  var y = parseInt(maxM.slice(0, 4), 10), mo = parseInt(maxM.slice(5, 7), 10) - (skuRange - 1);
+  while (mo < 1){ mo += 12; y -= 1; }
+  var floor = y + '-' + (mo < 10 ? '0' : '') + mo;
+  return rows.filter(function(r){ return r.month >= floor; });
+}
+// 채널 토글 — 통합/B&M/.COM
+function skuSales(r){ return skuChannel === 'bm' ? r.bm  : (skuChannel === 'com' ? r.com  : r.total); }
+function skuUnits(r){ return skuChannel === 'bm' ? r.bmU : (skuChannel === 'com' ? r.comU : r.totalU); }
+// 지표 토글 — 매출/판매수량
+function skuVal(r){ return skuMetric === 'units' ? skuUnits(r) : skuSales(r); }
+function skuMetricLabel(){ return skuMetric === 'units' ? '판매수량' : '매출'; }
+// 차트에 얹을 값 — 매출만 선택 통화로 환산한다 (수량은 통화와 무관하다)
+function skuPlot(v){ return skuMetric === 'units' ? v : curVal(v); }
+function skuFmtPlotted(v){ return skuMetric === 'units' ? fmtInt(v) : fmtCurPlotted(v); }
+function skuFmtCell(v){ return skuMetric === 'units' ? fmtInt(v) : fmtCurCell(v); }
+function skuAxisTitle(){
+  return skuMetric === 'units' ? '판매수량 (units)' : curAxisTitle();
+}
+
+function renderSkuKPI(){
+  var el = document.getElementById('skuKpiRow');
+  if (!el) return;
+  var rows    = skuRangeRows();
+  var periods = sellPeriods(rows, skuPeriod);
+  if (!periods.length){ el.innerHTML = ''; return; }
+  var lastK = periods[periods.length - 1].key;
+  var prevK = periods.length >= 2 ? periods[periods.length - 2].key : null;
+
+  function agg(filterFn){
+    var s = 0, u = 0, skus = {};
+    rows.forEach(function(r){
+      if (filterFn && !filterFn(r)) return;
+      var v = skuVal(r);
+      s += skuSales(r); u += skuUnits(r);
+      if (v > 0) skus[r.sku] = 1;
+    });
+    return { sales:s, units:u, skus: Object.keys(skus).length, val: skuMetric === 'units' ? u : s };
+  }
+  var cur   = agg(function(r){ return sellPeriodKey(r, skuPeriod) === lastK; });
+  var prev  = prevK ? agg(function(r){ return sellPeriodKey(r, skuPeriod) === prevK; }) : null;
+  var range = agg(null);
+
+  var badge = null;
+  if (prev && prev.val !== 0){
+    var d = (cur.val - prev.val) / prev.val * 100;
+    badge = { badge: (d >= 0 ? '▲ +' : '▼ ') + d.toFixed(1) + '%', cls: d >= 0 ? 'up' : 'dn' };
+  }
+
+  var dates = rows.map(function(r){ return r.date; }).sort();
+  var rangeLbl = dates.length ? dates[0] + ' ~ ' + dates[dates.length - 1] : '—';
+  var aov = range.units > 0 ? range.sales / range.units : null;
+  var cmpName = sellCmpName(skuPeriod);
+
+  var cards = [
+    { key:'recent', label:'최근 ' + sellPeriodKeyLabel(lastK, skuPeriod) + ' ' + skuMetricLabel(),
+      val: skuFmtCell(cur.val) === '' ? '-' : (skuMetric === 'units' ? fmtInt(cur.val) : fmtCurFull(cur.sales)),
+      sub: skuMetric === 'units' ? '판매수량 기준' : (curIsKrw() ? fmtUsd(cur.sales) : '<span style="color:#888;font-weight:700;">₩</span> ' + fmtKrw(cur.sales).slice(1)),
+      d: badge,
+      vs: prevK ? 'vs ' + (skuMetric === 'units' ? fmtInt(prev.val) : fmtCurFull(prev.sales))
+                + '  ' + cmpName + ' ' + sellPeriodKeyLabel(prevK, skuPeriod) : '' },
+    { key:'count', label:'판매 SKU 수', val: fmtInt(range.skus) + ' <span style="font-size:12px;color:#9ca3af;">종</span>',
+      sub: '선택 범위 실판매 기준', d: null, vs: '' },
+    { key:'price', label:'평균 판매단가', val: aov === null ? '-' : fmtUsd(aov),
+      sub: '매출 ÷ 판매수량', d: null, vs: '' },
+    { key:'sum', label:'합계', val: skuMetric === 'units' ? fmtInt(range.units) : fmtCurFull(range.sales),
+      sub: rangeLbl, d: null, vs: '' }
+  ];
+
+  el.innerHTML = cards.map(function(k){
+    return '<div class="kpi">'
+      + '<div class="kpi-header"><div class="kpi-label">' + k.label + '</div>'
+      + (k.d ? '<span class="kpi-badge ' + k.d.cls + '">' + k.d.badge + '</span>' : '') + '</div>'
+      + '<div class="kpi-value">' + k.val + '</div>'
+      + (k.sub ? '<div class="kpi-sub">' + k.sub + '</div>' : '')
+      + (k.vs ? '<div class="kpi-vs">' + k.vs + '</div>' : '')
+      + '<button class="kpi-info-btn" tabindex="-1" type="button">i</button>'
+      + '<div class="kpi-tooltip">' + SKU_KPI_NOTES[k.key] + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+// 상위 N SKU + 기타 — 계열이 18개를 넘으면 색이 서로 겹쳐 읽을 수 없다.
+function skuTopList(rows, n){
+  var byS = {};
+  rows.forEach(function(r){
+    if (!byS[r.sku]) byS[r.sku] = { sku:r.sku, name:r.name, val:0, sales:0, units:0 };
+    byS[r.sku].val   += skuVal(r);
+    byS[r.sku].sales += skuSales(r);
+    byS[r.sku].units += skuUnits(r);
+  });
+  var all = Object.keys(byS).map(function(k){ return byS[k]; })
+                  .sort(function(a, b){ return b.val - a.val; });
+  return { all: all, top: all.slice(0, n) };
+}
+
+function renderSkuMixChart(){
+  var cv = document.getElementById('skuMixChart');
+  if (!cv) return;
+  var rows    = skuRangeRows();
+  var periods = sellPeriods(rows, skuPeriod);
+  var t = document.getElementById('skuMixHdr');
+  if (t) t.textContent = 'SKU 구성 · ' + skuMetricLabel();
+
+  var lists = skuTopList(rows, SKU_COLORS.length);
+  var topKeys = lists.top.map(function(s){ return s.sku; });
+  var hasEtc  = lists.all.length > topKeys.length;
+
+  // pivot[sku][period]
+  var pivot = {};
+  rows.forEach(function(r){
+    var p = sellPeriodKey(r, skuPeriod);
+    var k = topKeys.indexOf(r.sku) >= 0 ? r.sku : '__etc';
+    if (!pivot[k]) pivot[k] = {};
+    pivot[k][p] = (pivot[k][p] || 0) + skuVal(r);
+  });
+
+  var ds = lists.top.map(function(s, i){
+    return {
+      label: sellSkuName(s.sku, s.name), stack: 'sku',
+      data: periods.map(function(p){ return skuPlot((pivot[s.sku] && pivot[s.sku][p.key]) || 0); }),
+      backgroundColor: hexToRgba(SKU_COLORS[i], 0.88), hoverBackgroundColor: SKU_COLORS[i],
+      borderWidth: 0, barPercentage: 0.6, categoryPercentage: 0.85
+    };
+  });
+  if (hasEtc) ds.push({
+    label: '기타', stack: 'sku',
+    data: periods.map(function(p){ return skuPlot((pivot.__etc && pivot.__etc[p.key]) || 0); }),
+    backgroundColor: hexToRgba(SKU_ETC_COLOR, 0.88), hoverBackgroundColor: SKU_ETC_COLOR,
+    borderWidth: 0, barPercentage: 0.6, categoryPercentage: 0.85
+  });
+
+  var isDaily = skuPeriod === 'daily';
+  var cfg = {
+    type: 'bar',
+    data: { labels: periods.map(function(p){ return sellPeriodAxis(p.key, skuPeriod); }), datasets: ds },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#fff', titleColor: '#222', bodyColor: '#555',
+          borderColor: '#E0E0E4', borderWidth: 1, padding: 10,
+          // 계열이 11개라 전부 띄우면 툴팁이 화면을 덮는다 → 값이 0인 계열은 숨긴다
+          filter: function(ctx){ return ctx.parsed.y !== 0; },
+          callbacks: {
+            title: sellTooltipTitle(),
+            label: function(ctx){
+              return '  ' + ctx.dataset.label + ': ' + skuFmtPlotted(ctx.parsed.y);
+            }
+          }
+        }
+      },
+      scales: {
+        x: { stacked: true, grid: { color: 'rgba(0,0,0,0.07)' },
+             ticks: { color: '#888', font: { size: 9 },
+                      maxRotation: isDaily ? 90 : 0, minRotation: isDaily ? 90 : 0, autoSkip: false } },
+        // ⚠️ 축은 0에서 자른다. 음수(반품)는 아래 순위·채널 구성 표에 실제 값으로 남는다.
+        y: { stacked: true, type: 'linear', position: 'left', min: 0, beginAtZero: true,
+             grid: { color: 'rgba(0,0,0,0.07)' },
+             ticks: { color: '#888', font: { size: 9 },
+                      callback: skuMetric === 'units'
+                        ? function(v){ return v >= 1000 ? (v / 1000).toFixed(0) + 'K' : v; }
+                        : curTick },
+             title: { display: true, text: skuAxisTitle(), color: '#666', font: { size: 9 } } }
+      }
+    }
+  };
+  if (skuMixChart) skuMixChart.destroy();
+  skuMixChart = new Chart(cv.getContext('2d'), cfg);
+
+  var leg = document.getElementById('skuMixLeg');
+  if (leg){
+    leg.innerHTML = ds.length
+      ? ds.map(function(d, i){
+          var col = i < lists.top.length ? SKU_COLORS[i] : SKU_ETC_COLOR;
+          return '<div class="leg"><div class="leg-dot" style="background:' + col + ';"></div>'
+               + '<span title="' + d.label + '">' + d.label + '</span></div>';
+        }).join('')
+      : '<div class="split-empty">표시할 SKU가 없습니다.</div>';
+  }
+}
+
+// ── SKU 순위 (상위 12) ──────────────────────────────────────────────────────
+function renderSkuRankTable(){
+  var el = document.getElementById('skuRankTable');
+  if (!el) return;
+  var rows    = skuRangeRows();
+  var periods = sellPeriods(rows, skuPeriod);
+  if (!periods.length){ el.innerHTML = '<div class="tbl-empty">표시할 데이터가 없습니다.</div>'; return; }
+  var lastK = periods[periods.length - 1].key;
+
+  // 🛑 제목에 기간을 달지 않는다 (MJ 결정 2026-08-19 3차). 어느 구간인지는
+  //    바로 위 기간 토글이 이미 말하고, 값 열 이름과 툴팁이 받쳐 준다.
+  var hdr = document.getElementById('skuRankHdr');
+  if (hdr) hdr.textContent = 'SKU 순위';
+
+  // 순위는 마지막 구간 값 기준, 스파크라인은 선택 범위 전 구간
+  var byS = {};
+  rows.forEach(function(r){
+    if (!byS[r.sku]) byS[r.sku] = { sku:r.sku, name:r.name, cur:0, series:{}, price:0 };
+    var s = byS[r.sku];
+    var p = sellPeriodKey(r, skuPeriod);
+    s.series[p] = (s.series[p] || 0) + skuVal(r);
+    if (p === lastK) s.cur += skuVal(r);
+  });
+  // 단가는 `Raw_BM재고` 의 `정가` 를 정본으로 쓴다 (실매출 탭에는 단가 열이 없다)
+  var priceBySku = {};
+  D.bmInv.forEach(function(r){ if (r.price) priceBySku[r.sku] = r.price; });
+
+  var ranked = Object.keys(byS).map(function(k){ return byS[k]; })
+    .sort(function(a, b){ return b.cur - a.cur; }).slice(0, 12);
+  if (!ranked.length){ el.innerHTML = '<div class="tbl-empty">표시할 SKU가 없습니다.</div>'; return; }
+
+  var totCur = 0;
+  Object.keys(byS).forEach(function(k){ totCur += byS[k].cur; });
+
+  var valHdr = skuMetric === 'units' ? '판매수량' : (curIsKrw() ? '매출 (백만원)' : '매출 (USD)');
+  var html = '<table class="ch-tbl wide-first"><thead><tr>'
+           + '<th>SKU</th><th>순위</th><th>SKU번호</th><th>단가</th><th>추이</th>'
+           + '<th>' + valHdr + '</th><th>비중</th></tr></thead><tbody>';
+
+  ranked.forEach(function(s, i){
+    var series = periods.map(function(p){ return s.series[p.key] || 0; });
+    var pr = priceBySku[s.sku];
+    html += '<tr>' + sellSkuCell(s.sku, s.name)
+          + '<td>' + (i + 1) + '</td><td>' + s.sku + '</td>'
+          + (pr ? '<td>' + fmtUsd0(pr) + '</td>' : '<td class="dash">-</td>')
+          + '<td class="spark-td">' + sparkline(series, SKU_COLORS[i % SKU_COLORS.length]) + '</td>'
+          + '<td>' + skuFmtCell(s.cur) + '</td>'
+          + (totCur > 0 ? '<td>' + fmtPct(s.cur / totCur * 100, 1) + '</td>' : '<td class="dash">-</td>')
+          + '</tr>';
+  });
+  var shownSum = ranked.reduce(function(t, s){ return t + s.cur; }, 0);
+  html += '<tr><td>TOTAL — 상위 ' + ranked.length + '</td><td class="dash">-</td><td class="dash">-</td>'
+        + '<td class="dash">-</td><td class="dash">-</td>'
+        + '<td>' + skuFmtCell(shownSum) + '</td>'
+        + (totCur > 0 ? '<td>' + fmtPct(shownSum / totCur * 100, 1) + '</td>' : '<td class="dash">-</td>')
+        + '</tr>';
+  el.innerHTML = html + '</tbody></table>';
+}
+
+// ── 채널 구성 (상위 10) ─────────────────────────────────────────────────────
+// 🛑 이 표는 채널 토글과 무관하다 — 표 자체가 채널 분해다.
+// ⚠️ `기회손실` = 품절매장수 × (B&M 매출 ÷ 재고보유매장수). 「재고가 있었다면 그 매장들도
+//    같은 속도로 팔았을 것」이라는 추정치이며, 재고보유매장수가 0이면 계산하지 않는다('-').
+//    UNOVE 임계값을 빌려오지 않고 원본 열만으로 만든 값이다 (MJ 결정 2026-08-19).
+function renderSkuChannelTable(){
+  var el = document.getElementById('skuChanTable');
+  if (!el) return;
+  var rows    = skuRangeRows();
+  var periods = sellPeriods(rows, skuPeriod);
+  if (!periods.length){ el.innerHTML = '<div class="tbl-empty">표시할 데이터가 없습니다.</div>'; return; }
+  var lastK = periods[periods.length - 1].key;
+
+  var hdr = document.getElementById('skuChanHdr');
+  if (hdr) hdr.textContent = '채널 구성';
+
+  var byS = {};
+  rows.forEach(function(r){
+    if (sellPeriodKey(r, skuPeriod) !== lastK) return;
+    if (!byS[r.sku]) byS[r.sku] = { sku:r.sku, name:r.name, bm:0, com:0, total:0 };
+    byS[r.sku].bm += r.bm; byS[r.sku].com += r.com; byS[r.sku].total += r.total;
+  });
+
+  // 재고·기회손실은 주 단위 스냅샷(`Raw_BM재고`)에서 온다 — 기준 주차를 함께 표기한다.
+  var b = bmBaseWeeks();
+  var invWk = b.cur ? b.cur.week : null;
+  var inv = {};
+  D.bmInv.forEach(function(r){
+    if (invWk && r.week !== invWk) return;
+    inv[r.sku] = {
+      store: r.inv, com: r.comOh,
+      loss: (r.inDoors > 0 && r.oos > 0) ? r.oos * (r.bm / r.inDoors) : null
+    };
+  });
+
+  var ranked = Object.keys(byS).map(function(k){ return byS[k]; })
+    .sort(function(a, c){ return c.total - a.total; }).slice(0, 10);
+  if (!ranked.length){ el.innerHTML = '<div class="tbl-empty">표시할 SKU가 없습니다.</div>'; return; }
+
+  var u = curIsKrw() ? ' (백만원)' : ' (USD)';
+  // ⚠️ 재고·기회손실은 매출과 기준이 다르다 — 매출은 위 기간 토글 구간, 재고는 주 단위 스냅샷이다.
+  //    🛑 열 이름에 주차를 달지 않는다 (MJ 결정 2026-08-19 3차). 기준 차이는 툴팁이 진다.
+  var invTip = '재고는 최신 주차 스냅샷입니다 (세포라가 주간으로만 제공). '
+             + '왼쪽 매출 열의 기간과 기준이 다를 수 있습니다.';
+  var html = '<table class="ch-tbl wide-first"><thead><tr>'
+           + '<th>SKU</th><th>B&M' + u + '</th><th>.COM' + u + '</th><th>전체' + u + '</th>'
+           + '<th>B&M 비중</th>'
+           + '<th title="' + invTip + '">재고 B&M매장'+'</th>'
+           + '<th title="' + invTip + '">재고 .COM'+'</th>'
+           + '<th title="품절매장수 × (B&M 매출 ÷ 재고보유매장수) · ' + invTip + '">기회손실' + u + '</th>'
+           + '</tr></thead><tbody>';
+
+  var t = { bm:0, com:0, total:0, store:0, comInv:0, loss:0, lossN:0 };
+  ranked.forEach(function(s){
+    var iv = inv[s.sku] || { store:null, com:null, loss:null };
+    t.bm += s.bm; t.com += s.com; t.total += s.total;
+    if (iv.store !== null) t.store  += iv.store;
+    if (iv.com   !== null) t.comInv += iv.com;
+    if (iv.loss  !== null){ t.loss += iv.loss; t.lossN++; }
+    html += '<tr>' + sellSkuCell(s.sku, s.name)
+          + '<td>' + fmtCurCell(s.bm) + '</td><td>' + fmtCurCell(s.com) + '</td>'
+          + '<td>' + fmtCurCell(s.total) + '</td>'
+          + (s.total > 0 ? '<td>' + fmtPct(s.bm / s.total * 100, 1) + '</td>' : '<td class="dash">-</td>')
+          + cellOr(iv.store, fmtInt) + cellOr(iv.com, fmtInt)
+          + cellOr(iv.loss, fmtCurCell) + '</tr>';
+  });
+
+  var n = ranked.length;
+  html += '<tr class="sum"><td>합계</td><td>' + fmtCurCell(t.bm) + '</td><td>' + fmtCurCell(t.com) + '</td>'
+        + '<td>' + fmtCurCell(t.total) + '</td><td class="dash">-</td>'
+        + '<td>' + fmtInt(t.store) + '</td><td>' + fmtInt(t.comInv) + '</td>'
+        + (t.lossN ? '<td>' + fmtCurCell(t.loss) + '</td>' : '<td class="dash">-</td>') + '</tr>'
+        + '<tr class="sum"><td>평균 (SKU당)</td><td>' + fmtCurCell(t.bm / n) + '</td>'
+        + '<td>' + fmtCurCell(t.com / n) + '</td><td>' + fmtCurCell(t.total / n) + '</td>'
+        + '<td class="dash">-</td><td>' + fmtInt(t.store / n) + '</td><td>' + fmtInt(t.comInv / n) + '</td>'
+        + (t.lossN ? '<td>' + fmtCurCell(t.loss / t.lossN) + '</td>' : '<td class="dash">-</td>') + '</tr>'
+        + '<tr class="sum"><td>비중</td>'
+        + (t.total > 0
+            ? '<td>' + fmtPct(t.bm / t.total * 100, 1) + '</td><td>' + fmtPct(t.com / t.total * 100, 1) + '</td><td>100.0%</td>'
+            : '<td class="dash">-</td><td class="dash">-</td><td class="dash">-</td>')
+        + '<td class="dash">-</td><td class="dash">-</td><td class="dash">-</td><td class="dash">-</td></tr>';
+
+  el.innerHTML = html + '</tbody></table>';
+}
+
+// ── SKU 탭 컨트롤 ───────────────────────────────────────────────────────────
+function setSkuPeriod(btn, pd){
+  if (skuPeriod === pd) return;
+  skuPeriod = pd;
+  var bs = document.querySelectorAll('[data-sku-period]');
+  for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('active', bs[i].dataset.skuPeriod === pd);
+  refreshSku(true);
+}
+function setSkuRange(btn, months){
+  if (skuRange === months) return;
+  skuRange = months;
+  var bs = document.querySelectorAll('[data-sku-range]');
+  for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('active', +bs[i].dataset.skuRange === months);
+  refreshSku(true);
+}
+function setSkuChannel(btn, ch){
+  if (skuChannel === ch) return;
+  skuChannel = ch;
+  var bs = document.querySelectorAll('[data-sku-chan]');
+  for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('active', bs[i].dataset.skuChan === ch);
+  refreshSku(true);
+}
+function setSkuMetric(btn, m){
+  if (skuMetric === m) return;
+  skuMetric = m;
+  var bs = document.querySelectorAll('[data-sku-metric]');
+  for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('active', bs[i].dataset.skuMetric === m);
+  refreshSku(true);
+}
+
+var _skuBooted = false;
+function refreshSku(force){
+  if (_skuBooted && !force) return;
+  var body  = document.getElementById('skuBody');
+  var empty = document.getElementById('skuEmpty');
+  if (!skuHasData()){
+    if (body)  body.style.display = 'none';
+    if (empty){ empty.style.display = ''; empty.textContent = 'SKU 실매출 데이터가 아직 없습니다.'; }
+    return;
+  }
+  if (body)  body.style.display = '';
+  if (empty) empty.style.display = 'none';
+  _skuBooted = true;
+  renderSkuKPI();
+  renderSkuMixChart();
+  renderSkuRankTable();
+  renderSkuChannelTable();
+  renderSheetWarnings('skuNote', ['Raw_실매출', '주차별요약']);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 //  탭 전환 · 사이드바
 // ═══════════════════════════════════════════════════════════════════════════════
 function switchTab(tab){
@@ -2054,10 +3549,17 @@ function switchTab(tab){
   for (var i = 0; i < items.length; i++) items[i].classList.toggle('active', items[i].dataset.tab === tab);
   document.getElementById('tabMain').style.display    = tab === 'main' ? '' : 'none';
   document.getElementById('tabChannel').style.display = tab === 'channel' ? '' : 'none';
-  document.getElementById('pageTitle').textContent = tab === 'main' ? '통합 대시보드' : '유입 채널별';
+  document.getElementById('tabBm').style.display      = tab === 'bm' ? '' : 'none';
+  document.getElementById('tabSku').style.display     = tab === 'sku' ? '' : 'none';
+  document.getElementById('pageTitle').textContent = TAB_TITLES[tab] || TAB_TITLES.main;
+  // 🛑 탭에 들어올 때마다 강제 재렌더한다. 숨겨진 canvas 는 폭이 0이라
+  //    첫 렌더가 접혀 있으면 그대로 눌린 차트가 남는다.
   if (tab === 'channel') { try { refreshChannel(true); } catch(e){ console.warn(e); } }
   if (tab === 'main')    { try { refreshMain(true);    } catch(e){ console.warn(e); } }
+  if (tab === 'bm')      { try { refreshBm(true);      } catch(e){ console.warn(e); } }
+  if (tab === 'sku')     { try { refreshSku(true);     } catch(e){ console.warn(e); } }
 }
+var TAB_TITLES = { main:'통합 대시보드', channel:'유입 채널별', bm:'B&M · 재고', sku:'SKU 실매출' };
 function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('collapsed'); }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -2292,16 +3794,30 @@ function applyPayload(data){
   D.updatedAt  = data.updatedAt || null;
   D.servedFrom = data.servedFrom || null;
 
+  // 세포라 실매출 계열 — 옛 캐시 페이로드에는 없는 키다. 없으면 빈 배열로 두고
+  // 해당 탭은 「데이터가 아직 없습니다」 상태로 그린다 (통합·유입 탭은 그대로 돈다).
+  D.bmInv      = data.bmInv      || [];
+  D.bmStore    = data.bmStore    || [];
+  D.bmWeek     = data.bmWeek     || [];
+  D.bmWeeks    = data.bmWeeks    || [];
+  D.salesDaily = data.salesDaily || [];
+  D.salesWeek  = data.salesWeek  || [];
+  D.skuWeek    = data.skuWeek    || [];
+  D.skuDaily   = data.skuDaily   || [];
+  D.dcStoreNos = data.dcStoreNos || [];
+
   // 선택돼 있던 값이 새 데이터에 없으면 떨어뜨린다
   pruneSet(selWeeks,      D.weeks.map(function(w){ return w.key; }));
   pruneSet(selChWeeks,    D.weeks.map(function(w){ return w.key; }));
   pruneSet(selVsChans,  D.channels);
   pruneSet(selCvrChans, D.channels);
+  pruneSet(selBmRegions, bmRegionList());
 
   buildMainOptions();
   buildChMonthOptions();
   buildChWeekOptions();
   buildChChanOptions();
+  buildBmRegionOptions();
 
   document.getElementById('topMeta').textContent =
     (D.range.start ? D.range.start + ' ~ ' + D.range.end + ' · ' + D.range.days + '일' : '—')
@@ -2309,6 +3825,8 @@ function applyPayload(data){
 
   refreshMain(true);
   refreshChannel(true);
+  refreshBm(true);
+  refreshSku(true);
 }
 
 function pruneSet(set, allowed){

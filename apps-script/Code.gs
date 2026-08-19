@@ -31,7 +31,7 @@
 // 상태가 될 수 있다. 토큰 없이 /exec 를 호출하면 이 값이 돌아오므로
 // 밖에서 배포 상태를 바로 확인할 수 있다.
 // 🛑 Code.gs 를 고치면 이 값을 함께 올린다.
-var CODE_VERSION = '2026-08-16a';
+var CODE_VERSION = '2026-08-19b';
 
 // 이 배포가 실제로 거는 검사 목록. 토큰 없이 /exec 를 부르면 함께 돌아온다.
 // audience 가 빠져 있으면 옛 코드가 배포돼 있다는 뜻이다 (→ 새 버전으로 재배포).
@@ -76,14 +76,86 @@ var SHEET_SPEC = {
     tab: 'RAW_유입', cols: 17,
     required: ['Date', 'Last Touch Channel', 'Visits TY', 'Sales TY', 'Conversion TY',
                '년', '월', '주차', '주차앵커']
+  },
+
+  // ── B&M · 재고 계열 (주 단위 · 세포라 실매출 리포트) ────────────────────────
+  // 🛑🛑 **구글 시트의 열 이름 규칙 — 이걸 놓치면 값이 1500배로 틀린다.**
+  //     `이름 ($)` = 세포라 원본(USD)  ·  `이름`(평문) = 시트가 만든 **KRW 파생열(×1500)**
+  //     로컬 누적관리용 xlsx 에는 KRW 파생열이 아예 없어서 평문 이름이 곧 USD 였다.
+  //     그 파일만 보고 스펙을 짰다가 2026-08-19 배포 후 `Raw_BM재고` TTL 이 정확히
+  //     1500배(₩36,934,605)로 나왔다. col_() 은 완전 일치 + indexOf 라 조용히 KRW 열을 잡는다.
+  //     → **금액 열은 언제나 `($)` 붙은 쪽을 읽는다.** 수량·개수 열은 파생열이 없어 평문 그대로다.
+  bmInv: {
+    tab: 'Raw_BM재고', cols: 32,
+    required: ['주차', '주종료일', 'SKU', '제품명', '정가',
+               'B&M매출 ($)', '.COM매출 ($)', 'TTL매출 ($)',
+               '배치매장수', '재고보유매장수', 'InStock%', '품절매장수', '매장재고', 'DC재고',
+               'WOS', '.COM_OH', '.COM_OO', '.COM_WOS',
+               'YTD_B&M ($)', 'YTD_COM ($)', 'YTD_전체 ($)']
+  },
+  bmStore: {
+    tab: 'Raw_BM매장', cols: 14,
+    required: ['주차', '주종료일', '매장번호', '매장명', '주간매출', '주간수량',
+               '매장재고', 'AFS', 'YTD 매출 ($)']
+  },
+  bmWeek: {
+    tab: 'Raw_BM주간요약', cols: 23,
+    required: ['주차', '주종료일', 'B&M매출 ($)', '.COM매출 ($)', '전체매출 ($)', 'InStock%',
+               '활성매장수', 'SpD', '.COM_OH', '.COM_OO',
+               'YTD_B&M ($)', 'YTD_COM ($)', 'YTD_전체 ($)']
+  },
+  // Sephora 공통 매장 인프라 매핑 (브랜드 수치 아님). 매장번호로 조인해 권역만 붙인다.
+  bmRegion: {
+    tab: 'Raw_BM_권역매핑', cols: 5,
+    required: ['Location Number', 'Store Name', 'Region', 'District']
+  },
+
+  // ── 실매출 계열 (일·주 · 세포라 실매출 리포트) ─────────────────────────────
+  // ⚠️ `Raw_실매출` 은 SKU 단위가 아니라 **날짜별 전 SKU 합산** 탭이다.
+  //    SKU × 일별은 `Raw_실매출_SKU별_일간` 이다. 이름이 헷갈리기 쉬우니 주의.
+  // ⚠️ F~K(파생) 열은 로컬 원본에서 비어 있다. 파서는 읽지 않고 날짜에서 직접 만든다.
+  // 🛑 시트의 실제 탭 이름은 `RAW_실매출`(RAW 대문자)이다. 다른 실매출 탭은 `Raw_` 인데
+  //    이 탭만 다르다. getSheetByName 이 관대해 소문자로도 통과하지만 기대지 않는다.
+  salesDaily: {
+    tab: 'RAW_실매출', cols: 11,
+    required: ['날짜', '주차', 'B&M 매출 ($)', '.COM 매출 ($)', '전체 매출 ($)']
+  },
+  // 🛑 **선택 탭.** 현재 구글 시트에 없다(로컬 누적관리 파일에만 있다).
+  //    없어도 화면은 정상이다 — 주차 라벨·기간은 `RAW_실매출`(일별)에서 전부 파생하고,
+  //    이 탭은 교차검증용 롤업일 뿐이다. 그래서 없을 때 화면 경고를 띄우지 않는다.
+  //    (탭이 있는데 헤더가 틀린 경우에는 경고를 띄운다 — 그건 진짜 사고다.)
+  //    `비고` 열은 읽지 않는다 — 분석 메모라 화면에 그릴 내용이 아니다.
+  salesWeek: {
+    tab: '주차별요약', cols: 11, optional: true,
+    required: ['주차', '기간', '일수', 'B&M 매출($)', '.COM 매출($)', '전체 매출($)', '.COM 비중']
+  },
+  skuWeek: {
+    tab: 'Raw_실매출_SKU별_주간', cols: 18,
+    required: ['주차', '주종료일', 'SKU번호', '제품명',
+               'B&M매출 ($)', '.COM매출 ($)', '전체매출 ($)',
+               'B&M수량', '.COM수량', '전체수량']
+  },
+  skuDaily: {
+    tab: 'Raw_실매출_SKU별_일간', cols: 20,
+    required: ['주차', '주종료일', '일', 'SKU번호', '제품명',
+               'B&M매출 ($)', '.COM매출 ($)', '전체매출 ($)',
+               'B&M수량', '.COM수량', '전체수량']
   }
 };
+
+// 🛑 `Raw_BM매장` 에 원본 그대로 들어 있는 `.COM` 물류센터 5곳.
+//    매장 실적(활성매장수·매장당 주간매출 등)에 넣으면 `.COM` 매출과 이중 계상된다.
+//    행을 지우지 않고 dc:true 로 표시해 프런트가 골라 쓰게 한다.
+//    (`Raw_BM주간요약` 의 `활성매장수` 는 이미 이 5곳을 뺀 값이다.)
+var DC_STORE_NOS = ['700', '900', '1000', '1020', '1090'];
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  엔드포인트
 //    /exec?token=…            현재 캐시 반환 (라이브 파싱 아님)
 //    /exec?token=…&fresh=1    캐시 우회 + 라이브 파싱 + 캐시 재작성
-//    /exec?token=…&only=키    단일 섹션 경량 경로 (meta|commerce|channel)
+//    /exec?token=…&only=키    단일 섹션 경량 경로
+//                             (meta|commerce|channel|bmInv|bmStore|bmWeek
+//                              |salesDaily|salesWeek|skuWeek|skuDaily)
 // ═══════════════════════════════════════════════════════════════════════════════
 function doGet(e) {
   var p = (e && e.parameter) ? e.parameter : {};
@@ -103,9 +175,16 @@ function doGet(e) {
       var ss1 = openSS_();
       var warn = [];
       var section;
-      if      (only === 'meta')     section = parseMeta_(ss1, warn);
-      else if (only === 'commerce') section = parseCommerce_(ss1, warn);
-      else if (only === 'channel')  section = parseChannel_(ss1, warn);
+      if      (only === 'meta')       section = parseMeta_(ss1, warn);
+      else if (only === 'commerce')   section = parseCommerce_(ss1, warn);
+      else if (only === 'channel')    section = parseChannel_(ss1, warn);
+      else if (only === 'bmInv')      section = parseBmInv_(ss1, warn);
+      else if (only === 'bmStore')    section = parseBmStore_(ss1, warn, parseBmRegion_(ss1, warn));
+      else if (only === 'bmWeek')     section = parseBmWeek_(ss1, warn);
+      else if (only === 'salesDaily') section = parseSalesDaily_(ss1, warn);
+      else if (only === 'salesWeek')  section = parseSalesWeek_(ss1, warn);
+      else if (only === 'skuWeek')    section = parseSkuWeek_(ss1, warn);
+      else if (only === 'skuDaily')   section = parseSkuDaily_(ss1, warn);
       else return jsonOut_({ error: 'UNKNOWN_SECTION', detail: only });
       return jsonOut_({
         ok: true, servedFrom: 'only:' + only, only: only, data: section,
@@ -207,6 +286,30 @@ function buildPayload_() {
   var commerce = parseCommerce_(ss, warnings);
   var channel  = parseChannel_(ss, warnings);
 
+  // ── B&M · 재고 / SKU 실매출 계열 ──────────────────────────────────────────
+  // 🛑 여기만 soft-fail 이다. 위 세 탭은 대시보드의 뿌리라 실패하면 그대로 던지지만,
+  //    새로 붙은 여섯 탭 중 하나가 없거나 헤더가 바뀌었다고 해서 이미 잘 도는
+  //    통합 탭·유입 채널 탭까지 500 으로 같이 죽이지는 않는다.
+  //    대신 warnings 에 실어 화면에 그대로 띄운다 — 조용히 삼키지 않는다.
+  var regionMap  = softParse_('Raw_BM_권역매핑', function(){ return parseBmRegion_(ss, warnings); }, warnings, {});
+  var bmInv      = softParse_('Raw_BM재고',      function(){ return parseBmInv_(ss, warnings); }, warnings, []);
+  var bmStore    = softParse_('Raw_BM매장',      function(){ return parseBmStore_(ss, warnings, regionMap); }, warnings, []);
+  var bmWeek     = softParse_('Raw_BM주간요약',   function(){ return parseBmWeek_(ss, warnings); }, warnings, []);
+  var salesDaily = softParse_('RAW_실매출',       function(){ return parseSalesDaily_(ss, warnings); }, warnings, []);
+
+  // 🛑 `주차별요약` 은 선택 탭이다. 시트에 없어도 화면은 정상이므로 경고를 띄우지 않는다 —
+  //    주차 라벨·기간은 `RAW_실매출`(일별)에서 전부 파생하고, 이 탭은 교차검증용 롤업일 뿐이다.
+  //    탭이 **있는데** 헤더가 틀린 경우에만 경고가 뜬다 (그건 진짜 사고다).
+  var salesWeek = [];
+  if (ss.getSheetByName(SHEET_SPEC.salesWeek.tab)) {
+    salesWeek = softParse_('주차별요약', function(){ return parseSalesWeek_(ss, warnings); }, warnings, []);
+  } else {
+    diagnostics.push('[주차별요약] 탭이 시트에 없습니다 — 선택 탭이라 건너뜁니다 '
+                   + '(주차 라벨·기간은 RAW_실매출에서 파생).');
+  }
+  var skuWeek    = softParse_('Raw_실매출_SKU별_주간', function(){ return parseSkuWeek_(ss, warnings); }, warnings, []);
+  var skuDaily   = softParse_('Raw_실매출_SKU별_일간', function(){ return parseSkuDaily_(ss, warnings); }, warnings, []);
+
   // ── 채널 목록 (표시 순서 = 매출 큰 순, NA는 항상 맨 뒤) ────────────────────
   var salesByCh = {};
   channel.forEach(function (r) { salesByCh[r.channel] = (salesByCh[r.channel] || 0) + r.sales; });
@@ -241,6 +344,21 @@ function buildPayload_() {
     meta:      meta,
     commerce:  commerce,
     channel:   channel,
+
+    // 🛑 실매출 계열은 주 단위 리포트다. 포털(commerce/channel)과 **일 단위로 합치거나
+    //    비교하지 않는다** — 포털은 당일 오더 gross, 실매출은 환불을 처리일 기준 차감한 값이라
+    //    일별로는 양방향으로 크게 어긋난다. 프런트에서도 두 계열을 섞은 지표를 만들지 않는다.
+    bmInv:      bmInv,
+    bmStore:    bmStore,
+    bmWeek:     bmWeek,
+    salesDaily: salesDaily,
+    salesWeek:  salesWeek,
+    skuWeek:    skuWeek,
+    skuDaily:   skuDaily,
+    // 실매출 주차 목록 — 라벨은 `주차별요약` 의 `기간` 을 정본으로 쓴다.
+    bmWeeks:    buildBmWeeks_(bmWeek, salesWeek, salesDaily),
+    dcStoreNos: DC_STORE_NOS,
+
     warnings:  warnings,
     diagnostics: diagnostics,
     updatedAt: nowIso_()
@@ -373,6 +491,385 @@ function parseChannel_(ss, warnings) {
   }
   if (!out.length) warnings.push('[RAW_유입] 데이터 행이 0건입니다.');
   return out;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  B&M · 재고 / SKU 실매출 파서
+//
+//  전부 세포라 실매출 리포트(주 단위 수급)에서 온 탭이다.
+//  🛑 원본에 숫자와 텍스트가 섞인 열이 있다 — `InStock%` 의 `-`(배치매장수 0),
+//     `WOS`·`.COM_WOS` 의 `/0`(분모 0). 세포라 원본 표기이며 우리 버그가 아니다.
+//     toNum_() 에 그냥 넣으면 0 으로 뭉개져 「재고가 0주치 남았다」로 오독되므로
+//     numOrNull_() 로 null 을 만들어 프런트에서 '-' 로 그리게 한다.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// 새 탭 파서 전용 안전망. 실패를 삼키지 않고 warnings 로 화면에 올린다.
+function softParse_(label, fn, warnings, fallback) {
+  try {
+    return fn();
+  } catch (err) {
+    warnings.push('[' + label + '] 시트를 읽지 못했습니다 — ' + err.message);
+    return fallback;
+  }
+}
+
+// 숫자면 숫자, 그 밖(빈 값·'-'·'/0')이면 null. 0 과 null 을 구분해야 하므로 toNum_ 과 다르다.
+function numOrNull_(val) {
+  if (typeof val === 'number') return isNaN(val) ? null : val;
+  if (val === '' || val === null || val === undefined) return null;
+  var s = String(val).replace(/[,$%\s]/g, '');
+  if (!s || !/^-?\d*\.?\d+$/.test(s)) return null;
+  var n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+// 매장번호·SKU 는 숫자로도 문자로도 들어온다 → 언제나 문자열 키로 통일한다.
+function idKey_(val) {
+  if (val === '' || val === null || val === undefined) return '';
+  if (typeof val === 'number') return String(Math.round(val));
+  return String(val).trim();
+}
+
+// ── Raw_BM_권역매핑 — 매장번호 → 권역/구역 ─────────────────────────────────
+// Sephora 전 브랜드 공통 매장 인프라 정보다(브랜드 매출 수치가 아니다).
+// 매핑 자체는 화면에 내보내지 않고 `Raw_BM매장` 행에 권역만 붙여 보낸다.
+function parseBmRegion_(ss, warnings) {
+  var spec = SHEET_SPEC.bmRegion;
+  var g    = openAndValidate_(ss, spec, warnings);
+  var rows = g.rows, hdrs = g.hdrs;
+
+  var iNo   = col_(hdrs, 'Location Number', spec.tab);
+  var iReg  = col_(hdrs, 'Region',          spec.tab);
+  var iDist = col_(hdrs, 'District',        spec.tab);
+
+  var map = {};
+  for (var i = 1; i < rows.length; i++) {
+    var no = idKey_(rows[i][iNo]);
+    if (!no) continue;
+    map[no] = {
+      region:   String(rows[i][iReg]  || '').trim(),
+      district: String(rows[i][iDist] || '').trim()
+    };
+  }
+  return map;
+}
+
+// ── Raw_BM재고 — SKU × 주간 (재고·InStock%·WOS·YTD) ────────────────────────
+function parseBmInv_(ss, warnings) {
+  var spec = SHEET_SPEC.bmInv;
+  var g    = openAndValidate_(ss, spec, warnings);
+  var rows = g.rows, hdrs = g.hdrs, tz = g.tz;
+
+  var iWk   = col_(hdrs, '주차',           spec.tab);
+  var iEnd  = col_(hdrs, '주종료일',        spec.tab);
+  var iSku  = col_(hdrs, 'SKU',            spec.tab);
+  var iName = col_(hdrs, '제품명',          spec.tab);
+  var iPrc  = col_(hdrs, '정가',            spec.tab);
+  // 🛑 반드시 `($)` 붙은 USD 원본을 읽는다. 평문 이름은 시트가 만든 KRW 파생열(×1500)이다.
+  var iBm   = col_(hdrs, 'B&M매출 ($)',     spec.tab);
+  var iCom  = col_(hdrs, '.COM매출 ($)',    spec.tab);
+  var iTtl  = col_(hdrs, 'TTL매출 ($)',     spec.tab);
+  var iDoor = col_(hdrs, '배치매장수',       spec.tab);
+  var iIn   = col_(hdrs, '재고보유매장수',    spec.tab);
+  var iPct  = col_(hdrs, 'InStock%',        spec.tab);
+  var iOos  = col_(hdrs, '품절매장수',       spec.tab);
+  var iInv  = col_(hdrs, '매장재고',         spec.tab);
+  var iDc   = col_(hdrs, 'DC재고',          spec.tab);
+  var iWos  = col_(hdrs, 'WOS',            spec.tab);
+  var iOh   = col_(hdrs, '.COM_OH',         spec.tab);
+  var iOo   = col_(hdrs, '.COM_OO',         spec.tab);
+  var iCWos = col_(hdrs, '.COM_WOS',        spec.tab);
+  var iYBm  = col_(hdrs, 'YTD_B&M ($)',     spec.tab);
+  var iYCom = col_(hdrs, 'YTD_COM ($)',     spec.tab);
+  var iYTtl = col_(hdrs, 'YTD_전체 ($)',     spec.tab);
+
+  var out = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r  = rows[i];
+    var wk = String(r[iWk] || '').trim();
+    var sku = idKey_(r[iSku]);
+    if (!wk || !sku) continue;
+    out.push({
+      week:    wk,
+      weekEnd: fmtDate_(r[iEnd], tz),
+      sku:     sku,
+      name:    String(r[iName] || '').trim(),
+      price:   toNum_(r[iPrc]),
+      bm:      toNum_(r[iBm]),          // 🛑 음수(반품)를 결측 처리하지 않는다
+      com:     toNum_(r[iCom]),
+      ttl:     toNum_(r[iTtl]),
+      doors:   toNum_(r[iDoor]),
+      inDoors: toNum_(r[iIn]),
+      inPct:   numOrNull_(r[iPct]),     // 소수(0.95). 배치매장수 0이면 원본이 '-' → null
+      oos:     toNum_(r[iOos]),
+      inv:     toNum_(r[iInv]),
+      dcInv:   toNum_(r[iDc]),
+      wos:     numOrNull_(r[iWos]),     // '/0' → null
+      comOh:   toNum_(r[iOh]),
+      comOo:   toNum_(r[iOo]),
+      comWos:  numOrNull_(r[iCWos]),
+      ytdBm:   toNum_(r[iYBm]),
+      ytdCom:  toNum_(r[iYCom]),
+      ytdTtl:  toNum_(r[iYTtl])
+    });
+  }
+  if (!out.length) warnings.push('[Raw_BM재고] 데이터 행이 0건입니다.');
+  return out;
+}
+
+// ── Raw_BM매장 — 매장 × 주간 ───────────────────────────────────────────────
+// 🛑 `.COM` 물류센터 5곳은 행을 지우지 않고 dc:true 로만 표시한다 (원본 보존).
+//    매장 실적 집계에서 빼는 것은 프런트의 몫 — 여기서 지우면 원본 대조가 안 된다.
+function parseBmStore_(ss, warnings, regionMap) {
+  var spec = SHEET_SPEC.bmStore;
+  var g    = openAndValidate_(ss, spec, warnings);
+  var rows = g.rows, hdrs = g.hdrs, tz = g.tz;
+
+  var iWk   = col_(hdrs, '주차',        spec.tab);
+  var iEnd  = col_(hdrs, '주종료일',     spec.tab);
+  var iNo   = col_(hdrs, '매장번호',     spec.tab);
+  var iName = col_(hdrs, '매장명',       spec.tab);
+  var iSal  = col_(hdrs, '주간매출',     spec.tab);
+  var iUnit = col_(hdrs, '주간수량',     spec.tab);
+  var iInv  = col_(hdrs, '매장재고',     spec.tab);
+  var iAfs  = col_(hdrs, 'AFS',        spec.tab);
+  var iYtd  = col_(hdrs, 'YTD 매출 ($)', spec.tab);
+
+  var out = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r  = rows[i];
+    var wk = String(r[iWk] || '').trim();
+    var no = idKey_(r[iNo]);
+    if (!wk || !no) continue;
+    var reg = (regionMap && regionMap[no]) || null;
+    out.push({
+      week:     wk,
+      weekEnd:  fmtDate_(r[iEnd], tz),
+      no:       no,
+      name:     String(r[iName] || '').trim(),
+      sales:    toNum_(r[iSal]),
+      units:    toNum_(r[iUnit]),
+      inv:      toNum_(r[iInv]),
+      afs:      toNum_(r[iAfs]),
+      ytd:      toNum_(r[iYtd]),
+      region:   reg ? reg.region   : '',
+      district: reg ? reg.district : '',
+      dc:       DC_STORE_NOS.indexOf(no) >= 0
+    });
+  }
+  if (!out.length) warnings.push('[Raw_BM매장] 데이터 행이 0건입니다.');
+  return out;
+}
+
+// ── Raw_BM주간요약 — 주간 롤업 ─────────────────────────────────────────────
+// `활성매장수` 는 시트에서 이미 `.COM` 물류센터 5곳을 뺀 값이다. 다시 계산하지 않는다.
+function parseBmWeek_(ss, warnings) {
+  var spec = SHEET_SPEC.bmWeek;
+  var g    = openAndValidate_(ss, spec, warnings);
+  var rows = g.rows, hdrs = g.hdrs, tz = g.tz;
+
+  var iWk   = col_(hdrs, '주차',        spec.tab);
+  var iEnd  = col_(hdrs, '주종료일',     spec.tab);
+  // 🛑 여기도 `($)` 쪽이 USD 원본이다. 평문은 KRW 파생열.
+  var iBm   = col_(hdrs, 'B&M매출 ($)',  spec.tab);
+  var iCom  = col_(hdrs, '.COM매출 ($)', spec.tab);
+  var iTot  = col_(hdrs, '전체매출 ($)', spec.tab);
+  var iPct  = col_(hdrs, 'InStock%',    spec.tab);
+  var iDoor = col_(hdrs, '활성매장수',    spec.tab);
+  var iSpd  = col_(hdrs, 'SpD',         spec.tab);
+  var iOh   = col_(hdrs, '.COM_OH',      spec.tab);
+  var iOo   = col_(hdrs, '.COM_OO',      spec.tab);
+  var iYBm  = col_(hdrs, 'YTD_B&M ($)',  spec.tab);
+  var iYCom = col_(hdrs, 'YTD_COM ($)',  spec.tab);
+  var iYTtl = col_(hdrs, 'YTD_전체 ($)',  spec.tab);
+
+  var out = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r  = rows[i];
+    var wk = String(r[iWk] || '').trim();
+    if (!wk) continue;
+    out.push({
+      week:    wk,
+      weekEnd: fmtDate_(r[iEnd], tz),
+      bm:      toNum_(r[iBm]),
+      com:     toNum_(r[iCom]),
+      total:   toNum_(r[iTot]),
+      inPct:   numOrNull_(r[iPct]),      // 매출 가중 In-Stock%. 소수(0.95)
+      doors:   toNum_(r[iDoor]),
+      spd:     toNum_(r[iSpd]),
+      comOh:   toNum_(r[iOh]),
+      comOo:   toNum_(r[iOo]),
+      ytdBm:   toNum_(r[iYBm]),
+      ytdCom:  toNum_(r[iYCom]),
+      ytdTtl:  toNum_(r[iYTtl])
+    });
+  }
+  if (!out.length) warnings.push('[Raw_BM주간요약] 데이터 행이 0건입니다.');
+  return out;
+}
+
+// ── Raw_실매출 — 날짜별 전 SKU 합산 (일별) ──────────────────────────────────
+// ⚠️ SKU 단위가 아니다. 이름이 헷갈리기 쉬우니 주의 — SKU × 일별은 skuDaily 다.
+// 🛑 시트의 파생열(년·월·주차)은 읽지 않는다. 날짜에서 직접 만든다
+//    (새 탭에 ARRAYFORMULA 파생열을 새로 만들지 않는다는 원칙 그대로).
+function parseSalesDaily_(ss, warnings) {
+  var spec = SHEET_SPEC.salesDaily;
+  var g    = openAndValidate_(ss, spec, warnings);
+  var rows = g.rows, hdrs = g.hdrs, tz = g.tz;
+
+  var iDate = col_(hdrs, '날짜',           spec.tab);
+  var iWk   = col_(hdrs, '주차',           spec.tab);   // 🛑 K열에도 같은 이름의 파생열이 있다.
+  var iBm   = col_(hdrs, 'B&M 매출 ($)',    spec.tab);   //    indexOf 는 앞선 B열을 잡는다 — 그게 원본이다.
+  var iCom  = col_(hdrs, '.COM 매출 ($)',   spec.tab);
+  var iTot  = col_(hdrs, '전체 매출 ($)',   spec.tab);
+
+  var out = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r    = rows[i];
+    var date = fmtDate_(r[iDate], tz);
+    if (!date) continue;
+    out.push({
+      date:  date,
+      week:  String(r[iWk] || '').trim(),
+      month: date.slice(0, 7),
+      bm:    toNum_(r[iBm]),
+      com:   toNum_(r[iCom]),
+      total: toNum_(r[iTot])
+    });
+  }
+  if (!out.length) warnings.push('[Raw_실매출] 데이터 행이 0건입니다.');
+  return out;
+}
+
+// ── 주차별요약 — 주간 롤업 ─────────────────────────────────────────────────
+// 🛑 `비고` 열은 읽지 않는다. 분석 메모(포털 대비 차이 원인 등)라 화면에 그릴 내용이 아니다.
+function parseSalesWeek_(ss, warnings) {
+  var spec = SHEET_SPEC.salesWeek;
+  var g    = openAndValidate_(ss, spec, warnings);
+  var rows = g.rows, hdrs = g.hdrs;
+
+  var iWk   = col_(hdrs, '주차',           spec.tab);
+  var iRng  = col_(hdrs, '기간',           spec.tab);
+  var iDays = col_(hdrs, '일수',           spec.tab);
+  var iBm   = col_(hdrs, 'B&M 매출($)',     spec.tab);
+  var iCom  = col_(hdrs, '.COM 매출($)',    spec.tab);
+  var iTot  = col_(hdrs, '전체 매출($)',    spec.tab);
+  var iShr  = col_(hdrs, '.COM 비중',       spec.tab);
+
+  var out = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r  = rows[i];
+    var wk = String(r[iWk] || '').trim();
+    if (!wk) continue;
+    out.push({
+      week:     wk,
+      range:    String(r[iRng] || '').trim(),
+      days:     toNum_(r[iDays]),
+      bm:       toNum_(r[iBm]),
+      com:      toNum_(r[iCom]),
+      total:    toNum_(r[iTot]),
+      comShare: numOrNull_(r[iShr])          // 소수(0.9273)
+    });
+  }
+  if (!out.length) warnings.push('[주차별요약] 데이터 행이 0건입니다.');
+  return out;
+}
+
+// ── Raw_실매출_SKU별_주간 ──────────────────────────────────────────────────
+function parseSkuWeek_(ss, warnings) {
+  var spec = SHEET_SPEC.skuWeek;
+  var g    = openAndValidate_(ss, spec, warnings);
+  var rows = g.rows, hdrs = g.hdrs, tz = g.tz;
+
+  var iWk    = col_(hdrs, '주차',          spec.tab);
+  var iEnd   = col_(hdrs, '주종료일',       spec.tab);
+  var iSku   = col_(hdrs, 'SKU번호',        spec.tab);
+  var iName  = col_(hdrs, '제품명',         spec.tab);
+  var iBm    = col_(hdrs, 'B&M매출 ($)',    spec.tab);
+  var iCom   = col_(hdrs, '.COM매출 ($)',   spec.tab);
+  var iTot   = col_(hdrs, '전체매출 ($)',   spec.tab);
+  var iBmU   = col_(hdrs, 'B&M수량',        spec.tab);
+  var iComU  = col_(hdrs, '.COM수량',       spec.tab);
+  var iTotU  = col_(hdrs, '전체수량',       spec.tab);
+
+  var out = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r   = rows[i];
+    var wk  = String(r[iWk] || '').trim();
+    var sku = idKey_(r[iSku]);
+    if (!wk || !sku) continue;
+    out.push({
+      week: wk, weekEnd: fmtDate_(r[iEnd], tz), sku: sku,
+      name:  String(r[iName] || '').trim(),
+      bm:    toNum_(r[iBm]),   com:   toNum_(r[iCom]),  total:  toNum_(r[iTot]),
+      bmU:   toNum_(r[iBmU]),  comU:  toNum_(r[iComU]), totalU: toNum_(r[iTotU])
+    });
+  }
+  if (!out.length) warnings.push('[Raw_실매출_SKU별_주간] 데이터 행이 0건입니다.');
+  return out;
+}
+
+// ── Raw_실매출_SKU별_일간 ──────────────────────────────────────────────────
+// 🛑 `일`(C열)·`주차`(A열)와 같은 이름의 파생열이 오른쪽 끝에도 있다.
+//    col_ 은 완전 일치 + indexOf 라 언제나 앞선 원본 열을 잡는다 — 의도한 동작이다.
+function parseSkuDaily_(ss, warnings) {
+  var spec = SHEET_SPEC.skuDaily;
+  var g    = openAndValidate_(ss, spec, warnings);
+  var rows = g.rows, hdrs = g.hdrs, tz = g.tz;
+
+  var iWk    = col_(hdrs, '주차',          spec.tab);
+  var iEnd   = col_(hdrs, '주종료일',       spec.tab);
+  var iDay   = col_(hdrs, '일',            spec.tab);
+  var iSku   = col_(hdrs, 'SKU번호',        spec.tab);
+  var iName  = col_(hdrs, '제품명',         spec.tab);
+  var iBm    = col_(hdrs, 'B&M매출 ($)',    spec.tab);
+  var iCom   = col_(hdrs, '.COM매출 ($)',   spec.tab);
+  var iTot   = col_(hdrs, '전체매출 ($)',   spec.tab);
+  var iBmU   = col_(hdrs, 'B&M수량',        spec.tab);
+  var iComU  = col_(hdrs, '.COM수량',       spec.tab);
+  var iTotU  = col_(hdrs, '전체수량',       spec.tab);
+
+  var out = [];
+  for (var i = 1; i < rows.length; i++) {
+    var r    = rows[i];
+    var date = fmtDate_(r[iDay], tz);
+    var sku  = idKey_(r[iSku]);
+    if (!date || !sku) continue;
+    out.push({
+      date: date, month: date.slice(0, 7),
+      week: String(r[iWk] || '').trim(), weekEnd: fmtDate_(r[iEnd], tz), sku: sku,
+      name:  String(r[iName] || '').trim(),
+      bm:    toNum_(r[iBm]),   com:   toNum_(r[iCom]),  total:  toNum_(r[iTot]),
+      bmU:   toNum_(r[iBmU]),  comU:  toNum_(r[iComU]), totalU: toNum_(r[iTotU])
+    });
+  }
+  if (!out.length) warnings.push('[Raw_실매출_SKU별_일간] 데이터 행이 0건입니다.');
+  return out;
+}
+
+// ── 실매출 주차 목록 ───────────────────────────────────────────────────────
+// 🛑 화면 문구에 주차 수를 박지 않기 위해 라벨을 전부 데이터에서 만든다.
+//    `주차별요약` 의 `기간`(07/26~08/01) 이 정본이고, 없으면 일별 행의 최소·최대 날짜로 만든다.
+function buildBmWeeks_(bmWeek, salesWeek, salesDaily) {
+  var byKey = {};
+  function slot(k) {
+    if (!byKey[k]) byKey[k] = { key: k, range: '', end: null, start: null };
+    return byKey[k];
+  }
+  bmWeek.forEach(function (r) { var s = slot(r.week); s.end = r.weekEnd || s.end; });
+  salesWeek.forEach(function (r) { var s = slot(r.week); s.range = r.range || s.range; });
+  salesDaily.forEach(function (r) {
+    if (!r.week) return;
+    var s = slot(r.week);
+    if (!s.start || r.date < s.start) s.start = r.date;
+    if (!s.end   || r.date > s.end)   s.end   = r.date;
+  });
+  return Object.keys(byKey)
+    .map(function (k) { return byKey[k]; })
+    .sort(function (a, b) {
+      var ka = a.end || a.key, kb = b.end || b.key;
+      return ka < kb ? -1 : (ka > kb ? 1 : 0);
+    });
 }
 
 // ── 결측 채널 0 채우기 ───────────────────────────────────────────────────────
@@ -624,6 +1121,10 @@ function checkCacheStatus() {
              'builtAt: ' + j.cacheBuiltAt + '\n' +
              '기간: ' + (j.range ? j.range.start + ' ~ ' + j.range.end + ' (' + j.range.days + '일)' : '—') + '\n' +
              'commerce: ' + (j.commerce || []).length + '행 / channel: ' + (j.channel || []).length + '행\n' +
+             'B&M — 재고 ' + (j.bmInv || []).length + '행 / 매장 ' + (j.bmStore || []).length +
+               '행 / 주간요약 ' + (j.bmWeek || []).length + '행\n' +
+             '실매출 — 일별 ' + (j.salesDaily || []).length + '행 / 주간 ' + (j.salesWeek || []).length +
+               '행 / SKU주간 ' + (j.skuWeek || []).length + '행 / SKU일간 ' + (j.skuDaily || []).length + '행\n' +
              '주차: ' + (j.weeks || []).map(function (w) { return w.key; }).join(', ') + '\n' +
              '채널: ' + (j.channels || []).join(', ') + '\n' +
              '경고: ' + ((j.warnings || []).length ? '\n  - ' + j.warnings.join('\n  - ') : '없음'));
@@ -695,11 +1196,57 @@ function checkTotals() {
     hv += r.visits; hs += r.sales;
     if (p.excludedChannels.indexOf(r.channel) >= 0) na += r.sales;
   });
+  // 실매출 계열 교차검증 — 같은 원천을 세 각도로 가공한 탭이라 합계가 소수점까지 맞아야 한다.
+  // 🛑 이 값들을 위 commerce/channel 합계와 비교하지 말 것. 정의가 다르다(오더 gross vs 환불 차감).
+  function sum(rows, f) { var t = 0; (rows || []).forEach(function (r) { t += f(r) || 0; }); return t; }
+  var rsD = sum(p.salesDaily, function (r) { return r.total; });
+  var rsW = sum(p.salesWeek,  function (r) { return r.total; });
+  var rsSW = sum(p.skuWeek,   function (r) { return r.total; });
+  var rsSD = sum(p.skuDaily,  function (r) { return r.total; });
+  var rsBI = sum(p.bmInv,     function (r) { return r.ttl; });
+  var rsBW = sum(p.bmWeek,    function (r) { return r.total; });
+  var stTot = sum((p.bmStore || []).filter(function (r) { return !r.dc; }), function (r) { return r.sales; });
+  var dcTot = sum((p.bmStore || []).filter(function (r) { return r.dc; }),  function (r) { return r.sales; });
+
+  // 🛑 여섯 탭은 같은 원천을 세 각도로 가공한 것이라 합계가 소수점까지 맞아야 한다.
+  //    2026-08-19 배포 때 `Raw_BM재고` 가 KRW 파생열을 잡아 정확히 1500배로 나왔는데,
+  //    숫자를 나란히 찍어만 두니 눈으로 흘려보냈다. 이제 기계가 판정한다.
+  var cross = [
+    { n: 'Raw_실매출',   v: rsD },  { n: 'SKU주간',        v: rsSW },
+    { n: 'SKU일간',      v: rsSD },  { n: 'Raw_BM재고',     v: rsBI },
+    { n: 'Raw_BM주간요약', v: rsBW }
+  ];
+  if (p.salesWeek && p.salesWeek.length) cross.push({ n: '주차별요약', v: rsW });
+  var base = rsD;
+  var bad  = cross.filter(function (c) { return Math.abs(c.v - base) > 0.01; });
+  var verdict = bad.length
+    ? '✘ 불일치 — ' + bad.map(function (c) {
+        var ratio = base !== 0 ? (c.v / base) : 0;
+        return c.n + ' $' + c.v.toFixed(2)
+             + (Math.abs(ratio - USD_TO_KRW) < 1 ? ' (정확히 ' + USD_TO_KRW + '배 → KRW 파생열을 읽고 있다)'
+                : c.v === 0 ? ' (0 — 탭/헤더를 못 읽었다. warnings 확인)' : ' (' + ratio.toFixed(4) + '배)');
+      }).join(' / ')
+    : '✔ 전부 일치';
+
   Logger.log('기간: ' + p.range.start + ' ~ ' + p.range.end + ' (' + p.range.days + '일)\n' +
              'commerce — 방문 ' + cv + ' / 매출 $' + cs.toFixed(2) + ' / 주문 ' + co + '\n' +
              'channel  — 방문 ' + hv + ' / 매출 $' + hs.toFixed(2) + '\n' +
              'NA 매출 $' + na.toFixed(2) + ' (' + (hs > 0 ? (na / hs * 100).toFixed(2) : '0') + '%)\n' +
              '주차: ' + p.weeks.map(function (w) { return w.key + '(' + w.start + '~' + w.end + ')'; }).join(', ') + '\n' +
+             '─────────────────────────────\n' +
+             '실매출 전체매출 — Raw_실매출 $' + rsD.toFixed(2) + ' / 주차별요약 $' + rsW.toFixed(2) +
+               ' / SKU주간 $' + rsSW.toFixed(2) + ' / SKU일간 $' + rsSD.toFixed(2) + '\n' +
+             'B&M TTL — Raw_BM재고 $' + rsBI.toFixed(2) + ' / Raw_BM주간요약 $' + rsBW.toFixed(2) + '\n' +
+             'Raw_BM매장 — 매장 $' + stTot.toFixed(2) + ' / .COM 물류센터 5곳 $' + dcTot.toFixed(2) +
+               ' (물류센터는 .COM 매출과 이중 계상되므로 매장 실적에서 제외)\n' +
+             '실매출 주차: ' + (p.bmWeeks || []).map(function (w) {
+                return w.key + '(' + (w.range || (w.start && w.end ? w.start + '~' + w.end : '—')) + ')';
+             }).join(', ') + '\n' +
+             '교차검증: ' + verdict + '\n' +
+             '─────────────────────────────\n' +
+             // 🛑 warnings 를 반드시 함께 찍는다. soft-fail 한 새 탭의 실패 사유가 여기 실린다 —
+             //    안 찍으면 「합계가 0」이라는 증상만 보이고 원인이 안 보인다 (2026-08-19 실제로 그랬다).
+             '경고: ' + ((p.warnings || []).length ? '\n  - ' + p.warnings.join('\n  - ') : '없음') + '\n' +
              // 화면에서 뺀 내부 진단은 여기로만 남긴다 (MJ 결정 2026-08-16)
              '진단: ' + ((p.diagnostics || []).length ? '\n  - ' + p.diagnostics.join('\n  - ') : '없음'));
 }

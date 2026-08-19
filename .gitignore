@@ -7,6 +7,8 @@ test/fixtures/
 
 # 로컬 설정
 .claude/settings.local.json
+# 로컬 미리보기 서버 설정 — 실데이터가 든 스크래치패드 경로를 가리키므로 커밋하지 않는다
+.claude/launch.json
 
 node_modules/
 .DS_Store
