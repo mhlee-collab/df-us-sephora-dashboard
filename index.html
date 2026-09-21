@@ -561,7 +561,12 @@ body{
       </div>
       <div class="chart-card">
         <div class="leg-row">
-          <div class="leg"><div class="leg-dot" style="background:#DD061A;"></div><span id="legSales">Sales</span></div>
+          <div class="seg">
+            <button class="tgl active" data-sales-type="com" onclick="setSalesType(this,'com')">Sales .COM</button>
+            <button class="tgl" data-sales-type="bm" onclick="setSalesType(this,'bm')">Sales B&amp;M</button>
+            <button class="tgl" data-sales-type="ttl" onclick="setSalesType(this,'ttl')">Sales TTL</button>
+          </div>
+          <div class="vdiv"></div>
           <button class="tgl active" id="btnVisits" onclick="toggleSeries(this,'visits')"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:#156FB8;"></span>Visits</button>
           <button class="tgl" id="btnOrders" onclick="toggleSeries(this,'orders')"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#0070C0;"></span>주문 수량</button>
           <button class="tgl" id="btnCvr" onclick="toggleSeries(this,'cvr')"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#6C237C;"></span>CVR</button>
@@ -970,7 +975,10 @@ var D = {
   //    실매출은 환불·반품을 처리일 기준으로 차감한 값이다. 일 단위로 섞지 않는다.
   bmInv: [], bmStore: [], bmWeek: [], bmWeeks: [],
   salesDaily: [], salesWeek: [], skuWeek: [], skuDaily: [],
-  dcStoreNos: []
+  dcStoreNos: [],
+  // 날짜(YYYY-MM-DD) → {bm,com,total}. RAW_commerce(SKU×일) 와 조인 단위가 달라
+  // 행에는 얹지 않는다 — applyPayload()/sumRows()/mainChartData() 참조.
+  salesByDate: {}
 };
 
 var currentUser = null;
@@ -982,6 +990,10 @@ var _prefetchPromise = null;
 var selMonths = new Set(), selWeeks = new Set();
 var mainPeriod = 'daily';   // 🛑 기본 = 일 보기 (MJ 결정 2026-08-16)
 var showSeries = { visits:true, orders:false, cvr:false };
+// Sales 채널 구분 — 기본 = .COM만(기존 단일 막대와 가장 가까운 모습). 최소 1개는 항상 켜져 있어야 한다.
+// 🛑 UNOVE 참고(2026-09-21 MJ 지시): 통합 탭 Sales 는 포털이 아니라 Raw_실매출(세포라 실매출) 기준으로
+//    바뀌었다 — applyPayload() 의 commerce 행 주석 참조.
+var selSalesTypes = new Set(['com']);
 // 통화 — 'KRW'(백만원) | 'USD'. 🛑 기본 선택은 KRW(백만원) (지시서 A1).
 //   통합 탭의 차트 축 · 툴팁 · 데이터 테이블이 이 값을 함께 따라간다.
 //   칩을 바꿔도 선택 중인 기간·필터는 건드리지 않는다 (차트만 다시 그린다).
@@ -1043,7 +1055,7 @@ Chart.defaults.font.family = "'Pretendard','Helvetica Neue',Arial,sans-serif";
 // ═══════════════════════════════════════════════════════════════════════════════
 //  포맷 유틸
 // ═══════════════════════════════════════════════════════════════════════════════
-function fmtInt(v){ return Math.round(v || 0).toLocaleString('en-US'); }
+function fmtInt(v){ return (Math.round(v || 0) + 0).toLocaleString('en-US'); }  // +0 → -0 표시 방지(작은 음수 반올림)
 function fmtUsd(v){ return '$' + (v || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function fmtUsd0(v){ return '$' + Math.round(v || 0).toLocaleString('en-US'); }
 function fmtKrw(v){ return '₩' + Math.round((v || 0) * D.usdToKrw).toLocaleString('ko-KR'); }
@@ -1269,10 +1281,20 @@ function mainFiltered(){
 // 합계 — CVR 은 주문 수량 / Visits TY × 100.
 // ⚠️ 원본 Conversion TY 와 정확히 같은 값이다(= orders/visits). 재정의가 아니라 방문 가중 합산이다.
 // 🛑 방문·전환은 반드시 RAW_commerce 안에서만 계산한다. RAW_유입 방문과 교차 계산 금지.
+// 🛑 rows 는 SKU × 일(하루 18행)이지만 Sales(실매출)는 날짜 단위 집계다 — 같은 날짜의
+//    SKU 행마다 더하면 18배가 된다. 날짜당 한 번만 D.salesByDate 에서 더한다.
 function sumRows(rows){
-  var v = 0, s = 0, o = 0;
-  rows.forEach(function(r){ v += r.visits; s += r.sales; o += r.orders; });
-  return { visits:v, sales:s, orders:o, cvr: v > 0 ? o / v * 100 : 0 };
+  var v = 0, o = 0, s = 0, sc = 0, sb = 0, seen = {};
+  rows.forEach(function(r){
+    v += r.visits; o += r.orders;
+    if (seen[r.date]) return;
+    seen[r.date] = true;
+    var sd = D.salesByDate[r.date];
+    s  += sd ? sd.total : 0;
+    sc += sd ? sd.com   : 0;
+    sb += sd ? sd.bm    : 0;
+  });
+  return { visits:v, sales:s, orders:o, salesCom:sc, salesBm:sb, cvr: v > 0 ? o / v * 100 : 0 };
 }
 
 // 직전 기간 — 주 선택 시 같은 길이의 직전 주 구간, 월 1개 선택 시 직전 월.
@@ -1306,7 +1328,7 @@ function prevPeriodRows(){
 
 var KPI_NOTES = {
   visits: '세포라 웹사이트/앱에서 특정 제품(SKU)과 상호작용한 세션. RAW_commerce 의 Visits TY 합계입니다. 유입 채널 탭의 방문과는 집계 단위가 달라 서로 비교하지 않습니다.',
-  sales:  'RAW_commerce 의 Sales TY 합계 (USD). 유입 채널 탭 매출 합계와 소수점까지 일치합니다. ₩ 환산은 $1 = 1,500원 기준입니다.',
+  sales:  'Raw_실매출(세포라 실매출) 기준 TTL(B&M+.COM) 합계 (USD). 포털 집계(유입 채널 탭 매출)와는 원천이 달라 값이 다릅니다 — 포털은 당일 오더 gross, 실매출은 환불·반품을 처리일 기준으로 차감합니다. ₩ 환산은 $1 = 1,500원 기준입니다.',
   orders: 'RAW_commerce 의 주문 수량 합계입니다.',
   cvr:    '주문 수량 / Visits TY × 100. 원본 Conversion TY 를 방문으로 가중 합산한 값과 같습니다.'
 };
@@ -1343,7 +1365,13 @@ function renderKPI(){
     { key:'visits', label:'TOTAL VISITS', val: fmtInt(cur.visits), sub:'', d:dV, r: rec && rec.visits },
     { key:'sales',  label:'TOTAL SALES',  val: fmtUsd(cur.sales),
       sub:'<span style="color:#888;font-weight:700;">₩</span> ' + fmtKrw(cur.sales).slice(1)
-          + ' <span style="color:#ccc;">($1 = ' + D.usdToKrw.toLocaleString('ko-KR') + '원)</span>',
+          + ' <span style="color:#ccc;">($1 = ' + D.usdToKrw.toLocaleString('ko-KR') + '원)</span>'
+          + '<div style="margin-top:5px;display:flex;gap:10px;">'
+          + '<span><span style="color:#888;font-weight:700;">.COM</span> ' + fmtUsd0(cur.salesCom)
+          + ' <span style="color:#ccc;">(' + (cur.sales ? (cur.salesCom / cur.sales * 100).toFixed(1) : '0.0') + '%)</span></span>'
+          + '<span><span style="color:#888;font-weight:700;">B&M</span> ' + fmtUsd0(cur.salesBm)
+          + ' <span style="color:#ccc;">(' + (cur.sales ? (cur.salesBm / cur.sales * 100).toFixed(1) : '0.0') + '%)</span></span>'
+          + '</div>',
       d:dS, r: rec && rec.sales },
     { key:'orders', label:'TOTAL ORDERS', val: fmtInt(cur.orders), sub:'', d:dO, r: rec && rec.orders },
     { key:'cvr',    label:'CVR (주문/방문)', val: fmtPct(cur.cvr), sub:'', d:dC, r: rec && rec.cvr }
@@ -1417,12 +1445,18 @@ function mainPeriodLabelLong(key){
 function mainChartData(){
   var rows = mainFiltered();
   var byP = {};
+  // 🛑 같은 이유(위 sumRows 주석) — 기간 버킷 안에서도 날짜당 한 번만 Sales 를 더한다.
   rows.forEach(function(r){
     var k = periodKey(r, mainPeriod);
-    if (!byP[k]) byP[k] = { key:k, visits:0, sales:0, orders:0 };
+    if (!byP[k]) byP[k] = { key:k, visits:0, sales:0, salesCom:0, salesBm:0, orders:0, _seen:{} };
     byP[k].visits += r.visits;
-    byP[k].sales  += r.sales;
     byP[k].orders += r.orders;
+    if (byP[k]._seen[r.date]) return;
+    byP[k]._seen[r.date] = true;
+    var sd = D.salesByDate[r.date];
+    byP[k].sales    += sd ? sd.total : 0;
+    byP[k].salesCom += sd ? sd.com   : 0;
+    byP[k].salesBm  += sd ? sd.bm    : 0;
   });
   return Object.keys(byP)
     .sort(function(a,b){
@@ -1433,6 +1467,7 @@ function mainChartData(){
       var v = byP[k];
       v.label = periodLabel(k, mainPeriod);
       v.cvr   = v.visits > 0 ? v.orders / v.visits * 100 : 0;
+      delete v._seen;
       return v;
     });
 }
@@ -1444,16 +1479,26 @@ function renderMainChart(){
   var n = data.length;
   var ds = [];
 
-  // 매출 = 주인공 계열 (메인 레드 막대)
-  ds.push({
-    label: 'Sales',
-    type: 'bar',
-    data: data.map(function(d){ return curVal(d.sales); }),
-    backgroundColor: hexToRgba(C.bar, 0.85),
-    hoverBackgroundColor: C.bar,
-    borderWidth: 0,
-    yAxisID: 'yS', order: 3,
-    barPercentage: 0.55, categoryPercentage: 0.85
+  // 매출 = 주인공 계열. COM/B&M/TTL 중 선택된 것만 그린다(다중 선택 가능) — UNOVE 참고 구조.
+  // 🛑 붉은 계열은 CI 레드 한 종류뿐이라 .COM 에만 쓴다. B&M·TTL 은 이 차트의 Visits(블루)·
+  //    CVR(퍼플) 선 색을 그대로 재사용한다(막대·선이라 형태로 구분됨 — UNOVE 도 같은 방식).
+  var SALES_TYPE_CFG = [
+    { type:'com', label:'Sales .COM', color:C.bar, key:'salesCom' },
+    { type:'bm',  label:'Sales B&M',  color:C.sub, key:'salesBm' },
+    { type:'ttl', label:'Sales TTL',  color:C.acc, key:'sales' }
+  ];
+  var salesBarPct = selSalesTypes.size > 1 ? 0.35 : 0.55;
+  SALES_TYPE_CFG.filter(function(c){ return selSalesTypes.has(c.type); }).forEach(function(c){
+    ds.push({
+      label: c.label,
+      type: 'bar',
+      data: data.map(function(d){ return curVal(d[c.key]); }),
+      backgroundColor: hexToRgba(c.color, 0.85),
+      hoverBackgroundColor: c.color,
+      borderWidth: 0,
+      yAxisID: 'yS', order: 3,
+      barPercentage: salesBarPct, categoryPercentage: 0.85
+    });
   });
   if (showSeries.visits) ds.push({
     label: 'Visits',
@@ -1508,8 +1553,8 @@ function renderMainChart(){
               if (v === null || v === undefined) return null;
               // 🛑 툴팁은 실제 값을 그대로 보여준다 — 음수(반품·환불)도 숨기지 않는다.
               //    차트에 얹힌 v 는 이미 선택 통화 단위이므로 여기서 다시 환산하지 않는다.
-              if (ctx.dataset.label === 'Sales')
-                return '  Sales: ' + (curIsKrw() ? fmtMKrwFromUnit(v) : fmtUsd(v));
+              if (ctx.dataset.label.indexOf('Sales ') === 0)
+                return '  ' + ctx.dataset.label + ': ' + (curIsKrw() ? fmtMKrwFromUnit(v) : fmtUsd(v));
               if (ctx.dataset.label === 'Visits')   return '  Visits: ' + fmtInt(v);
               if (ctx.dataset.label === '주문 수량') return '  주문 수량: ' + fmtInt(v);
               if (ctx.dataset.label === 'CVR')      return '  CVR: ' + fmtPct(v);
@@ -1566,9 +1611,6 @@ function renderMainChart(){
   var ctx = document.getElementById('mainChart').getContext('2d');
   if (mainChart) mainChart.destroy();
   mainChart = new Chart(ctx, cfg);
-
-  var legSales = document.getElementById('legSales');
-  if (legSales) legSales.textContent = curLegLabel();
 }
 
 // ── 그래프 하단 데이터 테이블 ────────────────────────────────────────────────
@@ -1587,9 +1629,12 @@ function renderMainTable(){
   // 행 = 그래프의 계열. 시리즈 토글과 무관하게 4개를 전부 보여준다
   // (토글은 그래프 가독성용이고, 표는 데이터 원본 역할이다).
   // 단위는 기준 열의 지표명이 진다 → 셀에는 「백만원」·소수점을 붙이지 않는다.
+  var salesUnit = curIsKrw() ? '(백만원)' : '(USD)';
+  function salesFmt(key){ return function(d){ return curIsKrw() ? fmtInt(curVal(d[key])) : fmtUsd0(d[key]); }; }
   var rows = [
-    { label: curIsKrw() ? 'SALES (백만원)' : 'SALES (USD)',
-      fmt: function(d){ return curIsKrw() ? fmtInt(curVal(d.sales)) : fmtUsd0(d.sales); } },
+    { label: 'SALES .COM ' + salesUnit, fmt: salesFmt('salesCom') },
+    { label: 'SALES B&M ' + salesUnit,  fmt: salesFmt('salesBm') },
+    { label: 'SALES TTL ' + salesUnit,  fmt: salesFmt('sales') },
     { label: 'VISITS',      fmt: function(d){ return fmtInt(d.visits); } },
     { label: 'ORDERS',      fmt: function(d){ return fmtInt(d.orders); } },
     { label: 'CVR (%)',     fmt: function(d){ return d.visits > 0 ? fmtPct(d.cvr) : '-'; } }
@@ -1625,6 +1670,18 @@ function toggleSeries(btn, key){
   showSeries[key] = !showSeries[key];
   btn.classList.toggle('active', showSeries[key]);
   renderMainChart();
+}
+// Sales 채널 다중 선택 — 마지막 1개는 끌 수 없다(UNOVE와 동일 규칙, 차트가 빈 채로 남는 것 방지).
+function setSalesType(btn, type){
+  if (selSalesTypes.has(type)){
+    if (selSalesTypes.size === 1) return;
+    selSalesTypes.delete(type);
+  } else {
+    selSalesTypes.add(type);
+  }
+  btn.classList.toggle('active', selSalesTypes.has(type));
+  renderMainChart();
+  renderMainTable();
 }
 // 🛑 통화만 바꾼다. 선택 중인 기간 토글·필터는 그대로 둔다 (지시서 A1).
 //    통화는 **대시보드 공용**이다 — 통합 탭에서 USD 로 바꾸고 유입 탭으로 넘어갔는데
@@ -3795,7 +3852,7 @@ function applyPayload(data){
   D.servedFrom = data.servedFrom || null;
 
   // 세포라 실매출 계열 — 옛 캐시 페이로드에는 없는 키다. 없으면 빈 배열로 두고
-  // 해당 탭은 「데이터가 아직 없습니다」 상태로 그린다 (통합·유입 탭은 그대로 돈다).
+  // B&M·재고 / SKU 실매출 탭은 「데이터가 아직 없습니다」 상태로 그린다.
   D.bmInv      = data.bmInv      || [];
   D.bmStore    = data.bmStore    || [];
   D.bmWeek     = data.bmWeek     || [];
@@ -3805,6 +3862,15 @@ function applyPayload(data){
   D.skuWeek    = data.skuWeek    || [];
   D.skuDaily   = data.skuDaily   || [];
   D.dcStoreNos = data.dcStoreNos || [];
+
+  // 🛑 통합 탭 Sales = Raw_실매출(세포라 실매출) 기준으로 전환(2026-09-21 MJ 지시, UNOVE 동일 구조).
+  //    RAW_commerce 의 Sales TY(포털)는 더 이상 쓰지 않는다.
+  //    ⚠️ Raw_실매출은 날짜 단위 집계인데 RAW_commerce 는 SKU × 일(하루 18행)이다 — 날짜별
+  //    매출을 SKU 행마다 그대로 얹어 합산하면 18배로 뻥튀기된다. 그래서 행에 주입하지 않고
+  //    날짜 조회용 맵만 만든다 — sumRows()/mainChartData() 가 날짜당 한 번만 더한다.
+  //    Visits·주문 수량·CVR 은 그대로 RAW_commerce(포털) 기준이라 원천이 섞이지 않는다.
+  D.salesByDate = {};
+  D.salesDaily.forEach(function(r){ D.salesByDate[r.date] = r; });
 
   // 선택돼 있던 값이 새 데이터에 없으면 떨어뜨린다
   pruneSet(selWeeks,      D.weeks.map(function(w){ return w.key; }));
@@ -3859,6 +3925,7 @@ window.toggleDD         = toggleDD;
 window.clearFilter      = clearFilter;
 window.setMainPeriod    = setMainPeriod;
 window.toggleSeries     = toggleSeries;
+window.setSalesType     = setSalesType;
 window.setCurrency  = setCurrency;
 window.setChPeriod      = setChPeriod;
 </script>

@@ -115,6 +115,34 @@ step('Visits 토글',   () => sandbox.toggleSeries(btn(), 'visits'));
 step('주문 수량 토글', () => sandbox.toggleSeries(btn(), 'orders'));
 step('CVR 토글',      () => sandbox.toggleSeries(btn(), 'cvr'));
 
+console.log('\n── Sales 채널 토글 (.COM / B&M / TTL, UNOVE 참고 구조, 2026-09-21) ──');
+assert('기본 = .COM 만 선택', [...sandbox.selSalesTypes].join(','), 'com');
+assert('  기본 상태 막대 1개, 라벨 Sales .COM',
+  lastChart('mainChart').data.datasets.filter(d => d.type === 'bar').length === 1
+  && lastChart('mainChart').data.datasets[0].label === 'Sales .COM', 'ok');
+step('B&M 켜기', () => sandbox.setSalesType(btn(), 'bm'));
+assert('  선택 = com,bm', [...sandbox.selSalesTypes].join(','), 'com,bm');
+assert('  막대 2개 (.COM + B&M)',
+  lastChart('mainChart').data.datasets.filter(d => d.type === 'bar').length === 2, 'ok');
+step('TTL 켜기', () => sandbox.setSalesType(btn(), 'ttl'));
+assert('  선택 = com,bm,ttl', [...sandbox.selSalesTypes].join(','), 'com,bm,ttl');
+assert('  막대 3개, TTL 값 = COM+B&M 합',
+  (() => {
+    const bars = lastChart('mainChart').data.datasets.filter(d => d.type === 'bar');
+    if (bars.length !== 3) return false;
+    const byLabel = {}; bars.forEach(b => byLabel[b.label] = b.data);
+    return byLabel['Sales .COM'].every((v, i) =>
+      Math.abs(v + byLabel['Sales B&M'][i] - byLabel['Sales TTL'][i]) < 1e-6);
+  })(), 'ok');
+step('.COM 끄기', () => sandbox.setSalesType(btn(), 'com'));
+step('B&M 끄기',  () => sandbox.setSalesType(btn(), 'bm'));
+assert('  🛑 마지막 1개는 끌 수 없다 (TTL 만 남음)', [...sandbox.selSalesTypes].join(','), 'ttl');
+step('TTL 끄기 시도(무시돼야 함)', () => sandbox.setSalesType(btn(), 'ttl'));
+assert('  여전히 ttl 1개', [...sandbox.selSalesTypes].join(','), 'ttl');
+step('.COM 만 다시 켜기', () => sandbox.setSalesType(btn(), 'com'));
+step('TTL 끄기',   () => sandbox.setSalesType(btn(), 'ttl'));
+assert('  기본 상태로 복귀', [...sandbox.selSalesTypes].join(','), 'com');
+
 console.log('\n── 통합 탭 통화 칩 (KRW 백만원 / USD) ──');
 // 🛑 기본 선택은 KRW(백만원). 축·툴팁·데이터 테이블이 함께 따라가고 기간·필터는 유지된다.
 assert('기본 통화 = KRW', sandbox.curCurrency === 'KRW', sandbox.curCurrency);
@@ -127,7 +155,7 @@ const salesCells = () => {
   return m ? m[1] : '';
 };
 assert('  데이터 테이블 지표명에만 (백만원)',
-  /SALES \(백만원\)/.test(els['mainTable'].innerHTML), 'ok');
+  /SALES [^<]*\(백만원\)/.test(els['mainTable'].innerHTML), 'ok');
 assert('  🛑 셀 숫자 옆에 「백만원」 텍스트 없음', !/백만원/.test(salesCells()), salesCells());
 assert('  🛑 KRW 셀에 소수점 없음', !/\d\.\d/.test(salesCells()), salesCells());
 const KRW_SALES_BAR = lastChart('mainChart').data.datasets[0].data.slice();
@@ -141,14 +169,15 @@ assert('  환산 = $1 × 1,500 ÷ 100만 (백만원 단위)',
   KRW_SALES_BAR.every((v, i) => Math.abs(v - USD_SALES_BAR[i] * payload.usdToKrw / 1e6) < 1e-9), 'ok');
 assert('  통화만 바뀌고 기간 토글은 유지', sandbox.mainPeriod === PERIOD_BEFORE, sandbox.mainPeriod);
 assert('  데이터 테이블도 USD 로 따라감',
-  /SALES \(USD\)/.test(els['mainTable'].innerHTML) && !/백만원/.test(els['mainTable'].innerHTML), 'ok');
+  /SALES [^<]*\(USD\)/.test(els['mainTable'].innerHTML) && !/백만원/.test(els['mainTable'].innerHTML), 'ok');
 assert('  🛑 USD 셀도 소수점 없음', !/\d\.\d/.test(salesCells()), salesCells());
 step('통화 KRW 로 복귀', () => sandbox.setCurrency(btn(), 'KRW'));
 
 console.log('\n── 통합 탭 데이터 테이블 ──');
 assert('그래프 아래 표가 그려진다', /<table class="ch-tbl/.test(els['mainTable'].innerHTML), 'ok');
-assert('  4개 지표 행 (SALES · VISITS · ORDERS · CVR)',
-  ['SALES', 'VISITS', 'ORDERS', 'CVR'].every(k => els['mainTable'].innerHTML.includes(k)), 'ok');
+assert('  6개 지표 행 (SALES .COM/B&M/TTL · VISITS · ORDERS · CVR)',
+  ['SALES .COM', 'SALES B&M', 'SALES TTL', 'VISITS', 'ORDERS', 'CVR']
+    .every(k => els['mainTable'].innerHTML.includes(k)), 'ok');
 assert('  열 = 그래프의 기간 수 + 기준 열 1',
   (els['mainTable'].innerHTML.match(/<th>/g) || []).length
     === lastChart('mainChart').data.labels.length + 1,
@@ -162,11 +191,23 @@ step('기간 주로 복귀', () => sandbox.setMainPeriod(btn(), 'weekly'));
 console.log('\n── 통합 탭 필터 (MONTH / WEEK) ──');
 const MONTHS = [...new Set(payload.commerce.map(r => r.month))].sort();
 const LAST_MONTH = MONTHS[MONTHS.length - 1];
-const TOTAL_SALES = payload.commerce.reduce((a, r) => a + r.sales, 0);
+// Sales(실매출)는 날짜 단위 집계라 SKU 행(하루 18개)마다 더하면 안 된다 — 고유 날짜당 한 번만
+// (index.html 의 sumRows()/mainChartData() 규칙과 동일하게 맞춘다).
+const salesByDateMap = {}; payload.salesDaily.forEach(r => { salesByDateMap[r.date] = r; });
+function sumSalesByDate(rows){
+  const seen = {};
+  return rows.reduce((a, r) => {
+    if (seen[r.date]) return a;
+    seen[r.date] = true;
+    const sd = salesByDateMap[r.date];
+    return a + (sd ? sd.total : 0);
+  }, 0);
+}
+const TOTAL_SALES = sumSalesByDate(payload.commerce);
 step(`MONTH=${LAST_MONTH} 선택`, () => { sandbox.selMonths.add(LAST_MONTH); sandbox.refreshMain(true); });
 assert('  필터가 실제로 좁힌다', (() => {
   const got = sandbox.sumRows(sandbox.mainFiltered()).sales;
-  const want = payload.commerce.filter(r => r.month === LAST_MONTH).reduce((a, r) => a + r.sales, 0);
+  const want = sumSalesByDate(payload.commerce.filter(r => r.month === LAST_MONTH));
   return Math.abs(got - want) < 1e-9 && got < TOTAL_SALES;
 })(), 'ok');
 step('MONTH 해제', () => sandbox.clearFilter('month'));
@@ -488,7 +529,9 @@ step('원래 페이로드로 복귀', () => sandbox.applyPayload(payload));
 //     숫자는 규칙(음수 통과 · '-' 가드 · 물류센터 제외 · 가중평균)을 걸 수 있게 고른 값이다.
 // ══════════════════════════════════════════════════════════════════════════════
 console.log('\n── B&M · 재고 / SKU 실매출 — 데이터 없음 상태 ──');
-step('실매출 키가 없는 옛 페이로드', () => sandbox.applyPayload(payload));
+// 🛑 payload.salesDaily 는 2026-09-21부터 통합 탭 Sales 원천이라 실데이터가 들어 있다.
+//    B&M 탭 빈 상태는 salesDaily 도 없는 진짜 「옛 캐시」를 흉내 내야 한다 — 따로 비워서 붙인다.
+step('실매출 키가 없는 옛 페이로드', () => sandbox.applyPayload(Object.assign({}, payload, { salesDaily: [] })));
 assert('  B&M 탭이 빈 상태로 떨어진다', /데이터가 아직 없습니다/.test(els['bmEmpty'].textContent), 'ok');
 assert('  SKU 탭도 마찬가지', /데이터가 아직 없습니다/.test(els['skuEmpty'].textContent), 'ok');
 assert('  🛑 통합 탭은 그대로 산다 (새 탭 실패가 기존 화면을 죽이지 않는다)',

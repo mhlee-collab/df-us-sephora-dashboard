@@ -27,12 +27,18 @@ const pad2 = n => String(Math.round(n || 0)).padStart(2, '0');
 
 const cRows = tsv('commerce.tsv').slice(1).filter(r => r[0]);
 const hRows = tsv('channel.tsv').slice(1).filter(r => r[0]);
+const sRows = tsv('salesDaily.tsv').slice(1).filter(r => r[0]);
 
 const commerce = cRows.map(r => ({
   date: serialToDate(r[0]), sku: String(Math.round(num(r[3]))), desc: r[4], name: r[23],
   visits: num(r[5]), sales: num(r[8]), orders: num(r[16]), cvr: num(r[11]),
   year: num(r[19]), month: pad2(num(r[20])), week: (r[21] || '').trim(), anchor: serialToDate(r[22])
 }));
+// Raw_실매출 — Code.gs parseSalesDaily_() 와 동일한 모양 {date,week,month,bm,com,total}
+const salesDaily = sRows.map(r => {
+  const date = serialToDate(r[0]);
+  return { date, week: (r[1] || '').trim(), month: date.slice(0, 7), bm: num(r[2]), com: num(r[3]), total: num(r[4]) };
+});
 let channel = hRows.map(r => ({
   date: serialToDate(r[0]), channel: (r[1] || '').trim(),
   visits: num(r[2]), sales: num(r[5]), cvr: num(r[8]),
@@ -76,7 +82,7 @@ const allD = [...new Set(commerce.concat(channel).map(r => r.date))].sort();
 const payload = {
   ok: true, tz: 'Asia/Seoul', usdToKrw: 1500, excludedChannels: EXCLUDED,
   range: { start: allD[0], end: allD[allD.length - 1], days: allD.length },
-  weeks, channels, meta: {}, commerce, channel,
+  weeks, channels, meta: {}, commerce, channel, salesDaily,
   warnings: added ? [`[RAW_유입] 결측 채널 ${added}행을 0으로 채웠습니다.`] : [],
   updatedAt: new Date().toISOString(), servedFrom: 'test'
 };
@@ -155,10 +161,15 @@ eq('시작일', payload.range.start, E.range.start);
 eq('종료일', payload.range.end,   E.range.end);
 eq('일수',   payload.range.days,  E.range.days);
 
-console.log('\n── 통합 탭 (RAW_commerce) ──');
+console.log('\n── 통합 탭 (RAW_commerce · Sales 는 Raw_실매출 기준) ──');
+// 🛑 Sales 는 2026-09-21부터 포털(RAW_commerce Sales TY)이 아니라 Raw_실매출(TTL=B&M+.COM)
+//    기준이다(UNOVE 구조 동일). Visits·Orders·CVR 은 그대로 포털 기준.
 const cur = sandbox.sumRows(sandbox.mainFiltered());
 eq('총 방문',      cur.visits, E.commerce.visits);
-eq('총 매출',      cur.sales.toFixed(2), E.commerce.sales);
+eq('총 매출(TTL)', cur.sales.toFixed(2), E.commerce.sales);
+eq('  .COM',        cur.salesCom.toFixed(2), E.commerce.salesCom);
+eq('  B&M',         cur.salesBm.toFixed(2), E.commerce.salesBm);
+eq('  .COM + B&M = TTL', (cur.salesCom + cur.salesBm).toFixed(2), cur.sales.toFixed(2));
 eq('총 주문 수량', cur.orders, E.commerce.orders);
 eq('CVR = 주문/방문', cur.cvr.toFixed(4), (E.commerce.orders / E.commerce.visits * 100).toFixed(4));
 // 원본 Conversion TY 를 방문 가중 합산한 값과 같아야 한다 (재계산이 아님을 확인)
@@ -184,10 +195,11 @@ eq('channel  주차 행수', E.weekKeys.map(k => hW[k]).join('/'), E.weekKeys.ma
 eq('주차 라벨 문자열', sandbox.weekLabel(E.weekKeys[0]), E.w1Label);
 
 console.log('\n── 유입 채널 탭 (RAW_유입) ──');
+// 🛑 통합 탭 Sales(실매출)와 더 이상 일치하지 않는다 — 원천이 다르다(포털 vs 실매출 괴리,
+//    문서화된 수 % 차이). 예전엔 둘 다 포털이라 소수점까지 일치했지만 그 불변식은 폐기됐다.
 const chAll = payload.channel.reduce((a, r) => a + r.sales, 0);
 const chNA  = payload.channel.filter(r => r.channel === 'NA').reduce((a, r) => a + r.sales, 0);
 eq('채널 매출 합계 (NA 포함)', chAll.toFixed(2), E.channel.sales);
-eq('  통합 탭 매출과 일치',    chAll.toFixed(2), cur.sales.toFixed(2));
 eq('NA 매출',                  chNA.toFixed(2), E.channel.naSales);
 eq('NA 비중',                  (chNA / chAll * 100).toFixed(2) + '%', E.channel.naPct);
 eq('채널 수 (NA 포함)',        payload.channels.length, E.channel.channelCount);
