@@ -554,7 +554,8 @@ body{
           <button class="tgl active" data-main-period="daily" onclick="setMainPeriod(this,'daily')">일</button>
           <div class="vdiv"></div>
           <!-- 통화 칩 — 기본 선택 = KRW(백만원). 축·데이터 테이블·툴팁이 함께 따라간다.
-               🛑 환율은 코드 상수($1 = 1,500원)다. 시트에 수식으로 두지 않는다. -->
+               🛑 환율은 기간별 고정(8/31까지 $1 = 1,500원 · 9/1부터 1,400원, fxRate).
+                  시트 `환율_기준` · Code.gs · 로컬 스크립트와 네 곳을 함께 바꾼다. -->
           <button class="tgl active" data-cur="KRW" onclick="setCurrency(this,'KRW')">KRW(백만원)</button>
           <button class="tgl" data-cur="USD" onclick="setCurrency(this,'USD')">USD</button>
         </div>
@@ -969,7 +970,7 @@ var MONTH_NAMES = {'01':'JAN','02':'FEB','03':'MAR','04':'APR','05':'MAY','06':'
 var D = {
   meta: {}, commerce: [], channel: [], channels: [], weeks: [],
   range: {start:null, end:null, days:0}, excludedChannels: ['NA'],
-  usdToKrw: 1500, warnings: [], updatedAt: null, servedFrom: null,
+  warnings: [], updatedAt: null, servedFrom: null,
   // ── 세포라 실매출 계열 (B&M · 재고 / SKU 실매출 탭) ────────────────────────
   // 🛑 포털(commerce·channel)과 원천·정의가 다르다 — 포털은 당일 오더 gross,
   //    실매출은 환불·반품을 처리일 기준으로 차감한 값이다. 일 단위로 섞지 않는다.
@@ -980,6 +981,65 @@ var D = {
   // 행에는 얹지 않는다 — applyPayload()/sumRows()/mainChartData() 참조.
   salesByDate: {}
 };
+
+// ── 환율 (USD → 원) · 2026-10-19 MJ 확정 (UN_US 동일) ─────────────────────────
+// 2026-08-31까지 1,500원 · 2026-09-01부터 1,400원. 일별 시장환율은 쓰지 않는다.
+// 판정 기준일: 일 자료 = 그 날짜 · 주 자료 = 주 마감일(토) · 월 자료 = 그 달 1일 · 불명 = 최신.
+// 여러 기간의 합계는 기간마다 그 기간 환율로 환산한 뒤 더한다(달러 합계에 환율 하나를 곱하지 않는다).
+// 🛑 시트 `환율_기준` · Code.gs FX_* · 로컬 스크립트와 네 곳이 같아야 한다. 바꿀 땐 네 곳 동시에.
+var FX_CUT = '2026-09-01', FX_OLD = 1500, FX_NEW = 1400;
+var FX_W1_END = '2026-08-01';            // DF_US W1(7/26 일) 마감일 — 'Wnn' 라벨 판정용
+function fxDay_(d){                      // 여러 날짜 표기 → 'YYYY-MM-DD' (판정 불가면 null)
+  if (d === null || d === undefined || d === '') return null;
+  function p2(n){ return String(n).padStart(2, '0'); }
+  if (Object.prototype.toString.call(d) === '[object Date]')   // 로컬 날짜 — toISOString(UTC)은 KST에서 하루 당겨진다
+    return isNaN(d.getTime()) ? null : d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+  var s = String(d).trim(), m;
+  if ((m = s.match(/^(\d{4})-(\d{2})-(\d{2})/))) return m[0];
+  if (/^\d{4}-\d{2}$/.test(s)) return s + '-01';               // 월 키
+  if ((m = s.match(/^W(\d{1,2})$/i))) {                         // 주차 → 주 마감일
+    var t = new Date(FX_W1_END + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + (+m[1] - 1) * 7);
+    return t.toISOString().slice(0, 10);
+  }
+  return null;
+}
+function fxRate(d){ var s = fxDay_(d); return (s === null || s >= FX_CUT) ? FX_NEW : FX_OLD; }
+
+// 원화 세트 — 행마다 그 행의 기준일 환율로 원 단위로 바꾼 사본을 한 번 만들어 둔다.
+// 통화 칩이 바뀌면 D.* 가 가리키는 세트만 바꾼다 → 집계 함수는 그대로 두어도 「기간별 환산 후 합산」이 된다.
+// USD 세트는 페이로드 원본 객체 그대로다(USD 화면은 환율 도입 전과 같다).
+// 키: [금액 필드, 기준일 필드]. 🛑 price(정가)는 화면이 언제나 USD 로 보여 주므로 넣지 않는다.
+var FX_FIELDS = {
+  commerce:   [['sales'], 'date'],
+  channel:    [['sales'], 'date'],
+  salesDaily: [['bm', 'com', 'total'], 'date'],
+  skuDaily:   [['bm', 'com', 'total'], 'date'],                // 일 원천 — weekEnd 가 있어도 date
+  salesWeek:  [['bm', 'com', 'total'], 'week'],                // 'W6' → 주 마감일
+  skuWeek:    [['bm', 'com', 'total'], 'weekEnd'],
+  bmInv:      [['bm', 'com', 'ttl', 'ytdBm', 'ytdCom', 'ytdTtl'], 'weekEnd'],   // YTD 도 그 주 마감일 환율(MJ 결정)
+  bmWeek:     [['bm', 'com', 'total', 'spd', 'ytdBm', 'ytdCom', 'ytdTtl'], 'weekEnd'],
+  bmStore:    [['sales', 'ytd'], 'weekEnd']
+};
+function fxConvertRows_(rows, spec){
+  return rows.map(function(r){
+    var o = Object.assign({}, r), rate = fxRate(r[spec[1]]);
+    spec[0].forEach(function(f){ if (typeof o[f] === 'number') o[f] = o[f] * rate; });
+    return o;
+  });
+}
+function useCurrencySet_(){
+  var s = D._set && D._set[curCurrency];
+  if (!s) return;
+  Object.keys(s).forEach(function(k){ D[k] = s[k]; });
+  D.salesByDate = {};
+  D.salesDaily.forEach(function(r){ D.salesByDate[r.date] = r; });
+}
+// 선택 통화와 다른 통화의 값을 함께 보여 주는 자리(KPI 보조줄)용 — 잠시 세트를 바꿔 집계하고 되돌린다
+function inCurrencySet_(cur, fn){
+  var keep = curCurrency;
+  curCurrency = cur; useCurrencySet_();
+  try { return fn(); } finally { curCurrency = keep; useCurrencySet_(); }
+}
 
 var currentUser = null;
 var autoRefreshTimer = null;
@@ -1058,15 +1118,18 @@ Chart.defaults.font.family = "'Pretendard','Helvetica Neue',Arial,sans-serif";
 function fmtInt(v){ return (Math.round(v || 0) + 0).toLocaleString('en-US'); }  // +0 → -0 표시 방지(작은 음수 반올림)
 function fmtUsd(v){ return '$' + (v || 0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
 function fmtUsd0(v){ return '$' + Math.round(v || 0).toLocaleString('en-US'); }
-function fmtKrw(v){ return '₩' + Math.round((v || 0) * D.usdToKrw).toLocaleString('ko-KR'); }
+// v = 원 단위(KRW 세트에서 집계한 값). 환율은 여기서 곱하지 않는다 — 행 단위로 이미 환산돼 있다.
+function fmtKrw(v){ return '₩' + Math.round(v || 0).toLocaleString('ko-KR'); }
 function fmtPct(v, digits){ return (v || 0).toFixed(digits === undefined ? 2 : digits) + '%'; }
 
 // ── 통화 변환 ────────────────────────────────────────────────────────────────
-// 원천은 언제나 USD. KRW 는 코드 상수 환율($1 = 1,500원)로 환산한 뒤 **백만원 단위**로 쓴다.
+// 원천은 언제나 USD. KRW 는 행 단위로 기준일 환율(fxRate)을 곱한 원화 세트를 집계한 값이고,
+// 화면에는 **백만원 단위**로 쓴다. 통화 칩이 KRW 면 D.* 가 원화 세트를 가리킨다(useCurrencySet_).
 // ⚠️ 음수(반품·환불)도 그대로 통과시킨다 — 축만 0에서 자르고 값은 숨기지 않는다 (지시서 C1).
 function curIsKrw(){ return curCurrency === 'KRW'; }
 // 차트에 실제로 얹는 수치 (KRW 는 백만원 단위 값)
-function curVal(usd){ return curIsKrw() ? (usd || 0) * D.usdToKrw / 1e6 : (usd || 0); }
+// 🛑 KRW 모드의 v 는 이미 원 단위다 — 여기서 환율을 다시 곱하지 않는다
+function curVal(v){ return curIsKrw() ? (v || 0) / 1e6 : (v || 0); }
 // 백만원 단위 표시 — 자릿수는 크기에 따라. 100 이상은 정수, 10 이상은 1자리, 그 미만은 2자리
 function fmtMKrwFromUnit(m){
   var a = Math.abs(m || 0);
@@ -1328,12 +1391,18 @@ function prevPeriodRows(){
 
 var KPI_NOTES = {
   visits: '세포라 웹사이트/앱에서 특정 제품(SKU)과 상호작용한 세션. RAW_commerce 의 Visits TY 합계입니다. 유입 채널 탭의 방문과는 집계 단위가 달라 서로 비교하지 않습니다.',
-  sales:  'Raw_실매출(세포라 실매출) 기준 TTL(B&M+.COM) 합계 (USD). 포털 집계(유입 채널 탭 매출)와는 원천이 달라 값이 다릅니다 — 포털은 당일 오더 gross, 실매출은 환불·반품을 처리일 기준으로 차감합니다. ₩ 환산은 $1 = 1,500원 기준입니다.',
+  sales:  'Raw_실매출(세포라 실매출) 기준 TTL(B&M+.COM) 합계 (USD). 포털 집계(유입 채널 탭 매출)와는 원천이 달라 값이 다릅니다 — 포털은 당일 오더 gross, 실매출은 환불·반품을 처리일 기준으로 차감합니다. ₩ 환산은 8/31까지 $1 = 1,500원 · 9/1부터 1,400원이며, 날짜별로 환산한 뒤 더합니다.',
   orders: 'RAW_commerce 의 주문 수량 합계입니다.',
   cvr:    '주문 수량 / Visits TY × 100. 원본 Conversion TY 를 방문으로 가중 합산한 값과 같습니다.'
 };
 
+// 통합 탭 KPI 는 큰 숫자가 언제나 USD 이고 ₩ 는 보조줄이다 — 통화 칩과 무관하다.
+// 🛑 ₩ 보조줄은 USD 합계에 환율을 곱하지 않고, 원화 세트에서 같은 필터로 따로 집계한다(기간별 환산 합).
 function renderKPI(){
+  var curK = inCurrencySet_('KRW', function(){ return sumRows(mainFiltered()); });
+  inCurrencySet_('USD', function(){ renderKPIUsd_(curK); });
+}
+function renderKPIUsd_(curK){
   var cur  = sumRows(mainFiltered());
   var prev = prevPeriodRows();
   var pv   = prev ? sumRows(prev.rows) : null;
@@ -1364,8 +1433,9 @@ function renderKPI(){
   var items = [
     { key:'visits', label:'TOTAL VISITS', val: fmtInt(cur.visits), sub:'', d:dV, r: rec && rec.visits },
     { key:'sales',  label:'TOTAL SALES',  val: fmtUsd(cur.sales),
-      sub:'<span style="color:#888;font-weight:700;">₩</span> ' + fmtKrw(cur.sales).slice(1)
-          + ' <span style="color:#ccc;">($1 = ' + D.usdToKrw.toLocaleString('ko-KR') + '원)</span>'
+      sub:'<span style="color:#888;font-weight:700;">₩</span> ' + fmtKrw(curK.sales).slice(1)
+          + ' <span style="color:#ccc;">($1 = ' + FX_OLD.toLocaleString('ko-KR') + '원 · '
+          + (+FX_CUT.slice(5, 7)) + '/' + (+FX_CUT.slice(8)) + '부터 ' + FX_NEW.toLocaleString('ko-KR') + '원)</span>'
           + '<div style="margin-top:5px;display:flex;gap:10px;">'
           + '<span><span style="color:#888;font-weight:700;">.COM</span> ' + fmtUsd0(cur.salesCom)
           + ' <span style="color:#ccc;">(' + (cur.sales ? (cur.salesCom / cur.sales * 100).toFixed(1) : '0.0') + '%)</span></span>'
@@ -1689,6 +1759,7 @@ function setSalesType(btn, type){
 function setCurrency(btn, cur){
   if (curCurrency === cur) return;
   curCurrency = cur;
+  useCurrencySet_();
   var bs = document.querySelectorAll('[data-cur]');
   for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('active', bs[i].dataset.cur === cur);
   renderMainChart();
@@ -2568,10 +2639,12 @@ function renderBmKPI(){
   function vsLine(txt){ return p ? 'vs ' + txt + '  WoW ' + p.week : ''; }
 
   var share = c.total !== 0 ? { bm: c.bm / c.total * 100, com: c.com / c.total * 100 } : null;
+  // 보조줄 = 반대 통화. 같은 주차 행을 반대 세트에서 다시 꺼낸다(원화는 그 주 마감일 환율로 이미 환산돼 있다)
+  var oc = inCurrencySet_(curIsKrw() ? 'USD' : 'KRW', function(){ return bmBaseWeeks().cur; });
 
   var cards = [
     { key:'total', label:'전체 매출', val: fmtCurFull(c.total),
-      sub: curIsKrw() ? fmtUsd(c.total) : '<span style="color:#888;font-weight:700;">₩</span> ' + fmtKrw(c.total).slice(1),
+      sub: curIsKrw() ? fmtUsd(oc.total) : '<span style="color:#888;font-weight:700;">₩</span> ' + fmtKrw(oc.total).slice(1),
       d: pctBadge(c.total, p && p.total), vs: vsLine(fmtCurFull(p ? p.total : 0)) },
     { key:'bm', label:'B&M 매출', val: fmtCurFull(c.bm),
       sub: share ? '매출 비중 ' + share.bm.toFixed(1) + '%' : '',
@@ -3271,13 +3344,23 @@ function renderSkuKPI(){
 
   var dates = rows.map(function(r){ return r.date; }).sort();
   var rangeLbl = dates.length ? dates[0] + ' ~ ' + dates[dates.length - 1] : '—';
-  var aov = range.units > 0 ? range.sales / range.units : null;
+  // 반대 통화 값(보조줄)과 USD 값(평균 판매단가는 언제나 USD)을 반대 세트에서 같은 범위로 다시 집계한다
+  var oth = inCurrencySet_(curIsKrw() ? 'USD' : 'KRW', function(){
+    var s = 0, cs = 0;
+    skuRangeRows().forEach(function(r){
+      s += skuSales(r);
+      if (sellPeriodKey(r, skuPeriod) === lastK) cs += skuSales(r);
+    });
+    return { range: s, cur: cs };
+  });
+  var usdRange = curIsKrw() ? oth.range : range.sales;
+  var aov = range.units > 0 ? usdRange / range.units : null;
   var cmpName = sellCmpName(skuPeriod);
 
   var cards = [
     { key:'recent', label:'최근 ' + sellPeriodKeyLabel(lastK, skuPeriod) + ' ' + skuMetricLabel(),
       val: skuFmtCell(cur.val) === '' ? '-' : (skuMetric === 'units' ? fmtInt(cur.val) : fmtCurFull(cur.sales)),
-      sub: skuMetric === 'units' ? '판매수량 기준' : (curIsKrw() ? fmtUsd(cur.sales) : '<span style="color:#888;font-weight:700;">₩</span> ' + fmtKrw(cur.sales).slice(1)),
+      sub: skuMetric === 'units' ? '판매수량 기준' : (curIsKrw() ? fmtUsd(oth.cur) : '<span style="color:#888;font-weight:700;">₩</span> ' + fmtKrw(oth.cur).slice(1)),
       d: badge,
       vs: prevK ? 'vs ' + (skuMetric === 'units' ? fmtInt(prev.val) : fmtCurFull(prev.sales))
                 + '  ' + cmpName + ' ' + sellPeriodKeyLabel(prevK, skuPeriod) : '' },
@@ -3846,8 +3929,11 @@ function applyPayload(data){
   D.weeks    = data.weeks || [];
   D.range    = data.range || { start:null, end:null, days:0 };
   D.excludedChannels = data.excludedChannels || ['NA'];
-  D.usdToKrw = data.usdToKrw || 1500;
-  D.warnings = data.warnings || [];
+  D.warnings = (data.warnings || []).slice();
+  // 환율 네 곳 동기화 — Code.gs 가 보낸 기준이 이 화면의 상수와 다르면 경고로 올린다
+  if (data.fx && (data.fx.cut !== FX_CUT || data.fx.old !== FX_OLD || data.fx.neu !== FX_NEW))
+    D.warnings.push('환율 불일치 — Code.gs ' + data.fx.cut + ' · ' + data.fx.old + ' · ' + data.fx.neu
+                    + ' / 화면 ' + FX_CUT + ' · ' + FX_OLD + ' · ' + FX_NEW);
   D.updatedAt  = data.updatedAt || null;
   D.servedFrom = data.servedFrom || null;
 
@@ -3869,8 +3955,13 @@ function applyPayload(data){
   //    매출을 SKU 행마다 그대로 얹어 합산하면 18배로 뻥튀기된다. 그래서 행에 주입하지 않고
   //    날짜 조회용 맵만 만든다 — sumRows()/mainChartData() 가 날짜당 한 번만 더한다.
   //    Visits·주문 수량·CVR 은 그대로 RAW_commerce(포털) 기준이라 원천이 섞이지 않는다.
-  D.salesByDate = {};
-  D.salesDaily.forEach(function(r){ D.salesByDate[r.date] = r; });
+  //    날짜 맵은 useCurrencySet_() 가 선택 통화 세트로 다시 만든다.
+  D._set = { USD: {}, KRW: {} };
+  Object.keys(FX_FIELDS).forEach(function(k){
+    D._set.USD[k] = D[k];
+    D._set.KRW[k] = fxConvertRows_(D[k], FX_FIELDS[k]);
+  });
+  useCurrencySet_();
 
   // 선택돼 있던 값이 새 데이터에 없으면 떨어뜨린다
   pruneSet(selWeeks,      D.weeks.map(function(w){ return w.key; }));
