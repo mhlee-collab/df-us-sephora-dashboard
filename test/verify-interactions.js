@@ -165,8 +165,9 @@ assert('  Sales 축 제목이 USD',
   lastChart('mainChart').options.scales.yS.title.text === 'Sales (USD)',
   lastChart('mainChart').options.scales.yS.title.text);
 const USD_SALES_BAR = lastChart('mainChart').data.datasets[0].data.slice();
-assert('  환산 = $1 × 1,500 ÷ 100만 (백만원 단위)',
-  KRW_SALES_BAR.every((v, i) => Math.abs(v - USD_SALES_BAR[i] * payload.usdToKrw / 1e6) < 1e-9), 'ok');
+// 픽스처는 전부 8/31 이전이라 모든 기간이 ×1,500 이다. 전환일을 건너는 경우는 아래 「환율」 절에서 건다.
+assert('  환산 = $1 × 1,500 ÷ 100만 (백만원 단위 · 픽스처는 전환일 이전)',
+  KRW_SALES_BAR.every((v, i) => Math.abs(v - USD_SALES_BAR[i] * sandbox.FX_OLD / 1e6) < 1e-9), 'ok');
 assert('  통화만 바뀌고 기간 토글은 유지', sandbox.mainPeriod === PERIOD_BEFORE, sandbox.mainPeriod);
 assert('  데이터 테이블도 USD 로 따라감',
   /SALES [^<]*\(USD\)/.test(els['mainTable'].innerHTML) && !/백만원/.test(els['mainTable'].innerHTML), 'ok');
@@ -206,13 +207,14 @@ function sumSalesByDate(rows){
 const TOTAL_SALES = sumSalesByDate(payload.commerce);
 step(`MONTH=${LAST_MONTH} 선택`, () => { sandbox.selMonths.add(LAST_MONTH); sandbox.refreshMain(true); });
 assert('  필터가 실제로 좁힌다', (() => {
-  const got = sandbox.sumRows(sandbox.mainFiltered()).sales;
+  // 기대값은 USD 원값 — KRW 모드에서는 D 가 원화 세트라 USD 세트에서 집계한다
+  const got = sandbox.inCurrencySet_('USD', () => sandbox.sumRows(sandbox.mainFiltered()).sales);
   const want = sumSalesByDate(payload.commerce.filter(r => r.month === LAST_MONTH));
   return Math.abs(got - want) < 1e-9 && got < TOTAL_SALES;
 })(), 'ok');
 step('MONTH 해제', () => sandbox.clearFilter('month'));
 assert('  해제하면 전체로 복귀',
-  Math.abs(sandbox.sumRows(sandbox.mainFiltered()).sales - TOTAL_SALES) < 1e-9, 'ok');
+  Math.abs(sandbox.inCurrencySet_('USD', () => sandbox.sumRows(sandbox.mainFiltered()).sales) - TOTAL_SALES) < 1e-9, 'ok');
 const WK = payload.weeks.map(w => w.key);          // 전부 데이터 파생 — 라벨을 박지 않는다
 step(`WEEK=${WK[1]} 선택`, () => { sandbox.selWeeks.add(WK[1]); sandbox.refreshMain(true); });
 assert(`  ${WK[1]} vs ${WK[0]} 비교 배지 생성`, /kpi-badge/.test(els['kpiRow'].innerHTML), 'WoW');
@@ -851,6 +853,64 @@ assert('  SKU 표 지표명도 USD 로', /\(USD\)/.test(els['skuRankTable'].inne
 step('KRW 로 복귀', () => sandbox.setCurrency(btn(), 'KRW'));
 assert('  다시 백만원', /백만원/.test(els['bmTrendTable'].innerHTML), 'ok');
 step('픽스처 페이로드로 복귀', () => sandbox.applyPayload(payload));
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  환율 — 8/31까지 1,500 · 9/1부터 1,400 (2026-10-19 MJ 확정)
+//  🛑 픽스처는 8월 초까지라 전환일을 못 건넌다 → 전환일 앞뒤 합성 페이로드로 건다(실데이터 아님).
+// ══════════════════════════════════════════════════════════════════════════════
+console.log('\n── 환율 판정 (fxRate) ──');
+[['2026-08-31', 1500], ['2026-09-01', 1400], ['2026-08', 1500], ['2026-09', 1400],
+ ['W5', 1500], ['W6', 1400], [null, 1400], [new Date(2026, 7, 31), 1500], [new Date(2026, 8, 1), 1400]]
+  .forEach(([d, want]) => assert('  fxRate(' + (d instanceof Date ? 'Date ' + d.getMonth() + '/' + d.getDate() : JSON.stringify(d)) + ') = ' + want,
+    sandbox.fxRate(d) === want, sandbox.fxRate(d)));
+assert('  W6 → 주 마감일 2026-09-05', sandbox.fxDay_('W6') === '2026-09-05', sandbox.fxDay_('W6'));
+
+const FX = (() => {
+  const tpl = payload.commerce[0];
+  const mon = d => (String(tpl.month).length === 7 ? d.slice(0, 7) : d.slice(5, 7));
+  const cm = (date, week, anchor) => Object.assign({}, tpl, { date, month: mon(date), week, anchor, visits: 10, orders: 1 });
+  const commerce = [cm('2026-08-30', 'W6', '2026-08-30'), cm('2026-08-31', 'W6', '2026-08-30'),
+                    cm('2026-09-01', 'W6', '2026-08-30'), cm('2026-09-06', 'W7', '2026-09-06')];
+  const sd = (date, week, bm, com) => ({ date, month: date.slice(0, 7), week, bm, com, total: bm + com });
+  const salesDaily = [sd('2026-08-30', 'W6', 40, 60), sd('2026-08-31', 'W6', 100, 100),
+                      sd('2026-09-01', 'W6', 100, 200), sd('2026-09-06', 'W7', 200, 200)];
+  const weeks = [{ key: 'W6', anchor: '2026-08-30', start: '2026-08-30', end: '2026-09-01' },
+                 { key: 'W7', anchor: '2026-09-06', start: '2026-09-06', end: '2026-09-06' }];
+  // 주 원천 — W6 은 9/5 마감이라 7일 전부 ×1,400 (MJ 결정: 원천 단위 규칙 그대로)
+  const bmWeek = [{ week: 'W6', weekEnd: '2026-09-05', bm: 240, com: 360, total: 600, inPct: 0.9, doors: 2, spd: 120,
+                    comOh: 0, comOo: 0, ytdBm: 240, ytdCom: 360, ytdTtl: 600 }];
+  return Object.assign({}, payload, SELL, {
+    commerce, salesDaily, weeks, channel: [], bmWeek,
+    bmWeeks: [{ key: 'W6', range: '08/30~09/05', start: '2026-08-30', end: '2026-09-05' }],
+    range: { start: '2026-08-30', end: '2026-09-06', days: 4 },
+    fx: { cut: '2026-09-01', old: 1500, neu: 1400 }
+  });
+})();
+
+console.log('\n── 환율 — 기간별 환산 후 합산 ──');
+step('전환일 앞뒤 합성 페이로드 대입', () => { sandbox.selMonths.clear(); sandbox.selWeeks.clear(); sandbox.applyPayload(FX); });
+step('통합 탭 · KRW · 월', () => { sandbox.switchTab('main'); sandbox.setMainPeriod(btn(), 'monthly'); });
+const comBar = () => lastChart('mainChart').data.datasets.find(d => d.label === 'Sales .COM').data;
+const near = (a, b) => a.length === b.length && a.every((v, i) => Math.abs(v - b[i]) < 1e-9);
+assert('  8월 .COM = 160 × 1,500 · 9월 .COM = 400 × 1,400 (백만원)', near(comBar(), [0.24, 0.56]), JSON.stringify(comBar()));
+step('통합 탭 · 주', () => sandbox.setMainPeriod(btn(), 'weekly'));
+assert('  W6(일 원천) = 8/30·8/31 ×1,500 + 9/1 ×1,400 → 0.52 · W7 = 0.28', near(comBar(), [0.52, 0.28]), JSON.stringify(comBar()));
+assert('  🛑 KPI ₩ 보조줄 = 기간별 합 ₩1,430,000 (달러 합계×1,500 = ₩1,500,000 이 아니다)',
+  els['kpiRow'].innerHTML.includes('1,430,000') && !els['kpiRow'].innerHTML.includes('1,500,000'), 'ok');
+assert('  KPI 큰 숫자는 그대로 USD', els['kpiRow'].innerHTML.includes('$1,000.00'), 'ok');
+assert('  화면 환율 = Code.gs 환율 → 불일치 경고 없음', !sandbox.D.warnings.some(w => /환율 불일치/.test(w)), 'ok');
+step('B&M 탭', () => sandbox.switchTab('bm'));
+assert('  B&M W6(주 원천, 9/5 마감) = 600 × 1,400 = 0.84백만원', els['bmKpiRow'].innerHTML.includes('0.84백만원'), 'ok');
+assert('    보조줄은 USD 원값 $600.00', els['bmKpiRow'].innerHTML.includes('$600.00'), 'ok');
+step('USD 로 전환', () => sandbox.setCurrency(btn(), 'USD'));
+assert('  🛑 USD 모드의 데이터는 페이로드 원본 객체 그대로 (환율 도입 전 화면과 같다)',
+  sandbox.D.salesDaily === FX.salesDaily && sandbox.D.commerce === FX.commerce && sandbox.D.bmWeek === FX.bmWeek, 'ok');
+assert('    B&M 보조줄 ₩ = 840,000', els['bmKpiRow'].innerHTML.includes('840,000'), 'ok');
+step('KRW 로 복귀', () => sandbox.setCurrency(btn(), 'KRW'));
+step('Code.gs 와 다른 환율 페이로드', () => sandbox.applyPayload(Object.assign({}, FX, { fx: { cut: '2026-09-01', old: 1500, neu: 1300 } })));
+assert('  환율 불일치 경고가 뜬다', sandbox.D.warnings.some(w => /환율 불일치/.test(w)), 'ok');
+assert('    원본 페이로드의 warnings 는 건드리지 않는다', !(FX.warnings || []).some(w => /환율 불일치/.test(w)), 'ok');
+step('픽스처 페이로드로 복귀', () => { sandbox.selMonths.clear(); sandbox.selWeeks.clear(); sandbox.applyPayload(payload); sandbox.switchTab('main'); });
 
 console.log('\n── 탭 전환 ──');
 step('유입 탭', () => sandbox.switchTab('channel'));

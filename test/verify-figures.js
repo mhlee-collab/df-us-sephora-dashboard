@@ -80,7 +80,9 @@ const weeks = Object.values(wk).sort((a, b) => a.anchor < b.anchor ? -1 : 1);
 const allD = [...new Set(commerce.concat(channel).map(r => r.date))].sort();
 
 const payload = {
-  ok: true, tz: 'Asia/Seoul', usdToKrw: 1500, excludedChannels: EXCLUDED,
+  // usdToKrw 는 Code.gs 가 하위호환으로 계속 보낸다(새 화면은 읽지 않고 fx 로 동기화만 검사한다)
+  ok: true, tz: 'Asia/Seoul', usdToKrw: 1500, fx: { cut: '2026-09-01', old: 1500, neu: 1400 },
+  excludedChannels: EXCLUDED,
   range: { start: allD[0], end: allD[allD.length - 1], days: allD.length },
   weeks, channels, meta: {}, commerce, channel, salesDaily,
   warnings: added ? [`[RAW_유입] 결측 채널 ${added}행을 0으로 채웠습니다.`] : [],
@@ -155,6 +157,8 @@ function eq(label, got, want) {
 }
 
 sandbox.applyPayload(payload);
+// 기대값(expected.json)은 USD 원값이다. 기본 통화는 KRW 라 D 가 원화 세트를 가리키므로 USD 세트로 맞춘다.
+sandbox.curCurrency = 'USD'; sandbox.useCurrencySet_();
 
 console.log('\n── 기간 ──');
 eq('시작일', payload.range.start, E.range.start);
