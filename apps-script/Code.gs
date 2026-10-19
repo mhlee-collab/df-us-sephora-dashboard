@@ -31,7 +31,7 @@
 // 상태가 될 수 있다. 토큰 없이 /exec 를 호출하면 이 값이 돌아오므로
 // 밖에서 배포 상태를 바로 확인할 수 있다.
 // 🛑 Code.gs 를 고치면 이 값을 함께 올린다.
-var CODE_VERSION = '2026-08-19b';
+var CODE_VERSION = '2026-10-19-fx';
 
 // 이 배포가 실제로 거는 검사 목록. 토큰 없이 /exec 를 부르면 함께 돌아온다.
 // audience 가 빠져 있으면 옛 코드가 배포돼 있다는 뜻이다 (→ 새 버전으로 재배포).
@@ -39,7 +39,28 @@ var GATE_CHECKS = 'token,audience,verified_email,domain';
 
 var SPREADSHEET_PROP_KEY = 'SPREADSHEET_ID';
 var ALLOWED_DOMAIN = 'wyattcorp.com';
-var USD_TO_KRW     = 1500;               // 환율 기준: $1 = 1,500원 (수동 갱신)
+
+// 환율 — 2026-08-31까지 1,500원 · 2026-09-01부터 1,400원 (2026-10-19 MJ 확정, UN_US 동일).
+// 판정 기준일: 일 자료 = 그 날짜 · 주 자료 = 주 마감일(토) · 월 자료 = 그 달 1일 · 불명 = 최신.
+// 🛑 시트 `환율_기준`(FX_CUT·FX_USD_OLD·FX_USD_NEW) · index.html fxRate · 로컬 스크립트와 네 곳이 같아야 한다.
+//    Code.gs 자체는 환산하지 않는다(파서는 USD만 낸다). 아래 값은 진단·동기화 검사·프런트 전달용.
+var FX_CUT     = '2026-09-01';
+var FX_USD_OLD = 1500;
+var FX_USD_NEW = 1400;
+function fxRate_(d, tz) {                 // tz = ss.getSpreadsheetTimeZone()
+  var s = '';
+  if (d instanceof Date) {
+    if (isNaN(d.getTime())) return FX_USD_NEW;
+    s = Utilities.formatDate(d, tz, 'yyyy-MM-dd');
+  } else {
+    var t = String(d === null || d === undefined ? '' : d).trim(), m;
+    if ((m = t.match(/^(\d{4})-(\d{1,2})(?:-(\d{1,2}))?/))) {
+      s = m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + (m[3] || '1')).slice(-2);
+    }
+  }
+  if (!s) return FX_USD_NEW;              // 날짜 불명 = 최신
+  return s >= FX_CUT ? FX_USD_NEW : FX_USD_OLD;
+}
 
 // 🛑 이 대시보드의 접근 게이트는 아래 verifyToken_() 이 전부다.
 //    배포 액세스가 「모든 사용자」인 이유는 그래야 CORS 가 열리기 때문이지
@@ -60,7 +81,9 @@ var EXCLUDED_CHANNELS = ['NA'];
 // ── 시트 스펙 ─────────────────────────────────────────────────────────────────
 // cols = 기준 열 개수. 이보다 적으면 에러(열이 사라졌다), 많으면 경고(오른쪽에 추가됨).
 // required = 파서가 실제로 읽는 열. 완전 일치 헤더명.
-// ⚠️ RAW_유입 M열은 헤더 없는 상수(1500) 셀이라 required에 넣지 않는다.
+// ⚠️ RAW_유입 M1 은 옛 환율 상수(1500) 칸이라 required에 넣지 않는다.
+//    2026-10-19부터 어떤 수식도 읽지 않는다(원화 열은 `환율_기준` 이름 범위를 날짜별로 참조).
+//    열 개수 검증이 헤더 행을 세므로 칸은 비우지 않고 둔다.
 var SHEET_SPEC = {
   meta: {
     tab: '구분자', cols: 9,
@@ -79,8 +102,8 @@ var SHEET_SPEC = {
   },
 
   // ── B&M · 재고 계열 (주 단위 · 세포라 실매출 리포트) ────────────────────────
-  // 🛑🛑 **구글 시트의 열 이름 규칙 — 이걸 놓치면 값이 1500배로 틀린다.**
-  //     `이름 ($)` = 세포라 원본(USD)  ·  `이름`(평문) = 시트가 만든 **KRW 파생열(×1500)**
+  // 🛑🛑 **구글 시트의 열 이름 규칙 — 이걸 놓치면 값이 1,400~1,500배로 틀린다.**
+  //     `이름 ($)` = 세포라 원본(USD)  ·  `이름`(평문) = 시트가 만든 **KRW 파생열(기간별 ×1,500 / 9/1부터 ×1,400)**
   //     로컬 누적관리용 xlsx 에는 KRW 파생열이 아예 없어서 평문 이름이 곧 USD 였다.
   //     그 파일만 보고 스펙을 짰다가 2026-08-19 배포 후 `Raw_BM재고` TTL 이 정확히
   //     1500배(₩36,934,605)로 나왔다. col_() 은 완전 일치 + indexOf 라 조용히 KRW 열을 잡는다.
@@ -282,6 +305,8 @@ function buildPayload_() {
   var warnings = [];        // 화면에 그려진다 — 데이터가 실제로 깨진 경우에만
   var diagnostics = [];     // 화면에 안 그린다 — 로그·하네스 대조용 내부 진단
 
+  fxSheetCheck_(ss, warnings);
+
   var meta     = parseMeta_(ss, warnings);
   var commerce = parseCommerce_(ss, warnings);
   var channel  = parseChannel_(ss, warnings);
@@ -336,7 +361,8 @@ function buildPayload_() {
     ok:        true,
     v:         CODE_VERSION,
     tz:        ss.getSpreadsheetTimeZone(),
-    usdToKrw:  USD_TO_KRW,
+    usdToKrw:  FX_USD_OLD,                                   // 하위호환 — 구버전 index.html 전용. 새 프런트는 읽지 않는다
+    fx:        { cut: FX_CUT, old: FX_USD_OLD, neu: FX_USD_NEW },
     excludedChannels: EXCLUDED_CHANNELS,
     range:     { start: dates[0] || null, end: dates[dates.length - 1] || null, days: dates.length },
     weeks:     weeks,
@@ -503,6 +529,20 @@ function parseChannel_(ss, warnings) {
 //     numOrNull_() 로 null 을 만들어 프런트에서 '-' 로 그리게 한다.
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// 환율 네 곳 동기화 검사 — 시트 `환율_기준` 이름 범위가 위 FX_* 상수와 다르면 화면 경고로 올린다.
+// 사람이 시트 한쪽만 고치는 사고를 기계가 잡는다.
+function fxSheetCheck_(ss, warnings) {
+  var tz = ss.getSpreadsheetTimeZone();
+  try {
+    var cut = ss.getRangeByName('FX_CUT'), o = ss.getRangeByName('FX_USD_OLD'), n = ss.getRangeByName('FX_USD_NEW');
+    if (!cut || !o || !n) { warnings.push('환율_기준 이름 범위(FX_CUT·FX_USD_OLD·FX_USD_NEW)가 없습니다'); return; }
+    var c = cut.getValue(), cs = c instanceof Date ? Utilities.formatDate(c, tz, 'yyyy-MM-dd') : String(c).trim();
+    if (cs !== FX_CUT || +o.getValue() !== FX_USD_OLD || +n.getValue() !== FX_USD_NEW)
+      warnings.push('환율 불일치 — 시트 ' + cs + ' · ' + o.getValue() + ' · ' + n.getValue()
+                    + ' / Code.gs ' + FX_CUT + ' · ' + FX_USD_OLD + ' · ' + FX_USD_NEW);
+  } catch (e) { warnings.push('환율_기준 확인 실패: ' + e.message); }
+}
+
 // 새 탭 파서 전용 안전망. 실패를 삼키지 않고 warnings 로 화면에 올린다.
 function softParse_(label, fn, warnings, fallback) {
   try {
@@ -565,7 +605,7 @@ function parseBmInv_(ss, warnings) {
   var iSku  = col_(hdrs, 'SKU',            spec.tab);
   var iName = col_(hdrs, '제품명',          spec.tab);
   var iPrc  = col_(hdrs, '정가',            spec.tab);
-  // 🛑 반드시 `($)` 붙은 USD 원본을 읽는다. 평문 이름은 시트가 만든 KRW 파생열(×1500)이다.
+  // 🛑 반드시 `($)` 붙은 USD 원본을 읽는다. 평문 이름은 시트가 만든 KRW 파생열(기간별 환율)이다.
   var iBm   = col_(hdrs, 'B&M매출 ($)',     spec.tab);
   var iCom  = col_(hdrs, '.COM매출 ($)',    spec.tab);
   var iTtl  = col_(hdrs, 'TTL매출 ($)',     spec.tab);
@@ -1223,7 +1263,8 @@ function checkTotals() {
     ? '✘ 불일치 — ' + bad.map(function (c) {
         var ratio = base !== 0 ? (c.v / base) : 0;
         return c.n + ' $' + c.v.toFixed(2)
-             + (Math.abs(ratio - USD_TO_KRW) < 1 ? ' (정확히 ' + USD_TO_KRW + '배 → KRW 파생열을 읽고 있다)'
+             // 9/1 이후가 섞이면 비율이 1,400~1,500 사이로 나온다 (기간별 환율)
+             + (ratio > FX_USD_NEW - 1 && ratio < FX_USD_OLD + 1 ? ' (' + ratio.toFixed(1) + '배 → KRW 파생열을 읽고 있다)'
                 : c.v === 0 ? ' (0 — 탭/헤더를 못 읽었다. warnings 확인)' : ' (' + ratio.toFixed(4) + '배)');
       }).join(' / ')
     : '✔ 전부 일치';
