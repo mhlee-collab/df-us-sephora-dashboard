@@ -494,6 +494,9 @@ body{
     <div class="sb-item" data-tab="sku" onclick="switchTab('sku')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" style="display:block;flex-shrink:0"><line x1="4.5" y1="2.5" x2="13" y2="2.5"/><line x1="4.5" y1="7" x2="13" y2="7"/><line x1="4.5" y1="11.5" x2="13" y2="11.5"/><circle cx="1.6" cy="2.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="1.6" cy="7" r="1.1" fill="currentColor" stroke="none"/><circle cx="1.6" cy="11.5" r="1.1" fill="currentColor" stroke="none"/></svg></span><span class="sb-text">SKU 실매출</span>
     </div>
+    <div class="sb-item" data-tab="query" onclick="switchTab('query')">
+      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" style="display:block;flex-shrink:0"><circle cx="6" cy="6" r="4.3"/><line x1="9.2" y1="9.2" x2="13" y2="13"/></svg></span><span class="sb-text">구글 쿼리</span>
+    </div>
   </div>
   <div class="sb-footer">
     <div class="sb-user">
@@ -897,6 +900,11 @@ body{
       <div class="note" id="skuNote"></div>
       <div style="height:28px;"></div>
     </div>
+  </div>
+
+  <!-- ─────────── 구글 쿼리 탭 (/query-us/ 를 그대로 띄운다) ─────────── -->
+  <div id="tabQuery" style="display:none;">
+    <iframe id="qusFrame" title="구글 쿼리" style="width:100%;height:calc(100vh - 44px);border:0;display:block;background:#fff;"></iframe>
   </div>
 
   </div><!-- /main-scroll -->
@@ -3691,6 +3699,7 @@ function switchTab(tab){
   document.getElementById('tabChannel').style.display = tab === 'channel' ? '' : 'none';
   document.getElementById('tabBm').style.display      = tab === 'bm' ? '' : 'none';
   document.getElementById('tabSku').style.display     = tab === 'sku' ? '' : 'none';
+  document.getElementById('tabQuery').style.display   = tab === 'query' ? '' : 'none';
   document.getElementById('pageTitle').textContent = TAB_TITLES[tab] || TAB_TITLES.main;
   // 🛑 탭에 들어올 때마다 강제 재렌더한다. 숨겨진 canvas 는 폭이 0이라
   //    첫 렌더가 접혀 있으면 그대로 눌린 차트가 남는다.
@@ -3698,8 +3707,24 @@ function switchTab(tab){
   if (tab === 'main')    { try { refreshMain(true);    } catch(e){ console.warn(e); } }
   if (tab === 'bm')      { try { refreshBm(true);      } catch(e){ console.warn(e); } }
   if (tab === 'sku')     { try { refreshSku(true);     } catch(e){ console.warn(e); } }
+  if (tab === 'query')   openQueryTab();
 }
-var TAB_TITLES = { main:'통합 대시보드', channel:'유입 채널별', bm:'B&M · 재고', sku:'SKU 실매출' };
+var TAB_TITLES = { main:'통합 대시보드', channel:'유입 채널별', bm:'B&M · 재고', sku:'SKU 실매출', query:'구글 쿼리' };
+// ═══ 구글 쿼리 탭 — /query-us/ 를 iframe 으로 띄우고, 이 대시보드 로그인 토큰(시트 읽기 전용 포함)을
+//     그 페이지 출처로만 넘긴다. 토큰으로 시트를 못 읽으면 탭 안에서 따로 로그인 화면이 뜬다.
+var QUS_URL = 'https://wyatt-biz-dashboard.vercel.app/query-us/?brand=DF';
+function openQueryTab(){
+  var f = document.getElementById('qusFrame');
+  if (f && !f.getAttribute('src')) f.setAttribute('src', QUS_URL);   // 처음 열 때만 불러온다
+}
+window.addEventListener('message', function(e){
+  var f = document.getElementById('qusFrame');
+  if (!f || e.source !== f.contentWindow || e.origin !== new URL(QUS_URL).origin) return;
+  if (e.data && e.data.type === 'qus-ready'){
+    var t = sessionStorage.getItem('dfus_token');
+    if (t) f.contentWindow.postMessage({ type:'qus-token', token:t }, e.origin);
+  }
+});
 function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('collapsed'); }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -3746,7 +3771,7 @@ function startGoogleLogin(){
     client_id: GOOGLE_CLIENT_ID,
     redirect_uri: REDIRECT_URI,
     response_type: 'token',
-    scope: 'email profile',
+    scope: 'email profile https://www.googleapis.com/auth/spreadsheets.readonly',   // 구글 쿼리 탭이 시트를 읽는다
     hd: ALLOWED_DOMAIN,
     prompt: 'select_account'
   });
