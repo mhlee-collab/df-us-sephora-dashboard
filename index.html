@@ -1402,6 +1402,12 @@ function krwByKey_(){
   return m;
 }
 function roasOf_(num, den){ return den > 0 ? num / den * 100 : null; }
+// ROAS 분모 — 월 버킷은 매출 데이터가 그 달 1일부터 있을 때만 쓴다.
+// 🛑 대시보드 매출은 2026-07-26 부터라 7월은 6일치 매출 ÷ 7월 전체 비용이 된다(실측 6%) → 그 달은 ROAS 에서 뺀다.
+function roasCost_(period, label, key){
+  if (period === 'monthly' && !(D.range && D.range.start && D.range.start <= key + '-01')) return 0;
+  return costVal(period, label, key);
+}
 function fmtRoas_(v){ return v === null || v === undefined ? '—' : Math.round(v).toLocaleString('en-US') + '%'; }
 function fmtCostM_(v){ return v === null || v === undefined ? '-' : fmtKrw(v); }
 
@@ -1413,7 +1419,7 @@ function kpiRoas_(rows){
     var keys = {}, den = 0;
     rows.forEach(function(r){ keys[periodKey(r, p)] = 1; });
     var kept = Object.keys(keys).filter(function(k){
-      var d = 0; labels.forEach(function(l){ d += costVal(p, l, k); });
+      var d = 0; labels.forEach(function(l){ d += roasCost_(p, l, k); });
       if (d > 0){ den += d; return true; }
       return false;
     });
@@ -1526,7 +1532,7 @@ var KPI_NOTES = {
   sales:  'Raw_실매출(세포라 실매출) 기준 TTL(B&M+.COM) 합계 (USD). 포털 집계(유입 채널 탭 매출)와는 원천이 달라 값이 다릅니다 — 포털은 당일 오더 gross, 실매출은 환불·반품을 처리일 기준으로 차감합니다. ₩ 환산은 8/31까지 $1 = 1,500원 · 9/1부터 1,400원이며, 날짜별로 환산한 뒤 더합니다.',
   orders: 'RAW_commerce 의 주문 수량 합계입니다.',
   cvr:    '주문 수량 / Visits TY × 100. 원본 Conversion TY 를 방문으로 가중 합산한 값과 같습니다.',
-  roasTotal: 'TTL 매출(원화) ÷ 광고비 총계. 주를 고르면 주, 아니면 월 단위로 합산하고, 비용이 아직 0 인 기간(장부 마감 전)은 분자·분모 모두에서 뺍니다. 「공통 비용 포함」을 끄면 공통 브랜딩·KOL 비용을 뺀 총계로 계산합니다.',
+  roasTotal: 'TTL 매출(원화) ÷ 광고비 총계. 주를 고르면 주, 아니면 월 단위로 합산하고, 비용이 아직 0 인 기간(장부 마감 전)과 매출 자료가 그 달 1일부터 없는 달(7월)은 분자·분모 모두에서 뺍니다. 「공통 비용 포함」을 끄면 공통 브랜딩·KOL 비용을 뺀 총계로 계산합니다.',
   roasCom:   '.COM 매출(원화) ÷ 페이드 비용(세포라 광고). 월 = 장부 퍼포먼스 · 주 = 광고 RAW 세포라 캠페인. 비용이 0 인 기간은 분자·분모 모두에서 뺍니다.'
 };
 
@@ -1774,7 +1780,7 @@ function renderMainChart(){
         label: COST_SERIES_NAME[k], type: 'line',
         data: data.map(function(d){
           var s = krw[d.key] ? krw[d.key][x[1]] : 0;
-          var r = roasOf_(s, costVal(mainPeriod, x[2], d.key));
+          var r = roasOf_(s, roasCost_(mainPeriod, x[2], d.key));
           return r === null ? null : Math.round(r);
         }),
         borderColor: COST_COLORS[k], backgroundColor: hexToRgba(COST_COLORS[k], 0.08),
@@ -1911,8 +1917,8 @@ function renderMainTable(){
     { label: 'KOL 비용 (₩)',        fmt: function(d){ return fmtCostM_(costVal(mainPeriod, 'KOL 비용', d.key)); } },
     { label: '채널마케팅 비용 (₩)', fmt: function(d){ return fmtCostM_(costVal(mainPeriod, '채널마케팅 비용', d.key)); } },
     { label: '광고비 총계 (₩)',     fmt: function(d){ return fmtCostM_(costVal(mainPeriod, '광고비 총계', d.key)); } },
-    { label: '닷컴 ROAS',  fmt: function(d){ var k = krw[d.key]; var r = roasOf_(k ? k.salesCom : 0, costVal(mainPeriod, '퍼포먼스 비용', d.key)); return r === null ? '-' : fmtRoas_(r); } },
-    { label: '전체 ROAS',  fmt: function(d){ if (mainPeriod === 'daily') return '-'; var k = krw[d.key]; var r = roasOf_(k ? k.sales : 0, costVal(mainPeriod, '광고비 총계', d.key)); return r === null ? '-' : fmtRoas_(r); } }
+    { label: '닷컴 ROAS',  fmt: function(d){ var k = krw[d.key]; var r = roasOf_(k ? k.salesCom : 0, roasCost_(mainPeriod, '퍼포먼스 비용', d.key)); return r === null ? '-' : fmtRoas_(r); } },
+    { label: '전체 ROAS',  fmt: function(d){ if (mainPeriod === 'daily') return '-'; var k = krw[d.key]; var r = roasOf_(k ? k.sales : 0, roasCost_(mainPeriod, '광고비 총계', d.key)); return r === null ? '-' : fmtRoas_(r); } }
   ];
   var krw = krwByKey_();
 
