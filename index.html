@@ -4788,7 +4788,9 @@ function buildAdsFromPayload_() {
   });
   window.ADS_DICT = dict;
   SALES_BY_DATE = {};
-  (D.salesDaily || []).forEach(function (s) {
+  // 🛑 닥포는 통화 칩에 따라 D.salesDaily 가 원화 사본으로 바뀐다 — 항상 USD 원본 세트를 읽고 여기서 한 번만 환산한다
+  var sdUsd = (D._set && D._set.USD && D._set.USD.salesDaily) || D.salesDaily || [];
+  sdUsd.forEach(function (s) {
     var o = SALES_BY_DATE[s.date] || (SALES_BY_DATE[s.date] = { com: 0, bam: 0, total: 0 });
     // 🛑 Raw_실매출은 USD — 이 탭 차트·툴팁은 매출을 ₩로 표시하므로 날짜 환율(fxRate)로 원화로 바꿔 둔다.
     //    (어노브 광고 탭은 USD 값을 ₩ 라벨로 그린다 — 닥포는 원화로 맞춤)
@@ -6233,7 +6235,6 @@ function applyPayload(data){
   // 비용·노출·쿼리(「세포라 대시보드용」 탭) · 세포라 광고 RAW — 원화. 옛 캐시에는 없는 키다(→ 비용 0).
   D.demand     = data.demand     || {};
   D.ads        = data.ads        || [];
-  try { buildAdsFromPayload_(); } catch(e){ console.warn('[ads] 어댑터 실패', e); }
   _adsDayC = null;
 
   // 🛑 통합 탭 Sales = Raw_실매출(세포라 실매출) 기준으로 전환(2026-09-21 MJ 지시, UNOVE 동일 구조).
@@ -6249,6 +6250,7 @@ function applyPayload(data){
     D._set.KRW[k] = fxConvertRows_(D[k], FX_FIELDS[k]);
   });
   useCurrencySet_();
+  try { buildAdsFromPayload_(); } catch(e){ console.warn('[ads] 어댑터 실패', e); }   // 통화 세트를 만든 뒤에 (USD 원본을 읽는다)
 
   // 선택돼 있던 값이 새 데이터에 없으면 떨어뜨린다
   pruneSet(selWeeks,      D.weeks.map(function(w){ return w.key; }));
