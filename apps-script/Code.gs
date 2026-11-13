@@ -31,7 +31,7 @@
 // 상태가 될 수 있다. 토큰 없이 /exec 를 호출하면 이 값이 돌아오므로
 // 밖에서 배포 상태를 바로 확인할 수 있다.
 // 🛑 Code.gs 를 고치면 이 값을 함께 올린다.
-var CODE_VERSION = '2026-11-12-cost';
+var CODE_VERSION = '2026-11-13-ads';
 
 // 이 배포가 실제로 거는 검사 목록. 토큰 없이 /exec 를 부르면 함께 돌아온다.
 // audience 가 빠져 있으면 옛 코드가 배포돼 있다는 뜻이다 (→ 새 버전으로 재배포).
@@ -657,6 +657,12 @@ function parseAdsSephora_(dss, warnings) {
   var iD = c('날짜'), iM = c('매체'), iC = c('채널 (판매채널)'), iCamp = c('캠페인명'),
       iG = c('광고 그룹명'), iCr = c('광고 소재명'), iImp = c('노출 수'), iClk = c('클릭 수'),
       iView = c('조회'), iConv = c('전환 수'), iRev = c('전환 매출'), iSp = c('최종 광고비(원)');
+  // 퍼포먼스 광고 탭(2026-11-13)용 — 없는 열은 0/빈칸 (탭 구조가 바뀌어도 비용 칩은 그대로 돈다)
+  function o(name) { return h.indexOf(name); }
+  var iAtc = o('장바구니 담기 수'), iLk = o('게시물 공감'), iCm = o('게시물 댓글'), iSh = o('게시물 공유'),
+      iSv = o('게시물 저장'), iGoal = o('캠페인 목표'), iOpt = o('최적화 목표');
+  function at(row, i) { return i < 0 ? 0 : toNum_(row[i]); }
+  function st(row, i) { return i < 0 ? '' : String(row[i] || '').trim().toLowerCase(); }
   var MEDIA = { '메타':1, '틱톡':1, '유튜브':1, '구글':1 };
   var out = [];
   for (var r = 1; r < v.length; r++) {
@@ -678,7 +684,9 @@ function parseAdsSephora_(dss, warnings) {
       creative: String(row[iCr] || '').trim(),
       impressions: toNum_(row[iImp]), clicks: toNum_(row[iClk]), views: toNum_(row[iView]),
       purchases: toNum_(row[iConv]), revenue: toNum_(row[iRev]),
-      spend: toNum_(String(row[iSp]).replace(/[₩,]/g, ''))
+      spend: toNum_(String(row[iSp]).replace(/[₩,]/g, '')),
+      atc: at(row, iAtc), likes: at(row, iLk), comments: at(row, iCm), shares: at(row, iSh), saves: at(row, iSv),
+      goal: st(row, iGoal), opt: st(row, iOpt)
     });
   }
   return out;

@@ -439,6 +439,128 @@ body{
   padding:10px 28px;background:var(--brand);color:#fff;border:none;border-radius:6px;
   font-size:13px;cursor:pointer;font-weight:600;font-family:inherit;
 }
+
+/* ── 퍼포먼스 광고 탭 (2026-11-13 어노브에서 이식, #tabAds 안으로 한정) ── */
+#tabAds .mkr-btn{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:3px 9px;border:0.5px solid #D8D8DC;background:#fff;color:#777;cursor:pointer;border-radius:3px;transition:all .15s;}
+#tabAds .mkr-btn:hover{border-color:#999;color:#444;}
+#tabAds .mkr-btn.active{background:#444;border-color:#444;color:#fff;}
+#tabAds .mkr-btn:disabled{opacity:.35;cursor:not-allowed;}
+#tabAds .marker-zone.hidden{height:0!important;min-height:0!important;margin:0!important;overflow:hidden;}
+#tabAds .stgl{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  padding:3px 9px;border:0.5px solid #D8D8DC;background:#fff;color:#777;cursor:pointer;border-radius:3px;transition:all .15s;}
+#tabAds .stgl:hover{border-color:#1D2847;color:#1D2847;}
+#tabAds .stgl.active{background:#1D2847;border-color:#1D2847;color:#fff;}
+#tabAds .cur-sw button.on{background:#d97070;color:#fff;}
+#tabAds .ads-p-btn{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 7px;border:0.5px solid #D8D8DC;background:#fff;color:#9ca3af;cursor:pointer;border-radius:3px;transition:all .15s;}
+#tabAds .ads-p-btn:hover{border-color:#1D2847;color:#1D2847;}
+#tabAds .ads-p-btn.active{background:#1D2847;border-color:#1D2847;color:#fff;}
+#tabAds .chart-filter-strip{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px;}
+#tabAds .cfd{display:flex;flex-direction:column;gap:4px;}
+#tabAds .cfd-lbl{font-size:10px;font-weight:500;color:#aaa;letter-spacing:0;}
+#tabAds .cfd-wrap{position:relative;user-select:none;}
+#tabAds .cfd-btn{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 10px;background:#fff;border:0.5px solid #E0E0E4;border-radius:6px;cursor:pointer;font-size:11px;color:#555;white-space:nowrap;min-width:72px;}
+#tabAds .cfd-btn:hover{border-color:#aaa;color:#333;}
+#tabAds .cfd-btn.cfd-open .cfd-arr{transform:rotate(180deg);}
+#tabAds .cfd-arr{font-size:9px;color:#aaa;transition:transform .15s;}
+#tabAds .cfd-panel{display:none;position:absolute;top:calc(100% + 3px);left:0;background:#fff;border:0.5px solid #E0E0E4;border-radius:8px;z-index:400;min-width:130px;box-shadow:0 4px 16px rgba(0,0,0,.08);max-height:220px;overflow-y:auto;}
+#tabAds .cfd-panel.show{display:block;}
+#tabAds .cfd-all{padding:7px 12px;font-size:11px;font-weight:500;cursor:pointer;color:#555;border-bottom:1px solid #EBEBEF;display:flex;align-items:center;gap:8px;}
+#tabAds .cfd-all:hover{background:#F5F5F8;}
+#tabAds .cfd-opt{padding:5px 12px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:8px;color:#555;white-space:nowrap;}
+#tabAds .cfd-opt:hover{background:#F5F5F8;}
+#tabAds .cfd-opt input[type=checkbox]{accent-color:#1D2847;width:12px;height:12px;cursor:pointer;flex-shrink:0;}
+#tabAds .cfd-sep{width:0.5px;height:24px;background:#EBEBEF;margin:0 2px;align-self:flex-end;margin-bottom:6px;}
+#tabAds .chart-sec-title{font-size:12px;font-weight:500;color:#444;margin-bottom:1px;}
+#tabAds .chart-sec-sub{font-size:10px;color:#aaa;margin-bottom:12px;}
+#tabAds .ads-tbl-wrap{overflow-x:auto;}
+#tabAds .ads-metric-tbl{border-collapse:collapse;font-size:10px;white-space:nowrap;width:100%;}
+#tabAds .ads-metric-tbl th,#tabAds .ads-metric-tbl td{padding:5px 9px;border-bottom:1px solid #EEE;text-align:right;}
+#tabAds .ads-metric-tbl th:first-child,#tabAds .ads-metric-tbl td.ads-metric-lbl{text-align:left;position:sticky;left:0;background:#fff;font-weight:600;color:#1D2847;z-index:1;}
+#tabAds .ads-metric-tbl thead th{color:#9ca3af;font-weight:700;border-bottom:2px solid #E0E0E4;font-size:9px;letter-spacing:.5px;text-transform:uppercase;}
+#tabAds .ads-metric-tbl tbody tr:hover td{background:#F8F8FB;}
+#tabAds .ads-metric-tbl .ca-lbl{color:#7B3F1D;}
+#tabAds .ads-metric-tbl .ca-na{color:#7b8194;cursor:help;}
+#tabAds .ads-metric-tbl .ca-why{display:block;font-size:9px;font-weight:400;color:#7b8194;}
+#tabAds .cty-row .cty-chip.on{background:#1D2847;color:#fff;border-color:#1D2847;}
+#tabAds .chs-bar .chs-tab.on{color:#111;font-weight:800;border-bottom-color:#d97070;}
+#tabAds .subtabs{background:#fff;border-bottom:.5px solid #E8E8EC;padding:0 28px;display:flex;gap:2px;}
+#tabAds .subtab{padding:11px 16px 9px;font-size:12px;color:#9ca3af;cursor:pointer;border-bottom:2px solid transparent;font-weight:500;}
+#tabAds .subtab:hover{color:#555;}
+#tabAds .subtab.on{color:#1D2847;font-weight:700;border-bottom-color:#c8102e;}
+#tabAds .cr-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+#tabAds .cstack{display:grid;grid-template-rows:15px 12px 12px;align-content:start;}
+#tabAds .cstack.one{grid-template-rows:15px;}
+#tabAds .c-now{font-weight:600;line-height:15px;}
+#tabAds .c-prev{color:#9ca3af;font-size:9px;font-weight:500;line-height:12px;}
+#tabAds .c-dlt{line-height:12px;}
+#tabAds .cstack.cr-leg{font-size:8px;color:#c4c4c8;font-weight:500;text-align:right;}
+#tabAds .cstack.cr-leg span:nth-child(1){line-height:15px;}
+#tabAds .cstack.cr-leg span:nth-child(2),#tabAds .cstack.cr-leg span:nth-child(3){line-height:12px;}
+#tabAds .cr-lblcell{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+#tabAds .cr-dlt{font-size:9px;font-weight:700;white-space:nowrap;}
+#tabAds .cr-dlt.cr-up{color:#c8102e;}
+#tabAds .cr-dlt.cr-dn{color:#3D85C6;}
+#tabAds .cr-dlt.cr-flat{color:#c4c4c8;}
+#tabAds .kpi-badge.cr-up{color:#c8102e;background:#FBE9EC;}
+#tabAds .kpi-badge.cr-dn{color:#3D85C6;background:#E8F0F9;}
+#tabAds .cr-badge{font-size:8.5px;font-weight:700;padding:1px 4px;border-radius:3px;margin-left:4px;}
+#tabAds .cr-badge.new{background:#e8f5ec;color:#16a34a;}
+#tabAds .cr-badge.end{background:#f2f2f5;color:#9ca3af;}
+#tabAds .cr-chip{display:inline-block;font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:4px;vertical-align:middle;white-space:nowrap;}
+#tabAds .cr-chip.meta{background:#E8F0F9;color:#3D85C6;}
+#tabAds .cr-chip.tiktok{background:#F6EAF1;color:#A64D79;}
+#tabAds .cr-chip.live{background:#EAF6EE;color:#16a34a;}
+#tabAds .cr-chip.test{background:#FBE9EC;color:#c8102e;}
+#tabAds .cr-chip.obj{background:#EEF1F7;color:#3f4a63;}
+#tabAds .cr-camprow{cursor:pointer;}
+#tabAds .cr-caret{display:inline-block;width:10px;color:#9ca3af;font-size:8px;transition:transform .15s;cursor:pointer;}
+#tabAds .cr-caret.open{transform:rotate(90deg);}
+#tabAds .cr-mrow{display:grid;align-items:center;gap:0 14px;padding:5px 0;border-bottom:.5px solid #F7F7F9;}
+#tabAds .cr-mrow:last-child{border-bottom:0;}
+#tabAds .cr-mhead{font-size:9px;font-weight:700;color:#9ca3af;letter-spacing:.3px;padding-bottom:5px;border-bottom:.5px solid #E8E8EC;margin-bottom:2px;}
+#tabAds .cr-mnamecell{display:flex;align-items:center;gap:7px;min-width:0;flex-wrap:wrap;}
+#tabAds .cr-mname{font-size:11px;color:#333;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+#tabAds .cr-dot{width:7px;height:7px;border-radius:50%;flex:none;display:inline-block;}
+#tabAds .cr-mcell{display:flex;align-items:center;gap:7px;}
+#tabAds .cr-mtrack{flex:1;height:7px;background:#F2F2F5;border-radius:4px;overflow:hidden;min-width:40px;}
+#tabAds .cr-mfill{height:100%;border-radius:4px;}
+#tabAds .cr-mval{font-size:10px;font-variant-numeric:tabular-nums;color:#333;font-weight:600;white-space:nowrap;text-align:right;min-width:52px;}
+#tabAds .cr-sortgrp{font-size:9px;font-weight:700;color:#9ca3af;text-align:right;letter-spacing:.3px;white-space:nowrap;}
+#tabAds .cr-sortrow{display:flex;gap:3px;flex-wrap:wrap;}
+#tabAds .cr-panels{display:flex;gap:14px;flex-wrap:wrap;}
+#tabAds .cr-panel{flex:1 1 400px;min-width:0;}
+#tabAds .cr-viz{width:100%;height:auto;display:block;}
+#tabAds .cr-ax{font-size:10.5px;fill:#9ca3af;font-family:inherit;}
+#tabAds .cr-ax.cur{fill:#c8102e;font-weight:700;}
+#tabAds .cr-lbl{font-size:10.5px;font-weight:700;font-family:inherit;}
+#tabAds .cr-quad{font-size:10px;fill:#c4c4c8;font-family:inherit;}
+#tabAds .cr-quad.warn{fill:#c8102e;opacity:.75;}
+#tabAds .cr-ptitle{font-size:11px;font-weight:700;fill:#1D2847;font-family:inherit;}
+#tabAds .cr-nodata{color:#c4c4c8;font-size:11px;padding:16px 0;}
+#tabAds .cr-lgd{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin-right:3px;}
+#tabAds .ddx{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:11px;}
+#tabAds .ddx thead th{background:#1D2847;color:#fff;font-size:8.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px;text-align:right;white-space:nowrap;cursor:pointer;}
+#tabAds .ddx thead th:first-child{text-align:left;padding-left:14px;min-width:320px;cursor:default;}
+#tabAds .ddx thead th:hover{background:#2b3757;}
+#tabAds .ddx td{padding:7px 8px;text-align:right;color:#666;border-bottom:.5px solid #F0F0F3;white-space:nowrap;}
+#tabAds .ddx td:first-child{text-align:left;color:#333;white-space:normal;}
+#tabAds tr.cr-lv1 td{font-weight:700;color:#111827;border-bottom:.5px solid #E8E8EC;}
+#tabAds tr.cr-lv2{background:#FAFAFC;}
+#tabAds tr.cr-lv3 td:first-child{color:#666;font-size:10.5px;}
+#tabAds .sarr{font-size:8px;margin-left:3px;opacity:.9;}
+#tabAds .sarr.off{opacity:.25;}
+#tabAds .footer{background:#14141f;color:#333;text-align:center;padding:9px;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-top:6px;}
+#tabAds .insight-item.warn{border-left-color:#c8102e;}
+#tabAds .kol-tbl th.left{text-align:left;}
+#tabAds .kol-tbl td.left{text-align:left;}
+#tabAds .kol-sort.on{opacity:1;color:#333;}
+#tabAds .stg-status.ok{background:rgba(22,163,74,0.12);color:#4ade80;border:0.5px solid rgba(74,222,128,0.2);}
+#tabAds .sb-cty.on{color:#fff;}
+#tabAds .sb-cty.on[data-cty="US"]{background:#d97070;}
+#tabAds .sb-cty.on[data-cty="CA"]{background:#7B3F1D;}
+#tabAds .sb-cty.on[data-cty="ALL"]{background:rgba(255,255,255,0.16);}
+#tabAds .sb-cty.on .sb-cdot{box-shadow:0 0 0 2px #fff;}
 </style>
 </head>
 <body>
@@ -499,6 +621,9 @@ body{
     </div>
     <div class="sb-item" data-tab="sku" onclick="switchTab('sku')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" style="display:block;flex-shrink:0"><line x1="4.5" y1="2.5" x2="13" y2="2.5"/><line x1="4.5" y1="7" x2="13" y2="7"/><line x1="4.5" y1="11.5" x2="13" y2="11.5"/><circle cx="1.6" cy="2.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="1.6" cy="7" r="1.1" fill="currentColor" stroke="none"/><circle cx="1.6" cy="11.5" r="1.1" fill="currentColor" stroke="none"/></svg></span><span class="sb-text">SKU 실매출</span>
+    </div>
+    <div class="sb-item" data-tab="ads" onclick="switchTab('ads')">
+      <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0"><polyline points="1,11.5 4.5,7.5 7.5,9.5 13,3.5"/><polyline points="9.5,3.5 13,3.5 13,7"/></svg></span><span class="sb-text">퍼포먼스 광고</span>
     </div>
     <div class="sb-item" data-tab="query" onclick="switchTab('query')">
       <span class="sb-icon"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3" style="display:block;flex-shrink:0"><circle cx="6" cy="6" r="4.3"/><line x1="9.2" y1="9.2" x2="13" y2="13"/></svg></span><span class="sb-text">구글 쿼리</span>
@@ -917,6 +1042,384 @@ body{
   </div>
 
   <!-- ─────────── 구글 쿼리 탭 (/query-us/ 를 그대로 띄운다) ─────────── -->
+<div id="tabAds" style="display:none;">
+<div class="subtabs">
+  <div class="subtab on" data-st="media" onclick="switchSubtab('media')">매체 성과</div>
+  <div class="subtab" data-st="creative" onclick="switchSubtab('creative')">소재별 성과</div>
+</div>
+<div id="stMedia">
+<!-- 필터 바 -->
+<div class="filter-row" style="padding:14px 28px 0;gap:16px;flex-wrap:wrap;align-items:center;">
+  <div class="filter-block">
+    <div class="filter-lbl">매출 타입</div>
+    <div style="display:flex;gap:4px;">
+      <button class="stgl active" data-ads-sales="com"   onclick="setAdsSales(this)">.COM</button>
+      <button class="stgl"        data-ads-sales="total" onclick="setAdsSales(this)">TTL</button>
+      <button class="stgl"        data-ads-sales="bam"   onclick="setAdsSales(this)">B&M</button>
+    </div>
+  </div>
+</div>
+<!-- Chart 1: 전체 퍼포먼스 -->
+<div class="chart-sec">
+  <div class="chart-sec-title">퍼포먼스 통합</div>
+  <div class="chart-sec-sub">광고비 · 세포라 매출 · 세포라 유입</div>
+  <div class="chart-filter-strip">
+  <div class="cfd">
+    <span class="cfd-lbl">매체</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-media" onclick="toggleCFD('media')"><span id="cfdLabel-media">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-media">
+        <div class="cfd-all" onclick="clearCFDMedia()"><input type="checkbox" id="chk-media-all" checked> ALL</div>
+        <label class="cfd-opt"><input type="checkbox" value="meta" checked onchange="onCFDMedia(this,'meta')"> Meta</label>
+        <label class="cfd-opt"><input type="checkbox" value="tiktok" checked onchange="onCFDMedia(this,'tiktok')"> TikTok</label>
+      </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">지표</span>
+    <div style="display:flex;gap:3px;">
+      <button class="stgl active" data-metric-chart="1" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
+      <button class="stgl"        data-metric-chart="1" data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
+      <button class="stgl"        data-metric-chart="1" data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
+      <button class="stgl"        data-metric-chart="1" data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
+      <button class="stgl"        data-metric-chart="1" data-ads-metric="er"          onclick="setAdsMetric(this)" style="display:none">ER</button>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">월</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-month1" onclick="toggleCFD('month1')"><span id="cfdLabel-month1">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-month1">
+        <div class="cfd-all" onclick="clearCFDMonth()"><input type="checkbox" id="chk-month1-all" checked> ALL</div>
+        <div id="cfdPanel-month1-opts"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">주차</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-week1" onclick="toggleCFD('week1')"><span id="cfdLabel-week1">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-week1">
+        <div class="cfd-all" onclick="clearCFDWeek()"><input type="checkbox" id="chk-week1-all" checked> ALL</div>
+        <div id="cfdPanel-week1-opts"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cfd-sep"></div>
+  <div class="cfd">
+    <span class="cfd-lbl">주기</span>
+    <div style="display:flex;gap:3px;">
+      <button class="ads-p-btn" data-chart="1" data-period="monthly" onclick="setChartPeriod(1,this,'monthly')">월</button>
+      <button class="ads-p-btn active" data-chart="1" data-period="weekly" onclick="setChartPeriod(1,this,'weekly')">주</button>
+      <button class="ads-p-btn" data-chart="1" data-period="daily" onclick="setChartPeriod(1,this,'daily')">일</button>
+    </div>
+  </div>
+  <div class="cfd-sep"></div>
+  <div class="cfd">
+    <span class="cfd-lbl">표시</span>
+    <div style="display:flex;gap:3px;">
+      <button class="mkr-btn active" id="btnSales1" onclick="toggleChartSales(1,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:3px 7px;"><span style="width:6px;height:6px;border-radius:50%;background:#d97070;display:inline-block;"></span>매출</button>
+      <button class="mkr-btn active" id="btnVisits1" onclick="toggleChartVisits(1,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:3px 7px;"><span style="width:6px;height:6px;border-radius:50%;background:#5dcaa5;display:inline-block;"></span>유입</button>
+    </div>
+  </div>
+  </div>
+  <div class="chart-card">
+    <div class="leg-row" id="adsChart1Leg" style="flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
+    <div class="chart-wrap" style="height:300px;"><canvas id="adsChart1"></canvas></div>
+    <div class="chart-note">좌축: 광고비  /  우축: 매출(₩) · 유입</div>
+  </div>
+  <div class="chart-card" style="margin-top:10px;">
+    <div class="chart-sec-sub" style="margin-bottom:8px;">지표 확인용 표 (18개 지표 · 현재 필터 기준)</div>
+    <div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="adsTable1"></table></div>
+    <div class="chart-note" style="text-align:left;color:#999;margin-top:6px;">Sales·ROAS = 전환 매출(달러) → 원 환산(2026-08-31까지 1,500원 · 2026-09-01부터 1,400원/달러, 대시보드 표준 트렌드 환율 기준) ÷ 최종 광고비(원). 광고비는 raw 산정 환율(1,450원/달러) 기준이라 Sales와 적용 환율이 다름 — 관행상 병존하는 기준으로 반영.</div>
+  </div>
+</div>
+<!-- Chart 2: Meta 캠페인 목표별 -->
+<div class="chart-sec">
+  <div class="chart-sec-title">Meta</div>
+  <div class="chart-sec-sub">캠페인 목표별 퍼포먼스 · 세포라 매출 · 유입</div>
+  <div class="chart-filter-strip">
+  <div class="cfd">
+    <span class="cfd-lbl">월</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-month2" onclick="toggleCFD('month2')"><span id="cfdLabel-month2">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-month2">
+        <div class="cfd-all" onclick="clearCFDMonth()"><input type="checkbox" id="chk-month2-all" checked> ALL</div>
+        <div id="cfdPanel-month2-opts"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">주차</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-week2" onclick="toggleCFD('week2')"><span id="cfdLabel-week2">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-week2">
+        <div class="cfd-all" onclick="clearCFDWeek()"><input type="checkbox" id="chk-week2-all" checked> ALL</div>
+        <div id="cfdPanel-week2-opts"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">지표</span>
+    <div style="display:flex;gap:3px;">
+      <button class="stgl active" data-metric-chart="2" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
+      <button class="stgl"        data-metric-chart="2" data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
+      <button class="stgl"        data-metric-chart="2" data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
+      <button class="stgl"        data-metric-chart="2" data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
+      <button class="stgl"        data-metric-chart="2" data-ads-metric="er"          onclick="setAdsMetric(this)" style="display:none">ER</button>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">캠페인 목표</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-metaCamp" onclick="toggleCFD('metaCamp')"><span id="cfdLabel-metaCamp">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-metaCamp">
+        <div class="cfd-all" onclick="clearCFDMetaCamp()"><input type="checkbox" id="chk-metaCamp-all" checked> ALL</div>
+        <div id="cfdPanel-metaCamp-opts">
+          <label class="cfd-opt"><input type="checkbox" value="전환(구매)" checked onchange="onCFDMetaCamp(this,'전환(구매)')"> 전환(구매)</label>
+          <label class="cfd-opt"><input type="checkbox" value="전환(장바구니)" checked onchange="onCFDMetaCamp(this,'전환(장바구니)')"> 전환(장바구니)</label>
+          <label class="cfd-opt"><input type="checkbox" value="트래픽(lpv)" checked onchange="onCFDMetaCamp(this,'트래픽(lpv)')"> 트래픽(lpv)</label>
+          <label class="cfd-opt"><input type="checkbox" value="트래픽(click)" checked onchange="onCFDMetaCamp(this,'트래픽(click)')"> 트래픽(click)</label>
+          <label class="cfd-opt"><input type="checkbox" value="조회" checked onchange="onCFDMetaCamp(this,'조회')"> 조회</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">차트 형식</span>
+    <div style="display:flex;gap:3px;">
+      <button class="ads-p-btn active" data-meta-type="bar" onclick="setMetaChartType(this,'bar')">Bar</button>
+      <button class="ads-p-btn" data-meta-type="line" onclick="setMetaChartType(this,'line')">Line</button>
+    </div>
+  </div>
+  <div class="cfd-sep"></div>
+  <div class="cfd">
+    <span class="cfd-lbl">주기</span>
+    <div style="display:flex;gap:3px;">
+      <button class="ads-p-btn" data-chart="2" data-period="monthly" onclick="setChartPeriod(2,this,'monthly')">월</button>
+      <button class="ads-p-btn active" data-chart="2" data-period="weekly" onclick="setChartPeriod(2,this,'weekly')">주</button>
+      <button class="ads-p-btn" data-chart="2" data-period="daily" onclick="setChartPeriod(2,this,'daily')">일</button>
+    </div>
+  </div>
+  <div class="cfd-sep"></div>
+  <div class="cfd">
+    <span class="cfd-lbl">표시</span>
+    <div style="display:flex;gap:3px;">
+      <button class="mkr-btn active" id="btnSales2" onclick="toggleChartSales(2,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:3px 7px;"><span style="width:6px;height:6px;border-radius:50%;background:#d97070;display:inline-block;"></span>매출</button>
+      <button class="mkr-btn active" id="btnVisits2" onclick="toggleChartVisits(2,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:3px 7px;"><span style="width:6px;height:6px;border-radius:50%;background:#5dcaa5;display:inline-block;"></span>유입</button>
+    </div>
+  </div>
+  </div>
+  <div class="chart-card">
+    <div class="leg-row" id="adsChart2Leg" style="flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
+    <div class="chart-wrap" style="height:300px;"><canvas id="adsChart2"></canvas></div>
+  </div>
+  <div class="chart-card" style="margin-top:10px;">
+    <div class="chart-sec-sub" style="margin-bottom:8px;">지표 확인용 표 (18개 지표 · 현재 필터 기준)</div>
+    <div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="adsTable2"></table></div>
+    <div class="chart-note" style="text-align:left;color:#999;margin-top:6px;">Sales·ROAS = 전환 매출(달러) → 원 환산(2026-08-31까지 1,500원 · 2026-09-01부터 1,400원/달러, 대시보드 표준 트렌드 환율 기준) ÷ 최종 광고비(원). 광고비는 raw 산정 환율(1,450원/달러) 기준이라 Sales와 적용 환율이 다름 — 관행상 병존하는 기준으로 반영.</div>
+  </div>
+</div>
+<!-- Chart 3: TikTok 캠페인 목표별 -->
+<div class="chart-sec" style="padding-bottom:28px;">
+  <div class="chart-sec-title">TikTok</div>
+  <div class="chart-sec-sub">캠페인 목표별 퍼포먼스 · 세포라 매출 · 유입</div>
+  <div class="chart-filter-strip">
+  <div class="cfd">
+    <span class="cfd-lbl">월</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-month3" onclick="toggleCFD('month3')"><span id="cfdLabel-month3">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-month3">
+        <div class="cfd-all" onclick="clearCFDMonth()"><input type="checkbox" id="chk-month3-all" checked> ALL</div>
+        <div id="cfdPanel-month3-opts"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">주차</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-week3" onclick="toggleCFD('week3')"><span id="cfdLabel-week3">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-week3">
+        <div class="cfd-all" onclick="clearCFDWeek()"><input type="checkbox" id="chk-week3-all" checked> ALL</div>
+        <div id="cfdPanel-week3-opts"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">지표</span>
+    <div style="display:flex;gap:3px;">
+      <button class="stgl active" data-metric-chart="3" data-ads-metric="spend"       onclick="setAdsMetric(this)">광고비</button>
+      <button class="stgl"        data-metric-chart="3" data-ads-metric="impressions" onclick="setAdsMetric(this)">노출</button>
+      <button class="stgl"        data-metric-chart="3" data-ads-metric="clicks"      onclick="setAdsMetric(this)">클릭</button>
+      <button class="stgl"        data-metric-chart="3" data-ads-metric="ctr"         onclick="setAdsMetric(this)">CTR</button>
+      <button class="stgl"        data-metric-chart="3" data-ads-metric="er"          onclick="setAdsMetric(this)" style="display:none">ER</button>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">캠페인 목표</span>
+    <div class="cfd-wrap">
+      <div class="cfd-btn" id="cfdBtn-ttCamp" onclick="toggleCFD('ttCamp')"><span id="cfdLabel-ttCamp">전체</span><span class="cfd-arr">▾</span></div>
+      <div class="cfd-panel" id="cfdPanel-ttCamp">
+        <div class="cfd-all" onclick="clearCFDTtCamp()"><input type="checkbox" id="chk-ttCamp-all" checked> ALL</div>
+        <div id="cfdPanel-ttCamp-opts">
+          <label class="cfd-opt"><input type="checkbox" value="검색" checked onchange="onCFDTtCamp(this,'검색')"> 검색</label>
+          <label class="cfd-opt"><input type="checkbox" value="조회" checked onchange="onCFDTtCamp(this,'조회')"> 조회</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cfd">
+    <span class="cfd-lbl">차트 형식</span>
+    <div style="display:flex;gap:3px;">
+      <button class="ads-p-btn active" data-tt-type="bar" onclick="setTtChartType(this,'bar')">Bar</button>
+      <button class="ads-p-btn" data-tt-type="line" onclick="setTtChartType(this,'line')">Line</button>
+    </div>
+  </div>
+  <div class="cfd-sep"></div>
+  <div class="cfd">
+    <span class="cfd-lbl">주기</span>
+    <div style="display:flex;gap:3px;">
+      <button class="ads-p-btn" data-chart="3" data-period="monthly" onclick="setChartPeriod(3,this,'monthly')">월</button>
+      <button class="ads-p-btn active" data-chart="3" data-period="weekly" onclick="setChartPeriod(3,this,'weekly')">주</button>
+      <button class="ads-p-btn" data-chart="3" data-period="daily" onclick="setChartPeriod(3,this,'daily')">일</button>
+    </div>
+  </div>
+  <div class="cfd-sep"></div>
+  <div class="cfd">
+    <span class="cfd-lbl">표시</span>
+    <div style="display:flex;gap:3px;">
+      <button class="mkr-btn active" id="btnSales3" onclick="toggleChartSales(3,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:3px 7px;"><span style="width:6px;height:6px;border-radius:50%;background:#d97070;display:inline-block;"></span>매출</button>
+      <button class="mkr-btn active" id="btnVisits3" onclick="toggleChartVisits(3,this)" style="display:flex;align-items:center;gap:3px;font-size:8px;padding:3px 7px;"><span style="width:6px;height:6px;border-radius:50%;background:#5dcaa5;display:inline-block;"></span>유입</button>
+    </div>
+  </div>
+  </div>
+  <div class="chart-card">
+    <div class="leg-row" id="adsChart3Leg" style="flex-wrap:wrap;gap:10px;margin-bottom:10px;"></div>
+    <div class="chart-wrap" style="height:300px;"><canvas id="adsChart3"></canvas></div>
+  </div>
+  <div class="chart-card" style="margin-top:10px;">
+    <div class="chart-sec-sub" style="margin-bottom:8px;">지표 확인용 표 (18개 지표 · 현재 필터 기준)</div>
+    <div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="adsTable3"></table></div>
+    <div class="chart-note" style="text-align:left;color:#999;margin-top:6px;">Sales·ROAS = 전환 매출(달러) → 원 환산(2026-08-31까지 1,500원 · 2026-09-01부터 1,400원/달러, 대시보드 표준 트렌드 환율 기준) ÷ 최종 광고비(원). 광고비는 raw 산정 환율(1,450원/달러) 기준이라 Sales와 적용 환율이 다름 — 관행상 병존하는 기준으로 반영.</div>
+  </div>
+</div>
+</div><!-- /stMedia -->
+  <div id="stCreative" style="display:none;">
+    <!-- ① 페이지 필터 스트립 -->
+    <div class="chart-filter-strip" id="crPageFilter" style="padding:14px 28px 12px;margin-bottom:0;">
+      <div class="cfd">
+        <span class="cfd-lbl">매체</span>
+        <div class="cfd-wrap">
+          <div class="cfd-btn" id="cfdBtn-crMedia" onclick="toggleCFD('crMedia')"><span id="crLbl-media">전체</span><span class="cfd-arr">▾</span></div>
+          <div class="cfd-panel" id="cfdPanel-crMedia"></div>
+        </div>
+      </div>
+      <div class="cfd">
+        <span class="cfd-lbl">기간 단위</span>
+        <div style="display:flex;gap:3px" id="crSegUnit">
+          <button class="ads-p-btn active" data-u="m" onclick="crSetUnit(this,'m')">월</button>
+          <button class="ads-p-btn" data-u="w" onclick="crSetUnit(this,'w')">주</button>
+          <button class="ads-p-btn" data-u="d" onclick="crSetUnit(this,'d')">일</button>
+        </div>
+      </div>
+      <div class="cfd">
+        <span class="cfd-lbl">구간</span>
+        <div class="cfd-wrap">
+          <div class="cfd-btn" id="cfdBtn-crCur" onclick="toggleCFD('crCur')" style="min-width:110px"><span id="crLbl-cur"></span><span class="cfd-arr">▾</span></div>
+          <div class="cfd-panel" id="cfdPanel-crCur" style="min-width:150px"></div>
+        </div>
+      </div>
+      <div class="cfd">
+        <span class="cfd-lbl" style="color:#c8102e">비교 구간</span>
+        <div class="cfd-wrap">
+          <div class="cfd-btn" id="cfdBtn-crCmp" onclick="toggleCFD('crCmp')" style="min-width:110px"><span id="crLbl-cmp"></span><span class="cfd-arr">▾</span></div>
+          <div class="cfd-panel" id="cfdPanel-crCmp" style="min-width:170px"></div>
+        </div>
+      </div>
+      <div class="cfd">
+        <span class="cfd-lbl">직전 구간 대비</span>
+        <div style="display:flex;gap:4px" id="crSegCmp"></div>
+      </div>
+      <div class="cfd-sep"></div>
+      <div class="cfd">
+        <span class="cfd-lbl">캠페인 (최적화 목표별)</span>
+        <div class="cfd-wrap">
+          <div class="cfd-btn" id="cfdBtn-crCamp" onclick="toggleCFD('crCamp')" style="min-width:200px"><span id="crLbl-camp">전체</span><span class="cfd-arr">▾</span></div>
+          <div class="cfd-panel" id="cfdPanel-crCamp" style="min-width:300px"></div>
+        </div>
+      </div>
+      <div class="cfd">
+        <span class="cfd-lbl">운영 구분</span>
+        <div style="display:flex;gap:3px" id="crSegMode">
+          <button class="stgl active" onclick="crSetMode(this,'all')">전체</button>
+          <button class="stgl" onclick="crSetMode(this,'ongoing')">상시</button>
+          <button class="stgl" onclick="crSetMode(this,'test')">테스트</button>
+        </div>
+      </div>
+      <div style="margin-left:auto;align-self:flex-end;font-size:10px;color:#aaa;text-align:right;line-height:1.7" id="crFCount"></div>
+    </div>
+    <div class="chart-note" style="padding:0 28px;text-align:left;color:#9ca3af" id="crWowNote"></div>
+
+    <!-- ② 전체 매체 요약 -->
+    <div class="chart-sec">
+      <div class="chart-sec-title">전체 매체 요약</div>
+      <div class="chart-sec-sub" id="crSecSubA"></div>
+      <div class="cr-kpis" id="crKpiRow"></div>
+      <div class="chart-card" style="margin-top:9px">
+        <div class="chart-sec-sub" style="margin-bottom:8px">매체별 요약</div>
+        <div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="crMediaTbl"></table></div>
+        <div class="chart-note" id="crLiveNote" style="margin-top:9px;text-align:left;color:#ccc">「소재」 = 선택 구간에 집행된 소재 수. 원천 시트에 게재 상태(ON/OFF) 열이 없어 「진행중」 표기는 넣지 않았습니다.</div>
+      </div>
+    </div>
+
+    <!-- ③ 소재별 성과 -->
+    <div class="chart-sec">
+      <div class="chart-sec-title">소재별 성과</div>
+      <div class="chart-sec-sub">캠페인 → 광고그룹 → 소재 · 이미지 없이 이름 기준</div>
+      <div class="chart-card">
+        <div class="chart-filter-strip" style="margin-bottom:6px">
+          <div class="cfd" style="flex:1">
+            <span class="cfd-lbl">지표 <span style="color:#c8102e">(복수 선택 · 최대 3개)</span></span>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <span style="font-size:9px;font-weight:700;color:#9ca3af">최소 광고비</span>
+              <div class="cfd-wrap">
+                <div class="cfd-btn" id="cfdBtn-crChartMin" onclick="toggleCFD('crChartMin')" style="min-width:104px"><span id="crLbl-chartMin">50만원 이상</span><span class="cfd-arr">▾</span></div>
+                <div class="cfd-panel" id="cfdPanel-crChartMin"></div>
+              </div>
+            </div>
+            <div id="crSegSort" style="margin-top:5px"></div>
+          </div>
+          <div class="cfd" style="margin-left:auto;align-self:flex-start">
+            <span class="cfd-lbl">보기</span>
+            <div style="display:flex;gap:3px" id="crSegView">
+              <button class="ads-p-btn active" onclick="crSetView(this,'bar')">막대</button>
+              <button class="ads-p-btn" onclick="crSetView(this,'trend')">추이</button>
+              <button class="ads-p-btn" onclick="crSetView(this,'scat')">분포</button>
+            </div>
+          </div>
+        </div>
+        <div class="chart-sec-sub" style="margin:2px 0 10px" id="crRankNote"></div>
+        <div id="crRank"></div>
+        <div class="chart-note" style="text-align:left;color:#999" id="crRankLeg"></div>
+      </div>
+
+      <div class="chart-card" style="margin-top:9px;overflow:hidden;padding-bottom:10px">
+        <div class="chart-filter-strip" style="margin-bottom:8px;align-items:center">
+          <div class="chart-sec-sub" style="margin-bottom:0">캠페인 → 광고그룹 → 소재 <span style="color:#c4c4c8">· 행을 눌러 펼치기</span></div>
+          <div class="cfd" style="margin-left:auto">
+            <span class="cfd-lbl">최소 광고비</span>
+            <div class="cfd-wrap">
+              <div class="cfd-btn" id="cfdBtn-crTblMin" onclick="toggleCFD('crTblMin')" style="min-width:104px"><span id="crLbl-tblMin">제한 없음</span><span class="cfd-arr">▾</span></div>
+              <div class="cfd-panel" id="cfdPanel-crTblMin"></div>
+            </div>
+          </div>
+        </div>
+        <div class="ads-tbl-wrap" style="margin:0 -16px;padding:0 16px"><table class="ddx"><thead id="crDDHead"></thead><tbody id="crTb"></tbody></table></div>
+        <div class="chart-note" id="crDDMinNote" style="text-align:left;color:#9ca3af;margin-top:8px"></div>
+      </div>
+    </div>
+  </div>
+</div><!-- /tabAds -->
   <div id="tabQuery" style="display:none;height:100%;">
     <iframe id="qusFrame" title="구글 쿼리" style="width:100%;height:100%;border:0;display:block;background:#fff;"></iframe>
   </div>
@@ -3900,6 +4403,1550 @@ function refreshSku(force){
 // ═══════════════════════════════════════════════════════════════════════════════
 //  탭 전환 · 사이드바
 // ═══════════════════════════════════════════════════════════════════════════════
+// ─── ADS STATE ────────────────────────────────────────────────────────────────
+const ADS_RAW = [];
+let selAdsSales  = 'com';    // com | total | bam
+const adsChartMetric = {1:'spend', 2:'spend', 3:'spend'}; // 차트별 독립 지표 (spend|impressions|clicks|ctr|er)
+let _curMetric = 'spend'; // 현재 렌더링 중인 차트의 지표 (내부 계산용)
+let selAdsMedia  = new Set(['meta','tiktok']);   // 닥포 세포라 광고 = 메타·틱톡
+const adsChartPeriod = {1:'weekly', 2:'weekly', 3:'weekly'};
+let adsGlobalPeriod2 = 'weekly'; // 글로벌 기간 (드롭다운 연동)
+let adsSelectedRange = new Set(); // empty = 전체, Set of period keys (multi-select)
+// 차트별 독립 매출/유입 토글
+const adsShowSales  = {1: true, 2: true, 3: true};
+const adsShowVisits = {1: true, 2: true, 3: true};
+const metaActiveCampaigns = new Set(['전환(구매)','전환(장바구니)','트래픽(lpv)','트래픽(click)','조회']);
+let metaChartType = 'bar';
+const ttActiveCampaigns = new Set(['검색','조회']);
+let ttChartType = 'bar';
+let adsChart1 = null, adsChart2 = null, adsChart3 = null;
+window.setAdsSales = function(btn) {
+  selAdsSales = btn.dataset.adsSales;
+  document.querySelectorAll('[data-ads-sales]').forEach(b => b.classList.toggle('active', b===btn));
+  refreshAds();
+};
+window.setAdsMetric = function(btn) {
+  var cn = parseInt(btn.dataset.metricChart || '0', 10);
+  if (!cn) return;
+  adsChartMetric[cn] = btn.dataset.adsMetric;
+  document.querySelectorAll('[data-metric-chart="' + cn + '"]').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.adsMetric === adsChartMetric[cn]);
+  });
+  refreshAdsChart(cn);
+};
+window.toggleAdsMedia = function(btn) {
+  const m = btn.dataset.adsMedia;
+  if (selAdsMedia.has(m)) {
+    if (selAdsMedia.size > 1) { selAdsMedia.delete(m); btn.classList.remove('active'); }
+  } else { selAdsMedia.add(m); btn.classList.add('active'); }
+  refreshAds();
+};
+window.setChartPeriod = function(chartNum, btn, period) {
+  document.querySelectorAll('[data-chart="' + chartNum + '"]').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  adsChartPeriod[chartNum] = period;
+  // 글로벌 버튼 상태 동기화 (3개 모두 같은 period면 active)
+  var allSame = [1,2,3].every(function(n){ return adsChartPeriod[n] === period; });
+  if (allSame) {
+    document.querySelectorAll('[data-ads-gperiod]').forEach(function(b){ b.classList.remove('active'); });
+    var gb = document.querySelector('[data-ads-gperiod="' + period + '"]');
+    if (gb) gb.classList.add('active');
+  }
+  refreshAdsChart(chartNum);
+};
+// ── 기간 드롭다운 ──────────────────────────────────────────────
+window.toggleAdsDD = function() {
+  var btn = document.getElementById('ddBtn-adsPeriod');
+  var panel = document.getElementById('ddPanel-adsPeriod');
+  if (!btn || !panel) return;
+  var isOpen = panel.classList.contains('show');
+  // 다른 모든 드롭다운 닫기
+  document.querySelectorAll('.dd-panel.show').forEach(function(p){ p.classList.remove('show'); });
+  document.querySelectorAll('.dd-btn.open').forEach(function(b){ b.classList.remove('open'); });
+  if (!isOpen) {
+    panel.classList.add('show');
+    btn.classList.add('open');
+    populateAdsPeriodOpts(adsGlobalPeriod2);
+  }
+};
+window.setAdsDDTab = function(period) {
+  adsGlobalPeriod2 = period;
+  adsSelectedRange = null;
+  // 탭 active
+  ['monthly','weekly','daily'].forEach(function(p){
+    var t = document.getElementById('adsDD-tab-' + p);
+    if (t) t.classList.toggle('active', p === period);
+  });
+  // ALL 체크
+  var allChk = document.getElementById('chk-adsPeriod-all');
+  if (allChk) allChk.checked = true;
+  // 옵션 재빌드
+  populateAdsPeriodOpts(period);
+  // 차트 업데이트
+  [1,2,3].forEach(function(n) {
+    adsChartPeriod[n] = period;
+    document.querySelectorAll('[data-chart="' + n + '"]').forEach(function(b){ b.classList.remove('active'); });
+    var pb = document.querySelector('[data-chart="' + n + '"][data-period="' + period + '"]');
+    if (pb) pb.classList.add('active');
+  });
+  updateAdsDDLabel();
+  refreshAds();
+};
+window.clearAdsPeriodDD = function() {
+  adsSelectedRange = new Set();
+  var allChk = document.getElementById('chk-adsPeriod-all');
+  if (allChk) allChk.checked = true;
+  document.querySelectorAll('#ddPanel-adsPeriod-opts .dd-opt input').forEach(function(c){ c.checked = false; });
+  updateAdsDDLabel();
+  refreshAds();
+};
+window.setAdsPeriodRange = function(chk, rangeKey) {
+  if (chk.checked) {
+    adsSelectedRange.add(rangeKey);
+    var allChk = document.getElementById('chk-adsPeriod-all');
+    if (allChk) allChk.checked = false;
+  } else {
+    adsSelectedRange.delete(rangeKey);
+    if (adsSelectedRange.size === 0) {
+      var allChk = document.getElementById('chk-adsPeriod-all');
+      if (allChk) allChk.checked = true;
+    }
+  }
+  updateAdsDDLabel();
+  refreshAds();
+};
+function populateAdsPeriodOpts(period) {
+  var container = document.getElementById('ddPanel-adsPeriod-opts');
+  if (!container) return;
+  var keys = new Set();
+  ADS_RAW.forEach(function(r){ keys.add(getPeriodKey(r.date, period)); });
+  Object.keys(SALES_BY_DATE).forEach(function(d){ keys.add(getPeriodKey(d, period)); });
+  var sorted = Array.from(keys).sort();
+  container.innerHTML = sorted.map(function(k) {
+    var label = '';
+    if (period === 'monthly') {
+      var parts = k.split('-');
+      label = parseInt(parts[1]) + '월';
+    } else if (period === 'weekly') {
+      label = fmtPeriodLabel(k, 'weekly');
+    } else {
+      var d = new Date(k + 'T00:00:00');
+      label = (d.getMonth()+1) + '/' + d.getDate() + ' (' + ['일','월','화','수','목','금','토'][d.getDay()] + ')';
+    }
+    var checked = adsSelectedRange.has(k) ? ' checked' : '';
+    return '<label class="dd-opt"><input type="checkbox" value="' + k + '"' + checked + ' onchange="setAdsPeriodRange(this,\'' + k + '\')"> ' + label + '</label>';
+  }).join('');
+}
+function updateAdsDDLabel() {
+  var lbl = document.getElementById('ddLabel-adsPeriod');
+  if (!lbl) return;
+  var pMap = { monthly:'월', weekly:'주', daily:'일' };
+  var pLabel = pMap[adsGlobalPeriod2] || '주';
+  if (adsSelectedRange.size === 0) { lbl.textContent = pLabel + ' · ALL'; return; }
+  var detail = '';
+  var keys = Array.from(adsSelectedRange).sort();
+  if (adsSelectedRange.size > 2) {
+    detail = keys.length + '개 선택';
+  } else {
+    detail = keys.map(function(k) {
+      if (adsGlobalPeriod2 === 'monthly') {
+        var parts = k.split('-'); return parseInt(parts[1]) + '월';
+      } else if (adsGlobalPeriod2 === 'weekly') {
+        return fmtPeriodLabel(k, 'weekly');
+      } else {
+        var d = new Date(k + 'T00:00:00');
+        return (d.getMonth()+1) + '/' + d.getDate();
+      }
+    }).join(', ');
+  }
+  lbl.textContent = pLabel + ' · ' + detail;
+}
+// 차트별 매출/유입 토글
+window.toggleChartSales = function(chartNum, btn) {
+  adsShowSales[chartNum] = !adsShowSales[chartNum];
+  btn.classList.toggle('active', adsShowSales[chartNum]);
+  refreshAdsChart(chartNum);
+};
+window.toggleChartVisits = function(chartNum, btn) {
+  adsShowVisits[chartNum] = !adsShowVisits[chartNum];
+  btn.classList.toggle('active', adsShowVisits[chartNum]);
+  refreshAdsChart(chartNum);
+};
+// 구버전 호환
+window.setAdsGlobalPeriod = function(btn, period) { setAdsDDTab(period); };
+window.toggleMetaCamp = function(btn) {
+  var obj = btn.getAttribute('data-meta-obj');
+  if (metaActiveCampaigns.has(obj)) { metaActiveCampaigns.delete(obj); btn.classList.remove('active'); }
+  else { metaActiveCampaigns.add(obj); btn.classList.add('active'); }
+  refreshAdsChart(2);
+};
+window.setMetaChartType = function(btn, type) {
+  document.querySelectorAll('[data-meta-type]').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  metaChartType = type;
+  refreshAdsChart(2);
+};
+window.toggleTtCamp = function(btn) {
+  var obj = btn.getAttribute('data-tt-obj');
+  if (ttActiveCampaigns.has(obj)) { ttActiveCampaigns.delete(obj); btn.classList.remove('active'); }
+  else { ttActiveCampaigns.add(obj); btn.classList.add('active'); }
+  refreshAdsChart(3);
+};
+// ── Chart Filter Dropdown (CFD) ────────────────────────────────
+window.toggleCFD = function(id) {
+  var panel = document.getElementById('cfdPanel-' + id);
+  var btn   = document.getElementById('cfdBtn-'   + id);
+  if (!panel || !btn) return;
+  var isOpen = panel.classList.contains('show');
+  document.querySelectorAll('.cfd-panel.show').forEach(function(p){ p.classList.remove('show'); });
+  document.querySelectorAll('.cfd-btn.cfd-open').forEach(function(b){ b.classList.remove('cfd-open'); });
+  document.querySelectorAll('.dd-panel.show').forEach(function(p){ p.classList.remove('show'); });
+  document.querySelectorAll('.dd-btn.open').forEach(function(b){ b.classList.remove('open'); });
+  if (!isOpen) {
+    panel.classList.add('show'); btn.classList.add('cfd-open');
+    if (id.indexOf('month') === 0) buildCFDMonthOpts(id.slice(-1));
+    else if (id.indexOf('week')  === 0) buildCFDWeekOpts(id.slice(-1));
+  }
+};
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.cfd-wrap') && !e.target.closest('.dd-wrap')) {
+    document.querySelectorAll('.cfd-panel.show').forEach(function(p){ p.classList.remove('show'); });
+    document.querySelectorAll('.cfd-btn.cfd-open').forEach(function(b){ b.classList.remove('cfd-open'); });
+  }
+});
+function buildCFDMonthOpts(n) {
+  var container = document.getElementById('cfdPanel-month' + n + '-opts');
+  if (!container) return;
+  var keys = new Set();
+  ADS_RAW.forEach(function(r){ keys.add(getPeriodKey(r.date,'monthly')); });
+  Object.keys(SALES_BY_DATE).forEach(function(d){ keys.add(getPeriodKey(d,'monthly')); });
+  var sorted = Array.from(keys).sort();
+  var isM = (adsGlobalPeriod2 === 'monthly');
+  container.innerHTML = sorted.map(function(k){
+    var label = parseInt(k.split('-')[1]) + '월';
+    var chk = (isM && adsSelectedRange.size > 0 && adsSelectedRange.has(k)) ? ' checked' : '';
+    return '<label class="cfd-opt"><input type="checkbox" value="' + k + '"' + chk + ' onchange="onCFDMonth(this,\'' + k + '\')"> ' + label + '</label>';
+  }).join('');
+}
+function buildCFDWeekOpts(n) {
+  var container = document.getElementById('cfdPanel-week' + n + '-opts');
+  if (!container) return;
+  var keys = new Set();
+  ADS_RAW.forEach(function(r){ keys.add(getPeriodKey(r.date,'weekly')); });
+  Object.keys(SALES_BY_DATE).forEach(function(d){ keys.add(getPeriodKey(d,'weekly')); });
+  var sorted = Array.from(keys).sort();
+  var isW = (adsGlobalPeriod2 === 'weekly');
+  container.innerHTML = sorted.map(function(k){
+    var label = fmtPeriodLabel(k,'weekly');
+    var chk = (isW && adsSelectedRange.size > 0 && adsSelectedRange.has(k)) ? ' checked' : '';
+    return '<label class="cfd-opt"><input type="checkbox" value="' + k + '"' + chk + ' onchange="onCFDWeek(this,\'' + k + '\')"> ' + label + '</label>';
+  }).join('');
+}
+window.onCFDMonth = function(chk, k) {
+  if (adsGlobalPeriod2 !== 'monthly') { adsGlobalPeriod2 = 'monthly'; adsSelectedRange = new Set(); }
+  if (chk.checked) adsSelectedRange.add(k); else adsSelectedRange.delete(k);
+  if (adsSelectedRange.size === 0) { [1,2,3].forEach(function(n){ var a=document.getElementById('chk-month'+n+'-all'); if(a)a.checked=true; }); }
+  else { [1,2,3].forEach(function(n){ var a=document.getElementById('chk-month'+n+'-all'); if(a)a.checked=false; }); }
+  syncCFDLabels(); refreshAds();
+};
+window.onCFDWeek = function(chk, k) {
+  if (adsGlobalPeriod2 !== 'weekly') { adsGlobalPeriod2 = 'weekly'; adsSelectedRange = new Set(); }
+  if (chk.checked) adsSelectedRange.add(k); else adsSelectedRange.delete(k);
+  if (adsSelectedRange.size === 0) { [1,2,3].forEach(function(n){ var a=document.getElementById('chk-week'+n+'-all'); if(a)a.checked=true; }); }
+  else { [1,2,3].forEach(function(n){ var a=document.getElementById('chk-week'+n+'-all'); if(a)a.checked=false; }); }
+  syncCFDLabels(); refreshAds();
+};
+window.clearCFDMonth = function() {
+  adsSelectedRange = new Set();
+  [1,2,3].forEach(function(n){
+    var c = document.getElementById('cfdPanel-month'+n+'-opts'); if(c) c.querySelectorAll('input').forEach(function(i){i.checked=false;});
+    var a = document.getElementById('chk-month'+n+'-all'); if(a) a.checked=true;
+  });
+  syncCFDLabels(); refreshAds();
+};
+window.clearCFDWeek = function() {
+  adsSelectedRange = new Set();
+  [1,2,3].forEach(function(n){
+    var c = document.getElementById('cfdPanel-week'+n+'-opts'); if(c) c.querySelectorAll('input').forEach(function(i){i.checked=false;});
+    var a = document.getElementById('chk-week'+n+'-all'); if(a) a.checked=true;
+  });
+  syncCFDLabels(); refreshAds();
+};
+function syncCFDLabels() {
+  [1,2,3].forEach(function(n) {
+    var mL = document.getElementById('cfdLabel-month'+n);
+    if (mL) {
+      if (adsGlobalPeriod2 !== 'monthly' || adsSelectedRange.size === 0) { mL.textContent = '전체'; }
+      else { var ks=[...adsSelectedRange].sort(); mL.textContent = ks.length>2 ? ks.length+'개' : ks.map(function(k){return parseInt(k.split('-')[1])+'월';}).join(', '); }
+    }
+    var wL = document.getElementById('cfdLabel-week'+n);
+    if (wL) {
+      if (adsGlobalPeriod2 !== 'weekly' || adsSelectedRange.size === 0) { wL.textContent = '전체'; }
+      else { var ks=[...adsSelectedRange].sort(); wL.textContent = ks.length>2 ? ks.length+'개' : ks.map(function(k){return fmtPeriodLabel(k,'weekly');}).join(', '); }
+    }
+  });
+}
+window.onCFDMedia = function(chk, media) {
+  if (chk.checked) selAdsMedia.add(media);
+  else if (selAdsMedia.size > 1) selAdsMedia.delete(media);
+  else { chk.checked = true; return; }
+  var allChk = document.getElementById('chk-media-all');
+  if (allChk) allChk.checked = (selAdsMedia.size === 3);
+  var lbl = document.getElementById('cfdLabel-media');
+  if (lbl) lbl.textContent = selAdsMedia.size === 3 ? '전체' : ['meta','tiktok','gsa'].filter(function(m){return selAdsMedia.has(m);}).map(function(m){return m==='meta'?'Meta':m==='tiktok'?'TikTok':'GSA';}).join(', ');
+  refreshAds();
+};
+window.clearCFDMedia = function() {
+  ['meta','tiktok','gsa'].forEach(function(m){selAdsMedia.add(m);});
+  document.querySelectorAll('#cfdPanel-media label input').forEach(function(c){c.checked=true;});
+  var a=document.getElementById('chk-media-all'); if(a)a.checked=true;
+  var lbl=document.getElementById('cfdLabel-media'); if(lbl)lbl.textContent='전체';
+  refreshAds();
+};
+window.onCFDMetaCamp = function(chk, obj) {
+  if (chk.checked) metaActiveCampaigns.add(obj);
+  else if (metaActiveCampaigns.size > 1) metaActiveCampaigns.delete(obj);
+  else { chk.checked = true; return; }
+  var lbl=document.getElementById('cfdLabel-metaCamp');
+  if (lbl) lbl.textContent = metaActiveCampaigns.size===5 ? '전체' : metaActiveCampaigns.size+'개 선택';
+  var aChk=document.getElementById('chk-metaCamp-all'); if(aChk)aChk.checked=(metaActiveCampaigns.size===5);
+  refreshAdsChart(2);
+};
+window.clearCFDMetaCamp = function() {
+  ['전환(구매)','전환(장바구니)','트래픽(lpv)','트래픽(click)','조회'].forEach(function(o){metaActiveCampaigns.add(o);});
+  document.querySelectorAll('#cfdPanel-metaCamp-opts input').forEach(function(c){c.checked=true;});
+  var a=document.getElementById('chk-metaCamp-all'); if(a)a.checked=true;
+  var lbl=document.getElementById('cfdLabel-metaCamp'); if(lbl)lbl.textContent='전체';
+  refreshAdsChart(2);
+};
+window.onCFDTtCamp = function(chk, obj) {
+  if (chk.checked) ttActiveCampaigns.add(obj);
+  else if (ttActiveCampaigns.size > 1) ttActiveCampaigns.delete(obj);
+  else { chk.checked = true; return; }
+  var lbl=document.getElementById('cfdLabel-ttCamp');
+  if (lbl) lbl.textContent = ttActiveCampaigns.size===2 ? '전체' : ttActiveCampaigns.size+'개 선택';
+  var aChk=document.getElementById('chk-ttCamp-all'); if(aChk)aChk.checked=(ttActiveCampaigns.size===2);
+  refreshAdsChart(3);
+};
+window.clearCFDTtCamp = function() {
+  ['검색','조회'].forEach(function(o){ttActiveCampaigns.add(o);});
+  document.querySelectorAll('#cfdPanel-ttCamp-opts input').forEach(function(c){c.checked=true;});
+  var a=document.getElementById('chk-ttCamp-all'); if(a)a.checked=true;
+  var lbl=document.getElementById('cfdLabel-ttCamp'); if(lbl)lbl.textContent='전체';
+  refreshAdsChart(3);
+};
+window.setTtChartType = function(btn, type) {
+  document.querySelectorAll('[data-tt-type]').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  ttChartType = type;
+  refreshAdsChart(3);
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  퍼포먼스 광고 탭 (2026-11-13 민경 「하나씩 옮겨봐」 — 어노브 탭을 그대로 이식)
+//  · 원천 = D.ads (Code.gs parseAdsSephora_: 수요전환 시트 「퍼포먼스 광고_RAW」 판매채널 sephora/세포라)
+//  · 아래 어댑터가 어노브 코드가 읽는 ADS_RAW · ADS_DICT · SALES_BY_DATE · RAW_SKU 를 만든다.
+//    광고 코드 본문은 어노브와 같다(매체 GSA 옵션만 뺌).
+//  · 매출(SALES_BY_DATE) = Raw_실매출 USD · 유입(RAW_SKU) = RAW_commerce Visits — 통합 탭과 같은 원천
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🛑 전환 매출 단위: 닥포 「퍼포먼스 광고_RAW」 K열은 원화다(원천 행 대조: 전환 건당 금액이 원화 규모).
+//    어노브 시트는 달러라 ×환율을 하지만 닥포는 그대로 쓴다. 시트가 달러로 바뀌면 여기만 fxRate 로 바꾼다.
+function ADS_REV_TO_KRW_(d) { return 1; }
+var SALES_BY_DATE = {};
+var RAW_SKU = [];
+var ADS_MEDIA_KEY_ = { '메타':'meta', '틱톡':'tiktok', '유튜브':'youtube', '구글':'google' };
+function adsObjective_(media, opt, campaign) {
+  var t = String(opt || '').toLowerCase(), c = String(campaign || '').toLowerCase();
+  if (media === 'meta') {
+    if (t === 'view') return '조회';
+    if (t === 'lpv')  return '트래픽(lpv)';
+    if (t === 'traf') return '트래픽(click)';
+    if (t === 'pur')  return '전환(구매)';
+    if (t === 'cart') return '전환(장바구니)';
+    return t || 'meta';
+  }
+  if (media === 'tiktok') return c.indexOf('search') !== -1 ? '검색' : '조회';
+  return t || media;
+}
+function buildAdsFromPayload_() {
+  ADS_RAW.length = 0;
+  var dict = { campaign: [], adgroup: [], creative: [] }, ix = { campaign: {}, adgroup: {}, creative: {} };
+  function di(k, v) { if (!(v in ix[k])) { ix[k][v] = dict[k].length; dict[k].push(v); } return ix[k][v]; }
+  (D.ads || []).forEach(function (r) {
+    var media = ADS_MEDIA_KEY_[r.media] || String(r.media || '').toLowerCase();
+    var tok = String(r.campaign || '').split('_');
+    ADS_RAW.push({
+      date: r.date, week: '', media: media,
+      objective: adsObjective_(media, r.opt, r.campaign),
+      impressions: r.impressions || 0, clicks: r.clicks || 0, spend: r.spend || 0,
+      views: r.views || 0, purchases: r.purchases || 0,
+      revenue: (r.revenue || 0) * ADS_REV_TO_KRW_(r.date),
+      atc: r.atc || 0, likes: r.likes || 0, comments: r.comments || 0, shares: r.shares || 0, saves: r.saves || 0,
+      campaign: di('campaign', r.campaign || ''), adgroup: di('adgroup', r.adgroup || ''), creative: di('creative', r.creative || ''),
+      goal: r.goal || '', opt: r.opt || '', mode: tok.length >= 2 ? tok[tok.length - 2] : '', chan: 'sephora'
+    });
+  });
+  window.ADS_DICT = dict;
+  SALES_BY_DATE = {};
+  (D.salesDaily || []).forEach(function (s) {
+    var o = SALES_BY_DATE[s.date] || (SALES_BY_DATE[s.date] = { com: 0, bam: 0, total: 0 });
+    // 🛑 Raw_실매출은 USD — 이 탭 차트·툴팁은 매출을 ₩로 표시하므로 날짜 환율(fxRate)로 원화로 바꿔 둔다.
+    //    (어노브 광고 탭은 USD 값을 ₩ 라벨로 그린다 — 닥포는 원화로 맞춤)
+    var fx = fxRate(s.date);
+    o.com += (s.com || 0) * fx; o.bam += (s.bm || 0) * fx; o.total += (s.total || 0) * fx;
+  });
+  RAW_SKU = (D.commerce || []).map(function (r) { return { date: r.date, visits: r.visits || 0 }; });
+}
+
+// ─── PERFORMANCE ADS ─────────────────────────────────────────────────────────
+function getMonthKey(dateStr) {
+  return dateStr.slice(0, 7); // YYYY-MM
+}
+function getDayKey(dateStr) {
+  return dateStr.slice(0, 10); // YYYY-MM-DD
+}
+function getPeriodKey(dateStr, period) {
+  if (period === 'monthly') return getMonthKey(dateStr);
+  if (period === 'daily')   return getDayKey(dateStr);
+  return getWeekKey(dateStr);
+}
+function fmtPeriodLabel(key, period) {
+  if (period === 'monthly') {
+    const parts = key.split('-');
+    return parts[0].slice(2) + '/' + parts[1];
+  }
+  if (period === 'daily') {
+    const d = new Date(key + 'T00:00:00');
+    return (d.getMonth()+1) + '/' + d.getDate();
+  }
+  return fmtWkLabel(key);
+}
+function getWeekKey(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const dow = d.getDay();
+  const sun = new Date(d);
+  sun.setDate(d.getDate() - dow);
+  const mm = String(sun.getMonth()+1).padStart(2,'0');
+  const dd = String(sun.getDate()).padStart(2,'0');
+  return sun.getFullYear() + '-' + mm + '-' + dd;
+}
+function fmtWkLabel(wkKey) {
+  const d = new Date(wkKey + 'T00:00:00');
+  const sat = new Date(d); sat.setDate(d.getDate() + 6);
+  const fmt = x => (x.getMonth()+1) + '/' + x.getDate();
+  return fmt(d) + '-' + fmt(sat);
+}
+function buildAdsWeekly(mediaFilter) {
+  // Returns { weekKey: { spend, impressions, clicks, byObj: { objName: {spend,impressions,clicks} } } }
+  const byWeek = {};
+  ADS_RAW.forEach(r => {
+    if (mediaFilter && !mediaFilter.has(r.media)) return;
+    const wk = getWeekKey(r.date);
+    const _eng = (r.likes||0) + (r.comments||0) + (r.shares||0) + (r.saves||0);
+    if (!byWeek[wk]) byWeek[wk] = { spend:0, impressions:0, clicks:0, eng:0, byObj:{} };
+    byWeek[wk].spend       += (r.spend       || 0);
+    byWeek[wk].impressions += (r.impressions || 0);
+    byWeek[wk].clicks      += (r.clicks      || 0);
+    byWeek[wk].eng         += _eng;
+    if (!byWeek[wk].byObj[r.objective]) byWeek[wk].byObj[r.objective] = {spend:0,impressions:0,clicks:0,eng:0};
+    byWeek[wk].byObj[r.objective].spend       += (r.spend       || 0);
+    byWeek[wk].byObj[r.objective].impressions += (r.impressions || 0);
+    byWeek[wk].byObj[r.objective].clicks      += (r.clicks      || 0);
+    byWeek[wk].byObj[r.objective].eng         += _eng;
+  });
+  return byWeek;
+}
+function buildAdsByPeriod(mediaFilter, period) {
+  const byP = {};
+  ADS_RAW.forEach(r => {
+    if (mediaFilter && !mediaFilter.has(r.media)) return;
+    if (adsSelectedRange.size > 0 && !adsSelectedRange.has(getPeriodKey(r.date, adsGlobalPeriod2))) return;
+    const k = getPeriodKey(r.date, period);
+    const _eng = (r.likes||0) + (r.comments||0) + (r.shares||0) + (r.saves||0);
+    if (!byP[k]) byP[k] = { spend:0, impressions:0, clicks:0, eng:0, views:0, purchases:0, revenue:0, atc:0, byObj:{} };
+    byP[k].spend       += (r.spend       || 0);
+    byP[k].impressions += (r.impressions || 0);
+    byP[k].clicks      += (r.clicks      || 0);
+    byP[k].eng         += _eng;
+    byP[k].views       += (r.views       || 0);
+    byP[k].purchases   += (r.purchases   || 0);
+    byP[k].revenue     += (r.revenue     || 0);
+    byP[k].atc         += (r.atc         || 0);
+    if (!byP[k].byObj[r.objective]) byP[k].byObj[r.objective] = {spend:0,impressions:0,clicks:0,eng:0,views:0,purchases:0,revenue:0,atc:0};
+    byP[k].byObj[r.objective].spend       += (r.spend       || 0);
+    byP[k].byObj[r.objective].impressions += (r.impressions || 0);
+    byP[k].byObj[r.objective].clicks      += (r.clicks      || 0);
+    byP[k].byObj[r.objective].eng         += _eng;
+    byP[k].byObj[r.objective].views       += (r.views       || 0);
+    byP[k].byObj[r.objective].purchases   += (r.purchases   || 0);
+    byP[k].byObj[r.objective].revenue     += (r.revenue     || 0);
+    byP[k].byObj[r.objective].atc         += (r.atc         || 0);
+  });
+  return byP;
+}
+function buildSephoraByPeriod(period) {
+  const byP = {};
+  Object.entries(SALES_BY_DATE).forEach(([date, s]) => {
+    if (adsSelectedRange.size > 0 && !adsSelectedRange.has(getPeriodKey(date, adsGlobalPeriod2))) return;
+    const k = getPeriodKey(date, period);
+    if (!byP[k]) byP[k] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
+    byP[k].sales_com   += s.com   || 0;
+    byP[k].sales_bam   += s.bam   || 0;
+    byP[k].sales_total += s.total || 0;
+  });
+  const visitsByDate = {};
+  RAW_SKU.forEach(r => { visitsByDate[r.date] = (visitsByDate[r.date]||0) + r.visits; });
+  Object.entries(visitsByDate).forEach(([date, v]) => {
+    if (adsSelectedRange.size > 0 && !adsSelectedRange.has(getPeriodKey(date, adsGlobalPeriod2))) return;
+    const k = getPeriodKey(date, period);
+    if (!byP[k]) byP[k] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
+    byP[k].visits += v;
+  });
+  return byP;
+}
+function buildSephoraWeekly() {
+  // Returns { weekKey: { sales_com, sales_bam, sales_total, visits } }
+  const byWeek = {};
+  Object.entries(SALES_BY_DATE).forEach(([date, s]) => {
+    const wk = getWeekKey(date);
+    if (!byWeek[wk]) byWeek[wk] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
+    byWeek[wk].sales_com   += s.com   || 0;
+    byWeek[wk].sales_bam   += s.bam   || 0;
+    byWeek[wk].sales_total += s.total || 0;
+  });
+  // visits from RAW_SKU (aggregate by date→week)
+  const visitsByDate = {};
+  RAW_SKU.forEach(r => { visitsByDate[r.date] = (visitsByDate[r.date]||0) + r.visits; });
+  Object.entries(visitsByDate).forEach(([date, v]) => {
+    const wk = getWeekKey(date);
+    if (!byWeek[wk]) byWeek[wk] = {sales_com:0, sales_bam:0, sales_total:0, visits:0};
+    byWeek[wk].visits += v;
+  });
+  return byWeek;
+}
+function getSalesKey() {
+  return selAdsSales === 'com' ? 'sales_com' : selAdsSales === 'bam' ? 'sales_bam' : 'sales_total';
+}
+function getMetricLabel() {
+  return _curMetric === 'spend' ? '광고비(₩)' : _curMetric === 'impressions' ? '노출수' : _curMetric === 'clicks' ? '클릭수' : _curMetric === 'ctr' ? 'CTR(%)' : 'ER(%)';
+}
+function getSalesLabel() {
+  return selAdsSales === 'com' ? '매출(.COM,₩)' : selAdsSales === 'bam' ? '매출(B&M,₩)' : '매출(TTL,₩)';
+}
+const OBJ_COLORS = {
+  '조회':         '#9b59b6',
+  '트래픽(lpv)':  '#3498db',
+  '트래픽(click)':'#2ecc71',
+  '전환(구매)':   '#e74c3c',
+  '전환(장바구니)':'#f39c12',
+  '검색':         '#1abc9c',
+  '검색광고':     '#34495e',
+};
+// 비율 지표는 합산 버킷에서 도출 (기간별 sum/sum — 비율 평균 아님)
+function isRatioMetric() { return _curMetric === 'ctr' || _curMetric === 'er'; }
+function calcMetricVal(bucket) {
+  if (!bucket) return 0;
+  if (_curMetric === 'ctr') return (bucket.impressions > 0) ? (bucket.clicks / bucket.impressions) * 100 : 0;
+  if (_curMetric === 'er')  return (bucket.impressions > 0) ? ((bucket.eng || 0) / bucket.impressions) * 100 : 0;
+  return bucket[_curMetric] || 0;
+}
+function makeAdsChartCfg(weeks, adsWeekly, sepWeekly, stacked, objectives, mediaLabel, period, chartNum) {
+  var _showSales  = chartNum ? adsShowSales[chartNum]  : true;
+  var _showVisits = chartNum ? adsShowVisits[chartNum] : true;
+  const labels = weeks.map(k => fmtPeriodLabel(k, period || 'weekly'));
+  const metricKey = _curMetric;
+  const salesKey  = getSalesKey();
+  const fmtNum = v => _curMetric === 'spend'
+    ? '₩' + Math.round(v).toLocaleString('ko-KR')
+    : isRatioMetric()
+    ? (Math.round(v * 100) / 100).toFixed(2) + '%'
+    : Math.round(v).toLocaleString();
+  const datasets = [];
+  if (stacked && objectives.length > 0) {
+    objectives.forEach(obj => {
+      datasets.push({
+        label: obj,
+        data: weeks.map(wk => calcMetricVal(adsWeekly[wk] && adsWeekly[wk].byObj ? adsWeekly[wk].byObj[obj] : null)),
+        type: 'bar',
+        backgroundColor: OBJ_COLORS[obj] || '#999',
+        stack: isRatioMetric() ? undefined : 'ads',
+        yAxisID: 'yA', order: 3,
+        barPercentage: 0.6, categoryPercentage: 0.8,
+      });
+    });
+  } else {
+    datasets.push({
+      label: mediaLabel || getMetricLabel(),
+      data: weeks.map(wk => calcMetricVal(adsWeekly[wk])),
+      type: 'line',
+      borderColor: '#e8c84a',
+      backgroundColor: 'rgba(232,200,74,0.10)',
+      borderWidth: 2.5,
+      pointRadius: 2, pointHoverRadius: 3,
+      pointBackgroundColor: '#e8c84a',
+      fill: false,
+      yAxisID: 'yA', order: 3,
+      tension: 0.25,
+    });
+  }
+  // Sephora 매출 라인 (토글)
+  if (_showSales) datasets.push({
+    label: getSalesLabel(),
+    data: weeks.map(wk => (sepWeekly[wk]?.[salesKey] || 0)),
+    type: 'line', borderColor: '#d97070', backgroundColor: 'rgba(217,112,112,0.12)',
+    borderWidth: 2, pointRadius: 2, pointHoverRadius: 3,
+    pointBackgroundColor: '#d97070', fill: true,
+    yAxisID: 'yS', order: 1, tension: 0.3,
+  });
+  // Sephora 유입 라인 (토글)
+  if (_showVisits) datasets.push({
+    label: '세포라 유입',
+    data: weeks.map(wk => (sepWeekly[wk]?.visits || 0)),
+    type: 'line', borderColor: '#5dcaa5', backgroundColor: 'rgba(93,202,165,0.12)',
+    borderWidth: 2, pointRadius: 2, pointHoverRadius: 3,
+    pointBackgroundColor: '#5dcaa5', fill: true,
+    yAxisID: 'yV', order: 2, tension: 0.3,
+  });
+  return {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#fff', titleColor: '#222', bodyColor: '#555',
+          borderColor: '#E0E0E4', borderWidth: 1, padding: 10,
+          callbacks: {
+            title: ctx => '📅 ' + labels[ctx[0].dataIndex],
+            label: ctx => {
+              const v = ctx.raw || 0;
+              if (ctx.dataset.yAxisID === 'yS') return '  ' + ctx.dataset.label + ': ₩' + Math.round(v).toLocaleString('ko-KR');
+              if (ctx.dataset.yAxisID === 'yV') return '  세포라 유입: ' + Math.round(v).toLocaleString();
+              return '  ' + ctx.dataset.label + ': ' + fmtNum(v);
+            },
+            footer: stacked ? function(ctxArr) {
+              var wk = weeks[ctxArr[0].dataIndex];
+              if (isRatioMetric()) {
+                var nm = 0, im = 0;
+                ctxArr.forEach(function(c) {
+                  if (c.dataset.yAxisID !== 'yA') return;
+                  var b = adsWeekly[wk] && adsWeekly[wk].byObj ? adsWeekly[wk].byObj[c.dataset.label] : null;
+                  if (b) { nm += (_curMetric === 'ctr' ? (b.clicks || 0) : (b.eng || 0)); im += b.impressions || 0; }
+                });
+                return ['  ─────────────────', '  선택 목표 통합 ' + (_curMetric === 'ctr' ? 'CTR' : 'ER') + ': ' + (im > 0 ? (nm / im * 100).toFixed(2) : '0.00') + '%'];
+              }
+              var mediaTotal = (adsWeekly[wk] ? (adsWeekly[wk][metricKey] || 0) : 0);
+              var selTotal = ctxArr.reduce(function(s,c){ return c.dataset.yAxisID==='yA' ? s+(c.raw||0) : s; }, 0);
+              var lines = ['  ─────────────────'];
+              lines.push('  선택 목표 합계: ' + fmtNum(selTotal));
+              if (Math.round(mediaTotal) !== Math.round(selTotal)) {
+                lines.push('  매체 총 광고비: ' + fmtNum(mediaTotal) + '  ← 일부 목표 미선택');
+              }
+              return lines;
+            } : undefined
+          }
+        }
+      },
+      scales: {
+        x: { stacked: stacked && !isRatioMetric(), grid:{color:'rgba(0,0,0,0.04)'}, ticks:{font:{size:9},color:'#aaa',maxRotation:45} },
+        yA: {
+          type:'linear', position:'left', stacked: stacked && !isRatioMetric(),
+          grid:{color:'rgba(0,0,0,0.05)'},
+          ticks:{ display:false },
+          title:{ display:false }
+        },
+        yS: {
+          type:'linear', position:'right', display: _showSales, min:0, beginAtZero:true, grid:{drawOnChartArea:false},
+          ticks:{ display:false },
+          title:{ display:false }
+        },
+        yV: {
+          type:'linear', position:'right', display: _showVisits, grid:{drawOnChartArea:false},
+        }
+      }
+    }
+  };
+}
+function renderLegend(containerId, datasets, metricLabel) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  const chip = metricLabel
+    ? '<div class="leg" style="font-weight:700;color:#1D2847;background:#EEF0F6;padding:2px 9px;border-radius:3px;">' + metricLabel + '</div>'
+    : '';
+  c.innerHTML = chip + datasets.map(ds => {
+    const col = ds.type === 'line' ? ds.borderColor : (Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : ds.backgroundColor);
+    const dotStyle = ds.type === 'line'
+      ? 'border-radius:50%;border:2px solid ' + col + ';background:transparent;'
+      : 'background:' + col + ';border-radius:2px;';
+    return '<div class="leg"><div class="leg-dot" style="' + dotStyle + '"></div>' + ds.label + '</div>';
+  }).join('');
+}
+// ══════════ NEW: 퍼포먼스 광고 탭 — 지표 확인용 표 (18개 지표) ══════════
+const TABLE_METRICS = [
+  {key:'spend',     label:'광고비(백만원)', fmt:v => v==null ? '-' : (v/1e6).toLocaleString('ko-KR', {maximumFractionDigits:1})},
+  {key:'impressions',label:'노출',    fmt:v => v==null ? '-' : Math.round(v).toLocaleString()},
+  {key:'clicks',    label:'클릭',    fmt:v => v==null ? '-' : Math.round(v).toLocaleString()},
+  {key:'views',     label:'조회',    fmt:v => v==null ? '-' : Math.round(v).toLocaleString()},
+  {key:'eng',       label:'인게이지먼트', fmt:v => v==null ? '-' : Math.round(v).toLocaleString()},
+  {key:'ctr',       label:'CTR',     fmt:pctFmt},
+  {key:'vtr',       label:'VTR',     fmt:pctFmt},
+  {key:'er',        label:'ER',      fmt:pctFmt},
+  {key:'cpm',       label:'CPM',     fmt:wonFmt},
+  {key:'cpc',       label:'CPC',     fmt:wonFmt},
+  {key:'cpv',       label:'CPV',     fmt:wonFmt},
+  {key:'cpe',       label:'CPE',     fmt:wonFmt},
+  {key:'atc',       label:'ATC',     fmt:v => v==null ? '-' : Math.round(v).toLocaleString()},
+  {key:'purchases', label:'Purchase',fmt:v => v==null ? '-' : Math.round(v).toLocaleString()},
+  {key:'sales',     label:'Sales(백만원)', fmt:v => v==null ? '-' : (v/1e6).toLocaleString('ko-KR', {maximumFractionDigits:1})},
+  {key:'cpatc',     label:'CPATC',   fmt:wonFmt},
+  {key:'cpa',       label:'CPA',     fmt:wonFmt},
+  {key:'roas',      label:'ROAS',    fmt:v => v==null ? '-' : v.toFixed(2)+'×'},
+];
+function pctFmt(v){ return v==null ? '-' : v.toFixed(2)+'%'; }
+function wonFmt(v){ return v==null ? '-' : '₩'+Math.round(v).toLocaleString('ko-KR'); }
+function safeDiv(a,b){ return (b && b!==0) ? (a/b) : null; }
+function computeTableMetrics(bucket) {
+  if (!bucket) return {};
+  const b = bucket;
+  return {
+    spend: b.spend||0, impressions: b.impressions||0, clicks: b.clicks||0,
+    views: b.views||0, eng: b.eng||0, atc: b.atc||0, purchases: b.purchases||0,
+    sales: b.revenue||0,
+    ctr:   safeDiv(b.clicks, b.impressions) != null ? safeDiv(b.clicks, b.impressions)*100 : null,
+    vtr:   safeDiv(b.views,  b.impressions) != null ? safeDiv(b.views,  b.impressions)*100 : null,
+    er:    safeDiv(b.eng,    b.impressions) != null ? safeDiv(b.eng,    b.impressions)*100 : null,
+    cpm:   safeDiv(b.spend,  b.impressions) != null ? safeDiv(b.spend,  b.impressions)*1000 : null,
+    cpc:   safeDiv(b.spend,  b.clicks),
+    cpv:   safeDiv(b.spend,  b.views),
+    cpe:   safeDiv(b.spend,  b.eng),
+    cpatc: safeDiv(b.spend,  b.atc),
+    cpa:   safeDiv(b.spend,  b.purchases),
+    roas:  safeDiv(b.revenue||0, b.spend),
+  };
+}
+function sumBucketsByObj(periodBucket, objectives) {
+  const out = {spend:0,impressions:0,clicks:0,eng:0,views:0,purchases:0,revenue:0,atc:0};
+  if (!periodBucket || !periodBucket.byObj) return out;
+  objectives.forEach(function(obj){
+    const o = periodBucket.byObj[obj];
+    if (!o) return;
+    out.spend+=o.spend||0; out.impressions+=o.impressions||0; out.clicks+=o.clicks||0; out.eng+=o.eng||0;
+    out.views+=o.views||0; out.purchases+=o.purchases||0; out.revenue+=o.revenue||0; out.atc+=o.atc||0;
+  });
+  return out;
+}
+function renderAdsTable(tableId, weeks, adsByPeriod, objectives, period) {
+  const el = document.getElementById(tableId);
+  if (!el) return;
+  const labels = weeks.map(k => fmtPeriodLabel(k, period || 'weekly'));
+  const perPeriodMetrics = weeks.map(function(wk) {
+    const bucket = objectives ? sumBucketsByObj(adsByPeriod[wk], objectives) : adsByPeriod[wk];
+    return computeTableMetrics(bucket);
+  });
+  let html = '<thead><tr><th>지표</th>';
+  labels.forEach(function(l){ html += '<th>' + l + '</th>'; });
+  html += '</tr></thead><tbody>';
+  TABLE_METRICS.forEach(function(m){
+    html += '<tr><td class="ads-metric-lbl">' + m.label + '</td>';
+    perPeriodMetrics.forEach(function(pm){
+      html += '<td>' + m.fmt(pm[m.key] === undefined ? null : pm[m.key]) + '</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  el.innerHTML = html;
+}
+/* ═══════════ ONSITE TAB — refreshOnsite() ═══════════
+   window.ONSITE = parseOnsite_ 결과. 없으면 안내 placeholder.
+   차트는 재진입마다 destroy 후 재생성. 색상=대시보드 팔레트. */
+// 온사이트 탭 통화 (2026-10-13) — Code.gs 가 원화 = 달러 원본 × 기간 환율 fxRate_(행 날짜)로 내보내므로 달러 = 원화 ÷ 같은 환율
+function refreshAdsChart(chartNum) {
+  if (ADS_RAW.length === 0) return;
+  _curMetric = adsChartMetric[chartNum] || 'spend';
+  const p = adsChartPeriod[chartNum] || 'weekly';
+  const sep = buildSephoraByPeriod(p);
+  if (chartNum === 1) {
+    const ads1 = buildAdsByPeriod(selAdsMedia, p);
+    const weeks1 = [...new Set([...Object.keys(ads1), ...Object.keys(sep)])].sort();
+    const cfg1 = makeAdsChartCfg(weeks1, ads1, sep, false, [], getMetricLabel(), p, 1);
+    renderLegend('adsChart1Leg', cfg1.data.datasets);
+    const ctx1 = document.getElementById('adsChart1');
+    if (ctx1) { if (adsChart1) adsChart1.destroy(); adsChart1 = new Chart(ctx1.getContext('2d'), cfg1); }
+    renderAdsTable('adsTable1', weeks1, ads1, null, p);
+  } else if (chartNum === 2) {
+    const ads2 = buildAdsByPeriod(new Set(['meta']), p);
+    const weeks2 = [...new Set([...Object.keys(ads2), ...Object.keys(sep)])].sort();
+    const allMetaObjs = ['전환(장바구니)','전환(구매)','트래픽(click)','트래픽(lpv)','조회'];
+    const metaObjs = allMetaObjs.filter(o => metaActiveCampaigns.has(o));
+    const cfg2 = makeAdsChartCfg(weeks2, ads2, sep, true, metaObjs, '', p, 2);
+    if (metaChartType === 'line') {
+      cfg2.data.datasets = cfg2.data.datasets.map(function(ds) {
+        if (ds.yAxisID !== 'yA') return ds;
+        var col = OBJ_COLORS[ds.label] || '#999';
+        return Object.assign({}, ds, {type:'line', borderColor:col, backgroundColor:'transparent', fill:false, borderWidth:2, pointRadius:1.5, pointHoverRadius:3, tension:0.3, stack:undefined});
+      });
+      cfg2.options.scales.x.stacked = false;
+      cfg2.options.scales.yA.stacked = false;
+    }
+    renderLegend('adsChart2Leg', cfg2.data.datasets, getMetricLabel());
+    const ctx2 = document.getElementById('adsChart2');
+    if (ctx2) { if (adsChart2) adsChart2.destroy(); adsChart2 = new Chart(ctx2.getContext('2d'), cfg2); }
+    renderAdsTable('adsTable2', weeks2, ads2, metaObjs, p);
+  } else if (chartNum === 3) {
+    const ads3 = buildAdsByPeriod(new Set(['tiktok']), p);
+    const weeks3 = [...new Set([...Object.keys(ads3), ...Object.keys(sep)])].sort();
+    const allTtObjs = ['검색','조회'];
+    const ttObjs = allTtObjs.filter(o => ttActiveCampaigns.has(o));
+    const cfg3 = makeAdsChartCfg(weeks3, ads3, sep, true, ttObjs, '', p, 3);
+    if (ttChartType === 'line') {
+      cfg3.data.datasets = cfg3.data.datasets.map(function(ds) {
+        if (ds.yAxisID !== 'yA') return ds;
+        var col = OBJ_COLORS[ds.label] || '#999';
+        return Object.assign({}, ds, {type:'line', borderColor:col, backgroundColor:'transparent', fill:false, borderWidth:2, pointRadius:1.5, pointHoverRadius:3, tension:0.3, stack:undefined});
+      });
+      cfg3.options.scales.x.stacked = false;
+      cfg3.options.scales.yA.stacked = false;
+    }
+    renderLegend('adsChart3Leg', cfg3.data.datasets, getMetricLabel());
+    const ctx3 = document.getElementById('adsChart3');
+    if (ctx3) { if (adsChart3) adsChart3.destroy(); adsChart3 = new Chart(ctx3.getContext('2d'), cfg3); }
+    renderAdsTable('adsTable3', weeks3, ads3, ttObjs, p);
+  }
+}
+function refreshAds() {
+  if (ADS_RAW.length === 0) return;
+  // ER 버튼은 engagement 데이터가 실제 존재할 때만 노출 (Apps Script 미반영 시 허수 0% 차트 방지)
+  var hasEng = ADS_RAW.some(function(r) { return ((r.likes||0) + (r.comments||0) + (r.shares||0) + (r.saves||0)) > 0; });
+  document.querySelectorAll('[data-ads-metric="er"]').forEach(function(b) { b.style.display = hasEng ? '' : 'none'; });
+  if (!hasEng) {
+    [1,2,3].forEach(function(cn) {
+      if (adsChartMetric[cn] === 'er') {
+        adsChartMetric[cn] = 'spend';
+        document.querySelectorAll('[data-metric-chart="' + cn + '"]').forEach(function(b) { b.classList.toggle('active', b.dataset.adsMetric === 'spend'); });
+      }
+    });
+  }
+  refreshAdsChart(1);
+  refreshAdsChart(2);
+  refreshAdsChart(3);
+  try { refreshAdsCreative(); } catch (e) { console.warn('[소재별 성과] refresh 실패:', e); }
+}
+// ═══════════ 소재별 성과 (Creative Performance) — 260901 신설 ═══════════
+window.ADS_DICT = window.ADS_DICT || { campaign: [], adgroup: [], creative: [] };
+
+let crMedia = new Set(['meta', 'tiktok']);
+let crUnit = 'm'; // m|w|d — 기본 월(260902 MJ 확정, 최신 데이터의 월이 자동 선택됨)
+let crCur = null;
+let crCmp = null;
+let crNoCmp = true; // 260902 MJ 확정 — 기본 비교 끄기
+let crCampaigns = new Set(); // 선택된 campaign dict index. empty = 전체
+let crMode = 'all'; // all|ongoing|test
+let crChartMin = 500000;   // 그래프 전용 최소 광고비
+let crTblMin = 0;          // 드릴다운 표 전용 최소 광고비 (기본 제한 없음)
+let crSorts = ['spend'];   // 그래프 지표 선택(최대 3, 첫 번째 = 정렬 기준)
+let crView = 'bar';        // bar|trend|scat
+let crTk = 'spend', crTdir = -1; // 드릴다운 표 정렬 키/방향
+const CR_TT = []; // 현재 렌더된 차트의 툴팁 데이터 (index로 접근)
+
+const CR_MC = { meta: '#3D85C6', tiktok: '#A64D79' };
+const CR_UNAME = { m: '월', w: '주', d: '일' };
+const CR_WNAME = { m: 'MoM', w: 'WoW', d: 'DoD' };
+const CR_LINEC = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300'];
+const CR_MODE_LABEL = { ongoing: '상시', test: 'TEST', loyalty: '로열티' };
+
+// key, label, group — 22종 (work order §4-1). VTR은 시안 시점 누락분, 신규 추가.
+const CR_SGRP = [
+  ['광고', [['spend', '광고비'], ['impr', '노출수'], ['clk', '클릭수'], ['view', '조회수'], ['ctr', 'CTR'], ['vtr', 'VTR'], ['cpc', 'CPC']]],
+  ['전환', [['atc', '장바구니담기'], ['pur', '구매수'], ['atcr', '장바구니 전환율'], ['purr', '구매 전환율'], ['roas', 'ROAS']]],
+  ['참여', [['lik', '좋아요'], ['likr', '좋아요ER'], ['sav', '저장'], ['savr', '저장ER'], ['shr', '공유'], ['shrr', '공유ER'],
+            ['cmt', '댓글'], ['cmtr', '댓글ER'], ['eng', '전체 참여'], ['er', '전체ER']]]
+];
+const CR_SORTS = CR_SGRP.flatMap(g => g[1]);
+const CR_COLS = CR_SORTS; // 드릴다운/매체표 22열
+const CR_PCT = new Set(['ctr', 'vtr', 'atcr', 'purr', 'likr', 'savr', 'shrr', 'cmtr', 'er']);
+const CR_ER3 = new Set(['likr', 'savr', 'shrr', 'cmtr']); // 소수 3자리 %
+
+function crDv(a, b) { return (b && b !== 0) ? (a / b) : null; }
+function crWon(v) { return '₩' + Math.round(v).toLocaleString('ko-KR'); }
+function crWonM(v) { return '₩' + (v / 1e6).toLocaleString('ko-KR', { maximumFractionDigits: 1 }) + 'M'; }
+function crInt(v) { return Math.round(v).toLocaleString('ko-KR'); }
+function crFmt(k, v) {
+  if (v == null || !isFinite(v)) return '-';
+  if (k === 'spend') return crWonM(v);
+  if (k === 'cpc') return crWon(v);
+  if (k === 'roas') return v.toFixed(2) + '×';
+  if (CR_ER3.has(k)) return v.toFixed(3) + '%';
+  if (CR_PCT.has(k)) return v.toFixed(2) + '%';
+  return crInt(v);
+}
+
+// ── 집계 ────────────────────────────────────────────────────────────────────
+function crNewAgg() {
+  return { n: 0, spend: 0, impressions: 0, clicks: 0, views: 0, atc: 0, purchases: 0, revenue: 0,
+           likes: 0, comments: 0, shares: 0, saves: 0, media: null, mode: null, objective: null, campaign: null };
+}
+function crAdd(a, r) {
+  a.n++;
+  a.spend += r.spend || 0; a.impressions += r.impressions || 0; a.clicks += r.clicks || 0; a.views += r.views || 0;
+  a.atc += r.atc || 0; a.purchases += r.purchases || 0; a.revenue += r.revenue || 0;
+  a.likes += r.likes || 0; a.comments += r.comments || 0; a.shares += r.shares || 0; a.saves += r.saves || 0;
+  if (a.media == null) { a.media = r.media; a.mode = r.mode; a.objective = r.objective; a.campaign = r.campaign; }
+}
+function crMetrics(a) {
+  const eng = a.likes + a.saves + a.shares + a.comments;
+  return {
+    spend: a.spend, impr: a.impressions, clk: a.clicks, view: a.views,
+    ctr: crDv(a.clicks, a.impressions) != null ? crDv(a.clicks, a.impressions) * 100 : null,
+    vtr: crDv(a.views, a.impressions) != null ? crDv(a.views, a.impressions) * 100 : null,
+    cpc: crDv(a.spend, a.clicks),
+    atc: a.atc, pur: a.purchases,
+    atcr: crDv(a.atc, a.clicks) != null ? crDv(a.atc, a.clicks) * 100 : null,
+    purr: crDv(a.purchases, a.clicks) != null ? crDv(a.purchases, a.clicks) * 100 : null,
+    lik: a.likes, sav: a.saves, shr: a.shares, cmt: a.comments, eng: eng,
+    likr: crDv(a.likes, a.impressions) != null ? crDv(a.likes, a.impressions) * 100 : null,
+    savr: crDv(a.saves, a.impressions) != null ? crDv(a.saves, a.impressions) * 100 : null,
+    shrr: crDv(a.shares, a.impressions) != null ? crDv(a.shares, a.impressions) * 100 : null,
+    cmtr: crDv(a.comments, a.impressions) != null ? crDv(a.comments, a.impressions) * 100 : null,
+    er: crDv(eng, a.impressions) != null ? crDv(eng, a.impressions) * 100 : null,
+    roas: crDv(a.revenue, a.spend)
+  };
+}
+
+// ── 원천 데이터 ──────────────────────────────────────────────────────────────
+function crUnitFull() { return crUnit === 'm' ? 'monthly' : crUnit === 'd' ? 'daily' : 'weekly'; }
+function crRawRows() { return ADS_RAW.filter(r => r.campaign != null); } // parseAds에서 2026-01-01+ 로 이미 필터링됨
+function crPeriodKeys() {
+  const set = new Set();
+  crRawRows().forEach(r => set.add(getPeriodKey(r.date, crUnitFull())));
+  return [...set].sort();
+}
+function crFiltered(periodKey) {
+  return crRawRows().filter(r => {
+    if (getPeriodKey(r.date, crUnitFull()) !== periodKey) return false;
+    if (!crMedia.has(r.media)) return false;
+    if (crMode !== 'all' && r.mode !== crMode) return false;
+    if (crCampaigns.size > 0 && !crCampaigns.has(r.campaign)) return false;
+    return true;
+  });
+}
+function crCampaignList() {
+  const map = {};
+  crRawRows().forEach(r => {
+    if (!(r.campaign in map)) map[r.campaign] = { idx: r.campaign, media: r.media, mode: r.mode, objective: r.objective };
+  });
+  return Object.values(map).sort((a, b) => crCampName(a.idx).localeCompare(crCampName(b.idx)));
+}
+function crModeLabel(mode) { return CR_MODE_LABEL[mode] || mode; }
+function crCampName(idx) { return (ADS_DICT.campaign && ADS_DICT.campaign[idx]) || ('#' + idx); }
+function crAdgName(idx) { return (ADS_DICT.adgroup && ADS_DICT.adgroup[idx]) || ('#' + idx); }
+function crCreName(idx) { return (ADS_DICT.creative && ADS_DICT.creative[idx]) || ('#' + idx); }
+function crShort(n) { return String(n).replace(/^deep_/, '').replace(/_(\d{4})(\d{2})(\d{2})/, '~$2$3').replace(/\s*\(.*\)$/, ''); }
+
+function crAgg(rows) { const a = crNewAgg(); rows.forEach(r => crAdd(a, r)); return a; }
+function crGroupBy(rows, fn) { const g = {}; rows.forEach(r => { const k = fn(r); (g[k] = g[k] || []).push(r); }); return g; }
+const crKeyCamp = r => String(r.campaign);
+const crKeyAdg = r => r.campaign + '::' + r.adgroup;
+const crKeyCre = r => r.campaign + '::' + r.adgroup + '::' + r.creative;
+
+// ── 증감 (§5-3 — 붉은=증가 #c8102e / 파랑=감소 #3D85C6, CPC만 반전) ──────────
+function crDelta(k, a, b) {
+  if (b == null) return { t: 'new' };
+  const x = crMetrics(a)[k], y = crMetrics(b)[k];
+  if (x == null && y == null) return null;
+  if (y == null || y === 0) return (x && x > 0) ? { t: 'new' } : null;
+  if (x == null || x === 0) return { t: 'end' };
+  if (CR_PCT.has(k)) return { t: 'pp', v: x - y };
+  return { t: 'pct', v: (x - y) / y * 100 };
+}
+function crDeltaHTML(d, inv) {
+  if (!d) return '';
+  if (d.t === 'new') return '<span class="cr-dlt"><span class="cr-badge new">신규</span></span>';
+  if (d.t === 'end') return '<span class="cr-dlt"><span class="cr-badge end">종료</span></span>';
+  const v = d.v, up = v > 0, big = Math.abs(v) >= 0.05;
+  const cls = !big ? 'cr-flat' : ((up !== !!inv) ? 'cr-up' : 'cr-dn');
+  const arr = !big ? '–' : (up ? '▲' : '▼');
+  const txt = d.t === 'pp' ? Math.abs(v).toFixed(2) + '%p' : Math.abs(v).toFixed(1) + '%';
+  return '<span class="cr-dlt ' + cls + '">' + arr + ' ' + txt + '</span>';
+}
+function crCmpOn() { return !!crCmp; }
+function crCell(k, a, b) {
+  const v = crMetrics(a)[k], inv = (k === 'cpc');
+  if (!crCmpOn()) return '<div class="cstack one"><div class="c-now">' + crFmt(k, v) + '</div></div>';
+  return '<div class="cstack"><div class="c-now">' + crFmt(k, v) + '</div>' +
+    '<div class="c-prev">' + (b ? crFmt(k, crMetrics(b)[k]) : '—') + '</div>' +
+    '<div class="c-dlt">' + (crDeltaHTML(crDelta(k, a, b), inv) || '&nbsp;') + '</div></div>';
+}
+
+// ── 캠페인/운영구분 칩 (§9-1 — .cr-chip, 실제 대시보드에 .chip 없음) ──────────
+function crChips(media, mode, objective, noObj) {
+  var h = '<span class="cr-chip ' + media + '">' + (media === 'meta' ? 'Meta' : 'TikTok') + '</span>';
+  h += '<span class="cr-chip ' + (mode === 'test' ? 'test' : 'live') + '">' + crModeLabel(mode) + '</span>';
+  if (!noObj) h += '<span class="cr-chip obj">' + (objective || '') + '</span>';
+  return h;
+}
+
+// ── 툴팁 콘텐츠 (§8 — #mTooltip 재사용, 왼쪽 테두리 = 매체색) ───────────────────
+function crTipHTML(agg2, extra) {
+  const m = crMetrics(agg2), col = CR_MC[agg2.media] || '#ccc';
+  var h = '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:' + col + ';margin-bottom:4px">'
+    + (agg2.media === 'meta' ? 'Meta' : 'TikTok') + ' · ' + crModeLabel(agg2.mode) + '</div>';
+  if (agg2._creName) h += '<div style="font-size:10px;color:#444;font-weight:600">' + agg2._creName + '</div>';
+  h += '<div style="font-size:9px;color:#888;margin-top:2px">' + (agg2.objective || '') + (agg2._adgName ? ' · ' + agg2._adgName : '') + '</div>';
+  h += extra || (
+    '<div style="margin-top:5px;color:#555">광고비 ' + crWon(agg2.spend) + ' · 노출 ' + crInt(agg2.impressions) + ' · 클릭 ' + crInt(agg2.clicks) + '<br>'
+    + 'CTR ' + crFmt('ctr', m.ctr) + ' · CPC ' + crWon(m.cpc || 0) + '<br>'
+    + '장바구니 ' + crInt(agg2.atc) + ' (' + crFmt('atcr', m.atcr) + ') · 구매 ' + crInt(agg2.purchases) + ' (' + crFmt('purr', m.purr) + ')<br>'
+    + '좋아요 ' + crInt(agg2.likes) + ' · 저장 ' + crInt(agg2.saves) + ' · 공유 ' + crInt(agg2.shares) + ' · 댓글 ' + crInt(agg2.comments) + ' · ER ' + crFmt('er', m.er)
+    + (agg2.revenue ? '<br>전환매출 ' + crWon(agg2.revenue) + ' · ROAS ' + crFmt('roas', m.roas) : '') + '</div>'
+  );
+  return h;
+}
+function crTipShow(ev, html, col) {
+  const tip = document.getElementById('mTooltip');
+  if (!tip) return;
+  tip.style.borderLeftColor = col || '#ccc';
+  tip.style.maxWidth = '260px';
+  tip.innerHTML = html;
+  tip.style.display = 'block';
+}
+function crTipHide() {
+  const tip = document.getElementById('mTooltip');
+  if (!tip) return;
+  tip.style.display = 'none';
+  tip.style.maxWidth = '';
+}
+
+// ── 상단 필터 드롭다운 렌더 (.cfd 계열 재사용) ────────────────────────────────
+// 🛑 매체·캠페인 체크박스 패널은 refreshAdsCreative()가 필터 클릭마다 재호출하는
+// crRenderFilterOptions()에서 매번 innerHTML을 다시 그리면 안 된다 — 그리면
+// checked 속성이 하드코딩값으로 리셋되어 방금 사용자가 누른 상태를 덮어써버리고,
+// 캠페인은 "비어있으면 전체 채우기" 로직까지 겹쳐 ALL(전체 해제)이 그 자리에서
+// 원복된다(실사용 중 발견). 목록 자체가 바뀔 때만(최초 로드 등) 다시 그린다.
+function crRenderFilterOptions() {
+  const pnlMedia = document.getElementById('cfdPanel-crMedia');
+  if (pnlMedia && !pnlMedia.__crBuilt) {
+    pnlMedia.__crBuilt = true;
+    pnlMedia.innerHTML =
+      '<div class="cfd-all" onclick="crClearMedia()"><input type="checkbox" id="chk-crMedia-all" checked> ALL</div>' +
+      ['meta', 'tiktok'].map(m => '<label class="cfd-opt"><input type="checkbox" value="' + m + '"' + (crMedia.has(m) ? ' checked' : '') + ' onchange="crOnMedia(this,\'' + m + '\')"> ' + (m === 'meta' ? 'Meta' : 'TikTok') + '</label>').join('');
+  }
+
+  const pnlCamp = document.getElementById('cfdPanel-crCamp');
+  if (pnlCamp) {
+    const list = crCampaignList();
+    const sig = list.map(c => c.idx).join(',');
+    if (pnlCamp.__crBuiltSig !== sig) {
+      pnlCamp.__crBuiltSig = sig;
+      if (crCampaigns.size === 0) list.forEach(c => crCampaigns.add(c.idx)); // 최초 빌드에서만 기본값 = 전체
+      pnlCamp.innerHTML =
+        '<div class="cfd-all" onclick="crClearCamp()"><input type="checkbox" id="chk-crCamp-all"' + (crCampaigns.size === list.length ? ' checked' : '') + '> ALL</div>' +
+        list.map(c => '<label class="cfd-opt"><input type="checkbox" value="' + c.idx + '"' + (crCampaigns.has(c.idx) ? ' checked' : '') + ' onchange="crOnCamp(this,' + c.idx + ')">'
+          + '<b style="color:' + (c.mode === 'test' ? '#c8102e' : '#1D2847') + '">' + (c.objective || '') + '</b>'
+          + (c.mode === 'test' ? ' <b style="color:#c8102e">TEST</b>' : '')
+          + ' <span style="color:#aaa">· ' + crShort(crCampName(c.idx)) + '</span></label>').join('');
+    }
+  }
+
+  const pnlChartMin = document.getElementById('cfdPanel-crChartMin');
+  if (pnlChartMin) pnlChartMin.innerHTML = crMinOptsHTML('crChartMin', crChartMin);
+  const pnlTblMin = document.getElementById('cfdPanel-crTblMin');
+  if (pnlTblMin) pnlTblMin.innerHTML = crMinOptsHTML('crTblMin', crTblMin);
+
+  const segSort = document.getElementById('crSegSort');
+  if (segSort) segSort.innerHTML = CR_SGRP.map(g => '<div class="cr-sortgrp">' + g[0] + '</div><div class="cr-sortrow">'
+    + g[1].map(s => '<button class="ads-p-btn" data-v="' + s[0] + '" onclick="crToggleSort(\'' + s[0] + '\')">' + s[1] + '</button>').join('') + '</div>').join('');
+  crPaintSort();
+}
+function crMinOptsHTML(which, cur) {
+  return [[0, '제한 없음'], [100000, '10만원 이상'], [500000, '50만원 이상'], [1000000, '100만원 이상']]
+    .map(o => '<div class="cfd-opt" onclick="crSetMin(\'' + which + '\',' + o[0] + ')">' + o[1] + (o[0] === cur ? ' ✓' : '') + '</div>').join('');
+}
+function crPaintSort() {
+  document.querySelectorAll('#crSegSort button').forEach(b => b.classList.toggle('active', crSorts.indexOf(b.dataset.v) !== -1));
+}
+window.crClearMedia = function () {
+  const willCheck = crMedia.size < 2;
+  document.querySelectorAll('#cfdPanel-crMedia input[type=checkbox]').forEach(c => c.checked = willCheck);
+  crMedia = willCheck ? new Set(['meta', 'tiktok']) : new Set();
+  crUpdateFilterLabels(); refreshAdsCreative();
+};
+window.crOnMedia = function (el, m) {
+  if (el.checked) crMedia.add(m); else crMedia.delete(m);
+  const allBox = document.getElementById('chk-crMedia-all'); if (allBox) allBox.checked = crMedia.size === 2;
+  crUpdateFilterLabels(); refreshAdsCreative();
+};
+window.crClearCamp = function () {
+  const list = crCampaignList();
+  const willCheck = crCampaigns.size < list.length;
+  document.querySelectorAll('#cfdPanel-crCamp input[type=checkbox]').forEach(c => c.checked = willCheck);
+  crCampaigns = willCheck ? new Set(list.map(c => c.idx)) : new Set();
+  crUpdateFilterLabels(); refreshAdsCreative();
+};
+window.crOnCamp = function (el, idx) {
+  if (el.checked) crCampaigns.add(idx); else crCampaigns.delete(idx);
+  const allBox = document.getElementById('chk-crCamp-all'); if (allBox) allBox.checked = crCampaigns.size === crCampaignList().length;
+  crUpdateFilterLabels(); refreshAdsCreative();
+};
+const CR_MIN_LABELS = { 0: '제한 없음', 100000: '10만원 이상', 500000: '50만원 이상', 1000000: '100만원 이상' };
+window.crSetMin = function (which, val) {
+  if (which === 'crChartMin') crChartMin = val; else crTblMin = val;
+  const lbl = document.getElementById(which === 'crChartMin' ? 'crLbl-chartMin' : 'crLbl-tblMin');
+  if (lbl) lbl.textContent = CR_MIN_LABELS[val] || val;
+  crRenderFilterOptions(); refreshAdsCreative();
+};
+window.crToggleSort = function (k) {
+  const i = crSorts.indexOf(k);
+  if (i >= 0) { if (crSorts.length > 1) crSorts.splice(i, 1); }
+  else { crSorts.push(k); if (crSorts.length > 3) crSorts.splice(1, 1); }
+  crPaintSort(); refreshAdsCreative();
+};
+window.crSetUnit = function (btn, u) {
+  document.querySelectorAll('#crSegUnit button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  crUnit = u; crCur = null; crCmp = null;
+  refreshAdsCreative();
+};
+window.crSetMode = function (btn, m) {
+  document.querySelectorAll('#crSegMode button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  crMode = m; refreshAdsCreative();
+};
+window.crSetView = function (btn, v) {
+  document.querySelectorAll('#crSegView button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  crView = v; refreshAdsCreative();
+};
+window.crSetCmp = function (on) {
+  if (!on) { crNoCmp = true; crCmp = null; }
+  else { crNoCmp = false; const L = crPeriodKeys(); const i = L.indexOf(crCur); crCmp = i > 0 ? L[i - 1] : null; }
+  refreshAdsCreative();
+};
+window.crSetCur = function (k) { crCur = k; refreshAdsCreative(); };
+window.crSetCmpPeriod = function (k) { crCmp = k || null; crNoCmp = !crCmp; refreshAdsCreative(); };
+window.crSetTk = function (k) {
+  if (crTk === k) crTdir = -crTdir; else { crTk = k; crTdir = (k === 'cpc') ? 1 : -1; }
+  crRenderDrilldown();
+};
+window.crToggleLv1 = function (campIdx) {
+  const rows = document.querySelectorAll('tr.cr-lv2[data-camp="' + campIdx + '"]');
+  const caret = document.getElementById('cr-caret-' + campIdx);
+  const open = caret ? caret.classList.toggle('open') : false;
+  rows.forEach(r => r.style.display = open ? '' : 'none');
+  if (!open) {
+    document.querySelectorAll('tr.cr-lv3[data-camp="' + campIdx + '"]').forEach(r => r.style.display = 'none');
+    document.querySelectorAll('tr.cr-lv2[data-camp="' + campIdx + '"] .cr-caret').forEach(c => c.classList.remove('open'));
+  }
+};
+window.crToggleLv2 = function (groupKey) {
+  const safe = groupKey.replace(/[^a-zA-Z0-9]/g, '_');
+  const rows = document.querySelectorAll('tr.cr-lv3[data-grp="' + groupKey.replace(/"/g, '') + '"]');
+  const caret = document.getElementById('cr-caret2-' + safe);
+  const open = caret ? caret.classList.toggle('open') : false;
+  rows.forEach(r => r.style.display = open ? '' : 'none');
+};
+
+function crUpdateFilterLabels() {
+  const lblMedia = document.getElementById('crLbl-media');
+  if (lblMedia) lblMedia.textContent = crMedia.size === 2 ? '전체' : (crMedia.size ? [...crMedia].map(m => m === 'meta' ? 'Meta' : 'TikTok').join(', ') : '없음');
+  const lblCamp = document.getElementById('crLbl-camp');
+  const total = crCampaignList().length;
+  if (lblCamp) lblCamp.textContent = crCampaigns.size >= total ? '전체' : (crCampaigns.size ? crCampaigns.size + '개 선택' : '없음');
+}
+
+// ── 구간 채우기 (§3-2 — ADS_RAW 날짜에서 동적 생성, 하드코딩 금지) ─────────────
+function crFillPeriods() {
+  const L = crPeriodKeys();
+  if (!L.length) return;
+  if (L.indexOf(crCur) === -1) crCur = L[L.length - 1];
+  const ci = L.indexOf(crCur);
+  if (crNoCmp) crCmp = null;
+  else if (L.indexOf(crCmp) === -1 || crCmp === crCur) crCmp = ci > 0 ? L[ci - 1] : null;
+
+  const fmtLabel = k => fmtPeriodLabel(k, crUnitFull());
+  const pnlCur = document.getElementById('cfdPanel-crCur');
+  if (pnlCur) pnlCur.innerHTML = L.map(l => '<div class="cfd-opt" onclick="crSetCur(\'' + l + '\')">' + fmtLabel(l) + '</div>').join('');
+  const pnlCmp = document.getElementById('cfdPanel-crCmp');
+  if (pnlCmp) pnlCmp.innerHTML = '<div class="cfd-opt" onclick="crSetCmpPeriod(\'\')">비교 없음</div>' +
+    L.filter(l => l !== crCur).map(l => '<div class="cfd-opt" onclick="crSetCmpPeriod(\'' + l + '\')">' + fmtLabel(l) + (L.indexOf(l) === ci - 1 ? ' <span style="color:#c8102e">· 직전</span>' : '') + '</div>').join('');
+  const lc = document.getElementById('crLbl-cur'); if (lc) lc.textContent = fmtLabel(crCur);
+  const lm = document.getElementById('crLbl-cmp'); if (lm) lm.textContent = crCmp ? fmtLabel(crCmp) : '비교 없음';
+  const segCmp = document.getElementById('crSegCmp');
+  if (segCmp) segCmp.innerHTML = '<button class="stgl' + (crCmpOn() ? ' active' : '') + '" onclick="crSetCmp(true)">' + CR_WNAME[crUnit] + ' 비교</button>'
+    + '<button class="stgl' + (crCmpOn() ? '' : ' active') + '" onclick="crSetCmp(false)">끄기</button>';
+}
+
+// ── KPI 5장 (기존 .kpi/.kpi-header/.kpi-label/.kpi-value/.kpi-vs 그대로 재사용,
+//    배지 색만 .kpi-badge.cr-up/.cr-dn 신규 — 기존 .kpi-badge.up(초록)/.dn(빨강)과
+//    이 탭의 「증가=붉은색」 규칙이 달라 그대로 못 쓴다) ──────────────────────
+function crRenderKPI(a, b) {
+  const m = crMetrics(a);
+  const pack = [
+    ['총 광고비', 'spend', crWonM(a.spend), crInt(a.spend) + '원'],
+    ['노출', 'impr', crInt(a.impressions), '클릭 ' + crInt(a.clicks) + ' · CTR ' + crFmt('ctr', m.ctr)],
+    ['장바구니 / 구매', null, crInt(a.atc) + ' / ' + crInt(a.purchases), '전환율 ' + crFmt('atcr', m.atcr) + ' / ' + crFmt('purr', m.purr)],
+    ['인게이지먼트', 'eng', crInt(a.likes + a.saves + a.shares + a.comments), '저장 ' + crInt(a.saves) + ' · 공유 ' + crInt(a.shares) + ' · 댓글 ' + crInt(a.comments)],
+    ['ROAS', 'roas', m.roas != null ? crFmt('roas', m.roas) : '—', m.roas != null ? '전환매출 ' + crWonM(a.revenue) : '전환 목표 아님']
+  ];
+  const el = document.getElementById('crKpiRow');
+  if (!el) return;
+  el.innerHTML = pack.map(k => {
+    var badge = '';
+    if (crCmpOn() && k[1] && b) {
+      const dd = crDelta(k[1], a, b);
+      if (dd && dd.t !== 'new' && dd.t !== 'end') {
+        const up = dd.v > 0, big = Math.abs(dd.v) >= 0.05;
+        const cls = !big ? '' : ((up !== (k[1] === 'cpc')) ? 'cr-up' : 'cr-dn');
+        const arr = !big ? '–' : (up ? '▲' : '▼');
+        const txt = CR_PCT.has(k[1]) ? Math.abs(dd.v).toFixed(2) + '%p' : Math.abs(dd.v).toFixed(1) + '%';
+        badge = '<div class="kpi-badge ' + cls + '">' + arr + ' ' + txt + '</div>';
+      } else if (dd) {
+        badge = '<div class="kpi-badge ' + (dd.t === 'new' ? 'cr-up' : '') + '">' + (dd.t === 'new' ? '신규' : '종료') + '</div>';
+      }
+    }
+    return '<div class="kpi"><div class="kpi-header"><div class="kpi-label">' + k[0] + '</div>' + badge + '</div>'
+      + '<div class="kpi-value">' + k[2] + '</div><div class="kpi-vs">' + k[3] + '</div></div>';
+  }).join('');
+}
+
+// ── 매체별 요약 표 ────────────────────────────────────────────────────────────
+function crMediaRow(label, a, b, isSum) {
+  var tds = '<td class="ads-metric-lbl"' + (isSum ? ' style="background:#F5F5F8"' : '') + '>'
+    + '<div class="cr-lblcell"><span>' + label + '</span>'
+    + (crCmpOn() ? '<span class="cstack cr-leg"><span>이번</span><span>직전</span><span>증감</span></span>' : '') + '</div></td>';
+  CR_COLS.forEach(c => { tds += '<td>' + crCell(c[0], a, b) + '</td>'; });
+  return '<tr' + (isSum ? ' style="background:#F5F5F8"' : '') + '>' + tds + '</tr>';
+}
+function crRenderMediaSummary(rows, cmpRows) {
+  const el = document.getElementById('crMediaTbl');
+  if (!el) return;
+  var head = '<thead><tr><th>매체</th>' + CR_COLS.map(c => '<th>' + c[1] + '</th>').join('') + '</tr></thead><tbody>';
+  var body = '';
+  ['meta', 'tiktok'].forEach(m => {
+    const l = rows.filter(r => r.media === m);
+    if (!l.length) return;
+    const cb = cmpRows ? cmpRows.filter(r => r.media === m) : null;
+    body += crMediaRow(m === 'meta' ? 'Meta' : 'TikTok', crAgg(l), cb && cb.length ? crAgg(cb) : null);
+  });
+  body += crMediaRow('합계', crAgg(rows), cmpRows && cmpRows.length ? crAgg(cmpRows) : null, true);
+  el.innerHTML = head + body + '</tbody>';
+}
+
+// ── 그래프 — 막대 (§6-2, 열별 정규화 막대는 신규 .cr-mrow 계열) ───────────────
+function crPickTop(rows, k, n) {
+  const inv = (k === 'cpc');
+  const byCre = crGroupBy(rows.filter(r => r.spend >= crChartMin), crKeyCre);
+  return Object.keys(byCre).map(key => {
+    const a = crAgg(byCre[key]); const v = crMetrics(a)[k];
+    return { key: key, rows: byCre[key], a: a, v: v };
+  }).filter(x => x.v != null && isFinite(x.v) && x.v > 0)
+    .sort((x, y) => inv ? x.v - y.v : y.v - x.v).slice(0, n);
+}
+function crRenderBar(rows, cmpRows) {
+  const cmpByCre = cmpRows ? crGroupBy(cmpRows, crKeyCre) : null;
+  const KS = crSorts, primary = KS[0];
+  const top = crPickTop(rows, primary, 12);
+  const el = document.getElementById('crRank');
+  if (!el) return;
+  if (!top.length) { el.innerHTML = '<div class="cr-nodata">조건에 맞는 소재가 없습니다.</div>'; return; }
+  const names = KS.map(k => CR_SORTS.find(x => x[0] === k)[1]);
+  const mx = {}; KS.forEach(k => { mx[k] = Math.max.apply(null, top.map(x => { const v = crMetrics(x.a)[k]; return (v != null && isFinite(v) && v > 0) ? v : 0; })) || 1; });
+  const grid = 'grid-template-columns:minmax(170px,1.35fr) ' + KS.map(() => 'minmax(150px,1fr)').join(' ');
+  var h = '<div class="cr-mrow cr-mhead" style="' + grid + '"><div>소재</div>' + names.map(n => '<div>' + n + '</div>').join('') + '</div>';
+  h += top.map((x, ti) => {
+    const col = CR_MC[x.a.media] || '#999';
+    const cb = cmpByCre && cmpByCre[x.key] ? crAgg(cmpByCre[x.key]) : null;
+    const cells = KS.map((k, ci) => {
+      const v = crMetrics(x.a)[k], ok = (v != null && isFinite(v) && v > 0);
+      const d = crCmpOn() ? crDeltaHTML(crDelta(k, x.a, cb), k === 'cpc') : '';
+      return '<div class="cr-mcell"><div class="cr-mtrack"><div class="cr-mfill" style="width:' + (ok ? Math.max(2, v / mx[k] * 100) : 0) + '%;background:' + col + ';opacity:' + (ci ? 0.55 : 1) + '"></div></div>'
+        + '<div class="cr-mval">' + (ok ? crFmt(k, v) : '-') + d + '</div></div>';
+    }).join('');
+    const creName = crCreName(x.rows[0].creative);
+    const adgName = crAdgName(x.rows[0].adgroup);
+    const campName = crCampName(x.rows[0].campaign);
+    x.a._creName = creName; x.a._adgName = adgName;
+    return '<div class="cr-mrow" style="' + grid + '" data-tt="' + ti + '" title="' + (campName + ' / ' + adgName).replace(/"/g, '&quot;') + '">'
+      + '<div class="cr-mnamecell"><span class="cr-dot" style="background:' + col + '"></span><span class="cr-mname">' + crShort(creName) + '</span>' + crChips(x.a.media, x.a.mode, x.a.objective) + '</div>'
+      + cells + '</div>';
+  }).join('');
+  el.innerHTML = h;
+  CR_TT.length = 0;
+  top.forEach(x => CR_TT.push({ c: CR_MC[x.a.media] || '#ccc', h: crTipHTML(x.a) }));
+}
+
+// ── 그래프 — 추이 (§6-3, SVG 직접 생성) ──────────────────────────────────────
+function crYKeys() { const k = crSorts.filter(x => x !== 'spend'); return k.length ? k : ['ctr']; }
+function crRenderTrend(rows) {
+  CR_TT.length = 0;
+  const KS = crSorts, L = crPeriodKeys();
+  const top6 = crPickTop(rows, KS[0], 6);
+  const el = document.getElementById('crRank');
+  if (!el) return;
+  if (!top6.length) { el.innerHTML = '<div class="cr-nodata">조건에 맞는 소재가 없습니다.</div>'; return; }
+  el.innerHTML = '<div class="cr-panels">' + KS.map(k => crTrendPanel(k, top6, L, KS.length)).join('') + '</div>';
+}
+function crTrendPanel(K, top6, L, np) {
+  const series = top6.map((x, i) => {
+    const pts = L.map(lab => {
+      const rows2 = crRawRows().filter(r => crMedia.has(r.media) && (crMode === 'all' || r.mode === crMode)
+        && (crCampaigns.size === 0 || crCampaigns.has(r.campaign)) && crKeyCre(r) === x.key && getPeriodKey(r.date, crUnitFull()) === lab);
+      if (!rows2.length) return null;
+      const v = crMetrics(crAgg(rows2))[K];
+      return (v != null && isFinite(v)) ? v : null;
+    });
+    return { name: crShort(crCreName(x.rows[0].creative)), full: crCreName(x.rows[0].creative), col: CR_LINEC[i], pts: pts };
+  });
+  const all = series.flatMap(s => s.pts).filter(v => v != null);
+  const hi = Math.max.apply(null, all.concat([0])) || 1, lo = 0;
+  const wide = np === 1, W = wide ? 1000 : 520, H = wide ? 300 : 270, PL = 58, PR = wide ? 190 : 16, PT = 22, PB = 34;
+  const px = i => PL + (L.length < 2 ? 0 : i * (W - PL - PR) / (L.length - 1));
+  const py = v => PT + (1 - (v - lo) / (hi - lo)) * (H - PT - PB);
+  const ticks = [0, .25, .5, .75, 1].map(t => lo + (hi - lo) * t);
+  var g = ticks.map(t => '<line x1="' + PL + '" x2="' + (W - PR) + '" y1="' + py(t) + '" y2="' + py(t) + '" stroke="#EDEDF0" stroke-width="1"/>'
+    + '<text x="' + (PL - 8) + '" y="' + (py(t) + 3.5) + '" text-anchor="end" class="cr-ax">' + crFmt(K, t) + '</text>').join('');
+  g += L.map((lab, i) => {
+    const disp = fmtPeriodLabel(lab, crUnitFull());
+    return '<text x="' + px(i) + '" y="' + (H - 12) + '" text-anchor="middle" class="cr-ax' + (lab === crCur ? ' cur' : '') + '">' + disp + '</text>';
+  }).join('');
+  g += L.map((lab, i) => lab === crCur ? '<line x1="' + px(i) + '" x2="' + px(i) + '" y1="' + PT + '" y2="' + (H - PB) + '" stroke="#c8102e" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>' : '').join('');
+  const ends = [];
+  series.forEach(sr => {
+    var d = '', open = false;
+    sr.pts.forEach((v, i) => { if (v == null) { open = false; return; } d += (open ? ' L' : ' M') + px(i) + ' ' + py(v); open = true; });
+    g += '<path d="' + d + '" fill="none" stroke="' + sr.col + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    sr.pts.forEach((v, i) => {
+      if (v == null) return;
+      CR_TT.push({ c: sr.col, h: '<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:' + sr.col + ';margin-bottom:4px">' + fmtPeriodLabel(L[i], crUnitFull()) + '</div>'
+        + '<div style="font-size:10px;color:#444;font-weight:600">' + sr.full + '</div>'
+        + '<div style="margin-top:4px;color:#555">' + CR_SORTS.find(x => x[0] === K)[1] + ' <b>' + crFmt(K, v) + '</b></div>' });
+      g += '<circle class="pt" data-t="' + (CR_TT.length - 1) + '" cx="' + px(i) + '" cy="' + py(v) + '" r="3.4" fill="' + sr.col + '" stroke="#fff" stroke-width="2"/>';
+    });
+    var li = -1; sr.pts.forEach((v, i) => { if (v != null) li = i; });
+    if (li >= 0) ends.push({ x: px(li), y: py(sr.pts[li]), ty: py(sr.pts[li]), col: sr.col, name: sr.name });
+  });
+  ends.sort((a, b) => a.ty - b.ty);
+  const GAP = 15;
+  for (let i = 1; i < ends.length; i++) if (ends[i].ty - ends[i - 1].ty < GAP) ends[i].ty = ends[i - 1].ty + GAP;
+  const over = ends.length ? ends[ends.length - 1].ty - (H - PB) : 0;
+  if (over > 0) ends.forEach(e => e.ty -= over);
+  if (wide) ends.forEach(e => {
+    g += '<path d="M' + (e.x + 4) + ' ' + e.y + ' L' + (e.x + 10) + ' ' + e.ty + '" stroke="' + e.col + '" stroke-width="1" opacity=".5" fill="none"/>';
+    g += '<text x="' + (e.x + 13) + '" y="' + (e.ty + 3.5) + '" class="cr-lbl" fill="' + e.col + '">' + e.name + '</text>';
+  });
+  g = '<text x="' + PL + '" y="12" class="cr-ptitle">' + CR_SORTS.find(x => x[0] === K)[1] + '</text>' + g;
+  return '<div class="cr-panel"><svg viewBox="0 0 ' + W + ' ' + H + '" class="cr-viz" preserveAspectRatio="xMidYMid meet">' + g + '</svg></div>';
+}
+
+// ── 그래프 — 분포 (§6-4, 광고비 고정 X축 + 사분면) ───────────────────────────
+function crRenderScat(rows) {
+  CR_TT.length = 0;
+  const YS = crYKeys();
+  const el = document.getElementById('crRank');
+  if (!el) return;
+  el.innerHTML = '<div class="cr-panels">' + YS.map(y => crScatPanel(rows, y, YS.length)).join('') + '</div>';
+}
+function crScatPanel(rows, Y, np) {
+  const X = 'spend', YL = CR_SORTS.find(x => x[0] === Y)[1];
+  const byCre = crGroupBy(rows.filter(r => r.spend >= crChartMin), crKeyCre);
+  const pts = Object.keys(byCre).map(key => {
+    const a = crAgg(byCre[key]); const m = crMetrics(a);
+    return { key: key, rows: byCre[key], a: a, x: m.spend, y: m[Y] };
+  }).filter(p => p.x > 0 && p.y != null && isFinite(p.y));
+  const wide = np === 1, W = wide ? 1000 : 520, H = wide ? 330 : 300, PL = wide ? 64 : 56, PR = wide ? 26 : 16, PT = 24, PB = 38;
+  if (!pts.length) return '<div class="cr-panel"><div class="cr-nodata">' + YL + ' — 표시할 소재 없음</div></div>';
+  const xs = pts.map(p => p.x), ys = pts.map(p => p.y);
+  const xh = Math.max.apply(null, xs) * 1.08, yh = Math.max.apply(null, ys) * 1.14 || 1;
+  const med = arr => { const a = arr.slice().sort((u, v) => u - v); return a[Math.floor(a.length / 2)]; };
+  const mxv = med(xs), myv = med(ys), imx = Math.max.apply(null, pts.map(p => p.a.impressions)) || 1;
+  const px = v => PL + v / xh * (W - PL - PR), py = v => PT + (1 - v / yh) * (H - PT - PB);
+  var g = '<text x="' + PL + '" y="13" class="cr-ptitle">광고비 × ' + YL + '</text>';
+  [0, .5, 1].forEach(t => { g += '<line x1="' + PL + '" x2="' + (W - PR) + '" y1="' + py(yh * t) + '" y2="' + py(yh * t) + '" stroke="#EDEDF0"/>'
+    + '<text x="' + (PL - 7) + '" y="' + (py(yh * t) + 3.5) + '" text-anchor="end" class="cr-ax">' + crFmt(Y, yh * t) + '</text>'; });
+  [0, .5, 1].forEach(t => { g += '<text x="' + px(xh * t) + '" y="' + (H - 13) + '" text-anchor="middle" class="cr-ax">' + crFmt(X, xh * t) + '</text>'; });
+  g += '<line x1="' + px(mxv) + '" x2="' + px(mxv) + '" y1="' + PT + '" y2="' + (H - PB) + '" stroke="#c8102e" stroke-dasharray="4 4" opacity=".4"/>'
+    + '<line x1="' + PL + '" x2="' + (W - PR) + '" y1="' + py(myv) + '" y2="' + py(myv) + '" stroke="#c8102e" stroke-dasharray="4 4" opacity=".4"/>';
+  g += '<rect x="' + px(mxv) + '" y="' + py(myv) + '" width="' + (W - PR - px(mxv)) + '" height="' + (H - PB - py(myv)) + '" fill="#c8102e" opacity=".045"/>';
+  g += '<text x="' + (W - PR - 4) + '" y="' + (py(myv) - 6) + '" text-anchor="end" class="cr-quad">광고비 상위 · ' + YL + ' 상위</text>';
+  g += '<text x="' + (W - PR - 4) + '" y="' + (H - PB - 7) + '" text-anchor="end" class="cr-quad warn">광고비 상위 · ' + YL + ' 하위</text>';
+  pts.slice().sort((a, b) => b.a.impressions - a.a.impressions).forEach(p => {
+    const col = CR_MC[p.a.media] || '#999';
+    const rr = (wide ? 5 : 4) + Math.sqrt(p.a.impressions / imx) * (wide ? 13 : 10);
+    p.a._creName = crCreName(p.rows[0].creative); p.a._adgName = crAdgName(p.rows[0].adgroup);
+    CR_TT.push({ c: col, h: crTipHTML(p.a, '<div style="margin-top:5px;color:#555">광고비 <b>' + crWon(p.x) + '</b> · ' + YL + ' <b>' + crFmt(Y, p.y) + '</b><br>노출 ' + crInt(p.a.impressions) + ' · 클릭 ' + crInt(p.a.clicks) + '</div>') });
+    g += '<circle class="pt" data-t="' + (CR_TT.length - 1) + '" cx="' + px(p.x) + '" cy="' + py(p.y) + '" r="' + rr + '" fill="' + col + '" fill-opacity=".42" stroke="' + col + '" stroke-width="1.5"/>';
+  });
+  const lab = [];
+  crPickTop(rows, X, wide ? 5 : 3).forEach(t => {
+    const p = pts.find(q => q.key === t.key); if (!p) return;
+    const cx = px(p.x), cy = py(p.y), rr = (wide ? 5 : 4) + Math.sqrt(p.a.impressions / imx) * (wide ? 13 : 10);
+    const right = cx > W * 0.6; var ty = cy + 3.5;
+    while (lab.some(o => Math.abs(o - ty) < 13)) ty += 13;
+    lab.push(ty);
+    g += '<text x="' + (right ? cx - rr - 6 : cx + rr + 6) + '" y="' + ty + '" text-anchor="' + (right ? 'end' : 'start') + '" class="cr-lbl" fill="#4b5563">' + crShort(crCreName(p.rows[0].creative)) + '</text>';
+  });
+  return '<div class="cr-panel"><svg viewBox="0 0 ' + W + ' ' + H + '" class="cr-viz" preserveAspectRatio="xMidYMid meet">' + g + '</svg></div>';
+}
+
+function crRenderRankNote(rows) {
+  const KS = crSorts, names = KS.map(k => CR_SORTS.find(x => x[0] === k)[1]);
+  var note;
+  if (crView === 'bar') note = '<b>' + names.join(' · ') + '</b> · 상위 12개';
+  else if (crView === 'trend') note = '<b>' + names.join(' · ') + '</b> · ' + CR_UNAME[crUnit] + ' 구간별 추이 · 상위 6개 소재';
+  else note = '광고비 × <b>' + crYKeys().map(k => CR_SORTS.find(x => x[0] === k)[1]).join(' · ') + '</b> · 원 크기 = 노출';
+  const rn = document.getElementById('crRankNote');
+  if (rn) rn.innerHTML = note + ' · <b>' + fmtPeriodLabel(crCur, crUnitFull()) + '</b> · 최소 ' + (crChartMin ? crWon(crChartMin) : '제한 없음')
+    + (crView === 'bar' && KS[0] === 'cpc' ? ' <span style="color:#9ca3af">· CPC 낮은 순</span>' : '')
+    + (crCmpOn() && crView === 'bar' ? ' <span style="color:#c8102e">· ' + fmtPeriodLabel(crCmp, crUnitFull()) + ' 대비</span>' : '');
+  const media = '<span class="cr-lgd" style="background:#3D85C6"></span>Meta <span class="cr-lgd" style="background:#A64D79"></span>TikTok';
+  const leg = document.getElementById('crRankLeg');
+  if (leg) {
+    if (crView === 'trend') leg.innerHTML = (crSorts.length > 1 ? '선 색 = 소재(패널 공통) · ' : '선 = 소재, 끝에 이름 · ') + '붉은 점선 = 선택 구간';
+    else if (crView === 'scat') leg.innerHTML = media + ' · 붉은 점선 = 중앙값 · <b style="color:#c8102e">붉은 사분면 = 광고비 상위·성과 하위</b>';
+    else leg.innerHTML = media + ' · 막대는 열 안에서의 최댓값 대비 길이';
+    if (crView === 'trend' && crSorts.length > 1) {
+      const t6 = crPickTop(rows, crSorts[0], 6);
+      leg.innerHTML = t6.map((x, i) => '<span class="cr-lgd" style="background:' + CR_LINEC[i] + '"></span>' + crShort(crCreName(x.rows[0].creative))).join(' &nbsp; ')
+        + ' &nbsp;·&nbsp; 붉은 점선 = 선택 구간';
+    }
+  }
+}
+
+// ── 드릴다운 표 (§7 — 캠페인→광고그룹→소재, .ddx 재사용) ────────────────────
+function crTcmp(rowsA, rowsB) {
+  const x = crMetrics(crAgg(rowsA))[crTk], y = crMetrics(crAgg(rowsB))[crTk];
+  const xv = (x == null || !isFinite(x)) ? -Infinity : x, yv = (y == null || !isFinite(y)) ? -Infinity : y;
+  return (xv - yv) * crTdir;
+}
+function crRenderDDHead() {
+  const arw = k => crTk === k ? '<span class="sarr">' + (crTdir < 0 ? '▼' : '▲') + '</span>' : '<span class="sarr off">▽</span>';
+  var h = '<tr><th>이름</th>' + CR_COLS.map(c => '<th class="sortable" onclick="crSetTk(\'' + c[0] + '\')">' + c[1] + arw(c[0]) + '</th>').join('') + '</tr>';
+  const head = document.getElementById('crDDHead');
+  if (head) head.innerHTML = h;
+  return CR_COLS.length + 1;
+}
+function crDrow(rowsA, rowsB, cls, tdLabelHtml, attrs) {
+  const a = crAgg(rowsA), b = rowsB && rowsB.length ? crAgg(rowsB) : null;
+  var tds = '<td>' + tdLabelHtml + '</td>';
+  CR_COLS.forEach(c => { tds += '<td>' + crCell(c[0], a, b) + '</td>'; });
+  return '<tr class="' + cls + '" ' + (attrs || '') + '>' + tds + '</tr>';
+}
+function crRenderDrilldown() {
+  const nc = crRenderDDHead();
+  const tb = document.getElementById('crTb');
+  if (!tb) return;
+  if (!crCur) { tb.innerHTML = '<tr><td colspan="' + nc + '" style="color:#c4c4c8;padding:18px 14px">데이터가 없습니다.</td></tr>'; return; }
+  const rows = crFiltered(crCur);
+  const cmpRows = crCmpOn() ? crFiltered(crCmp) : null;
+  const gC = cmpRows ? crGroupBy(cmpRows, crKeyCamp) : null;
+  const gA = cmpRows ? crGroupBy(cmpRows, crKeyAdg) : null;
+  const gF = cmpRows ? crGroupBy(cmpRows, crKeyCre) : null;
+
+  // §7-5: 표 전용 최소 광고비는 소재(lv3) 행만 거른다. lv1·lv2 합계는 거르기 전 전체로 낸다.
+  const byC = crGroupBy(rows, crKeyCamp);
+  var h = '';
+  var hiddenCount = 0;
+  Object.keys(byC).sort((x, y) => crTcmp(byC[x], byC[y])).forEach(ci => {
+    const campRows = byC[ci];
+    const meta = campRows[0];
+    const nCre = new Set(campRows.map(crKeyCre)).size;
+    h += crDrow(campRows, gC && gC[ci] ? gC[ci] : null, 'cr-lv1',
+      '<div class="cr-camprow" onclick="crToggleLv1(\'' + ci + '\')"><span class="cr-caret" id="cr-caret-' + ci + '">▶</span>'
+      + '<b style="color:' + (meta.mode === 'test' ? '#c8102e' : '#111827') + '">' + (meta.objective || '') + '</b> ' + crChips(meta.media, meta.mode, meta.objective, true)
+      + '<div style="font-size:9px;color:#c4c4c8;font-weight:500;margin-top:2px;padding-left:16px">소재 ' + nCre + '개</div></div>',
+      'data-camp="' + ci + '"');
+
+    const byA = crGroupBy(campRows, crKeyAdg);
+    Object.keys(byA).sort((x, y) => crTcmp(byA[x], byA[y])).forEach(ak => {
+      const adgRows = byA[ak];
+      const nCre2 = new Set(adgRows.map(crKeyCre)).size;
+      const safeAk = ak.replace(/[^a-zA-Z0-9]/g, '_');
+      h += crDrow(adgRows, gA && gA[ak] ? gA[ak] : null, 'cr-lv2',
+        '<div class="cr-camprow" style="padding-left:14px" onclick="crToggleLv2(\'' + ak + '\')"><span class="cr-caret" id="cr-caret2-' + safeAk + '"></span>'
+        + crAdgName(adgRows[0].adgroup) + '<span style="color:#9ca3af;font-size:9.5px"> · ' + nCre2 + '개</span></div>',
+        'data-camp="' + ci + '" data-grp="' + ak + '" style="display:none"');
+
+      const byF = crGroupBy(adgRows, crKeyCre);
+      Object.keys(byF).sort((x, y) => crTcmp(byF[x], byF[y])).forEach(fk => {
+        const creRows = byF[fk];
+        const rowSpend = crAgg(creRows).spend;
+        if (crTblMin > 0 && rowSpend < crTblMin) { hiddenCount++; return; }
+        h += crDrow(creRows, gF && gF[fk] ? gF[fk] : null, 'cr-lv3',
+          '<span style="padding-left:28px;display:inline-block" title="' + crCreName(creRows[0].creative).replace(/"/g, '&quot;') + '">' + crShort(crCreName(creRows[0].creative)) + '</span>',
+          'data-camp="' + ci + '" data-grp="' + ak + '" style="display:none"');
+      });
+    });
+  });
+  tb.innerHTML = h || ('<tr><td colspan="' + nc + '" style="color:#c4c4c8;padding:18px 14px">조건에 맞는 데이터가 없습니다.</td></tr>');
+
+  const note = document.getElementById('crDDMinNote');
+  if (note) note.textContent = hiddenCount > 0 ? ('광고비 ' + crWon(crTblMin) + ' 미만 소재 ' + hiddenCount + '개는 표시하지 않았습니다.') : '';
+}
+
+// ── 메인 렌더 ────────────────────────────────────────────────────────────────
+function crRenderRank(rows, cmpRows) {
+  crRenderRankNote(rows);
+  if (crView === 'trend') crRenderTrend(rows);
+  else if (crView === 'scat') crRenderScat(rows);
+  else crRenderBar(rows, cmpRows);
+}
+function refreshAdsCreative() {
+  if (!ADS_RAW.length) return;
+  crRenderFilterOptions();
+  crFillPeriods();
+  crUpdateFilterLabels();
+  if (!crCur) return; // 소재 데이터가 아직 없음(백엔드 미배포 등) — KPI/표는 빈 채로 둔다
+
+  const rows = crFiltered(crCur);
+  const cmpRows = crCmpOn() ? crFiltered(crCmp) : null;
+  const a = crAgg(rows), b = cmpRows && cmpRows.length ? crAgg(cmpRows) : null;
+
+  crRenderKPI(a, b);
+  crRenderMediaSummary(rows, cmpRows);
+  crRenderRank(rows, cmpRows);
+  crRenderDrilldown();
+
+  const wowNote = document.getElementById('crWowNote');
+  if (wowNote) wowNote.innerHTML = crCmpOn()
+    ? ('각 칸은 위부터 <b>이번 구간(' + fmtPeriodLabel(crCur, crUnitFull()) + ')</b> / <b style="color:#9ca3af">직전 구간(' + fmtPeriodLabel(crCmp, crUnitFull()) + ')</b> / <b style="color:#c8102e">증감</b> 순입니다.')
+    : '비교를 켜면 모든 숫자 아래에 직전 구간 값과 증감이 붙습니다.';
+  const secSub = document.getElementById('crSecSubA');
+  if (secSub) secSub.innerHTML = '선택 구간 <b>' + fmtPeriodLabel(crCur, crUnitFull()) + '</b>' + (crCmpOn() ? (' · 비교 <b style="color:#c8102e">' + fmtPeriodLabel(crCmp, crUnitFull()) + '</b> (' + CR_WNAME[crUnit] + ')') : '') + ' · 아래 필터와 연동';
+  const fCount = document.getElementById('crFCount');
+  if (fCount) fCount.textContent = CR_UNAME[crUnit] + ' ' + fmtPeriodLabel(crCur, crUnitFull()) + ' · 캠페인 ' + new Set(rows.map(r => r.campaign)).size
+    + ' · 광고그룹 ' + new Set(rows.map(crKeyAdg)).size + ' · 소재 ' + new Set(rows.map(crKeyCre)).size + '개 / 총 광고비 ' + crWon(a.spend);
+}
+
+// ── 툴팁(막대/추이/분포 공통, mousemove 위임 — #mTooltip 전역 핸들러가 따라다님) ─
+(function () {
+  const wire = () => {
+    const rank = document.getElementById('crRank');
+    if (!rank || rank.__crWired) return;
+    rank.__crWired = true;
+    rank.addEventListener('mousemove', function (e) {
+      const pt = e.target.closest('circle.pt');
+      if (pt) { const t = CR_TT[+pt.dataset.t]; if (t) { crTipShow(e, t.h, t.c); return; } }
+      const rw = e.target.closest('.cr-mrow[data-tt]');
+      if (!rw) { crTipHide(); return; }
+      const t = CR_TT[+rw.dataset.tt];
+      if (!t) { crTipHide(); return; }
+      crTipShow(e, t.h, t.c);
+    });
+    rank.addEventListener('mouseleave', crTipHide);
+  };
+  document.addEventListener('DOMContentLoaded', wire);
+  window.__crWireTooltip = wire; // refreshAdsCreative/subtab 진입 시 재호출 대비
+})();
+
+// ── 하위탭 전환 (display 토글만 — refreshAds() 재호출 금지, §2-1) ────────────
+window.switchSubtab = function (which) {
+  document.querySelectorAll('.subtab').forEach(t => t.classList.toggle('on', t.dataset.st === which));
+  const stMedia = document.getElementById('stMedia'), stCreative = document.getElementById('stCreative');
+  if (stMedia) stMedia.style.display = which === 'media' ? '' : 'none';
+  if (stCreative) stCreative.style.display = which === 'creative' ? '' : 'none';
+  if (which === 'creative' && typeof window.__crWireTooltip === 'function') window.__crWireTooltip();
+};
 function switchTab(tab){
   var items = document.querySelectorAll('.sb-item');
   for (var i = 0; i < items.length; i++) items[i].classList.toggle('active', items[i].dataset.tab === tab);
@@ -3908,6 +5955,7 @@ function switchTab(tab){
   document.getElementById('tabBm').style.display      = tab === 'bm' ? '' : 'none';
   document.getElementById('tabSku').style.display     = tab === 'sku' ? '' : 'none';
   document.getElementById('tabQuery').style.display   = tab === 'query' ? '' : 'none';
+  document.getElementById('tabAds').style.display     = tab === 'ads' ? '' : 'none';
   document.getElementById('pageTitle').textContent = TAB_TITLES[tab] || TAB_TITLES.main;
   // 🛑 탭에 들어올 때마다 강제 재렌더한다. 숨겨진 canvas 는 폭이 0이라
   //    첫 렌더가 접혀 있으면 그대로 눌린 차트가 남는다.
@@ -3915,9 +5963,10 @@ function switchTab(tab){
   if (tab === 'main')    { try { refreshMain(true);    } catch(e){ console.warn(e); } }
   if (tab === 'bm')      { try { refreshBm(true);      } catch(e){ console.warn(e); } }
   if (tab === 'sku')     { try { refreshSku(true);     } catch(e){ console.warn(e); } }
+  if (tab === 'ads')     { try { refreshAds(); } catch(e){ console.warn('[ads]', e); } }
   if (tab === 'query')   openQueryTab();
 }
-var TAB_TITLES = { main:'통합 대시보드', channel:'유입 채널별', bm:'B&M · 재고', sku:'SKU 실매출', query:'구글 쿼리' };
+var TAB_TITLES = { main:'통합 대시보드', channel:'유입 채널별', bm:'B&M · 재고', sku:'SKU 실매출', ads:'퍼포먼스 광고', query:'구글 쿼리' };
 // ═══ 구글 쿼리 탭 — /query-us/ 를 iframe 으로 띄우고, 이 대시보드 로그인 토큰(시트 읽기 전용 포함)을
 //     그 페이지 출처로만 넘긴다. 토큰으로 시트를 못 읽으면 탭 안에서 따로 로그인 화면이 뜬다.
 var QUS_URL = 'https://wyatt-biz-dashboard.vercel.app/query-us/?brand=DF';
@@ -4184,6 +6233,7 @@ function applyPayload(data){
   // 비용·노출·쿼리(「세포라 대시보드용」 탭) · 세포라 광고 RAW — 원화. 옛 캐시에는 없는 키다(→ 비용 0).
   D.demand     = data.demand     || {};
   D.ads        = data.ads        || [];
+  try { buildAdsFromPayload_(); } catch(e){ console.warn('[ads] 어댑터 실패', e); }
   _adsDayC = null;
 
   // 🛑 통합 탭 Sales = Raw_실매출(세포라 실매출) 기준으로 전환(2026-09-21 MJ 지시, UNOVE 동일 구조).
