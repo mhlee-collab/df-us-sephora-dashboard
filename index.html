@@ -586,7 +586,7 @@ body{
           <button class="tgl" id="btnS-chmk" data-cost-key="chmk" onclick="toggleSeries(this,'chmk')" title="장부 채널 온사이트 광고 · 세포라 프로그램 · CO-OP · 월/주 단위 전용"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#c2578a;"></span>채널마케팅 비용</button>
           <button class="tgl" id="btnS-paid" data-cost-key="paid" onclick="toggleSeries(this,'paid')" title="월 = 장부 메타·틱톡·유튜브·구글 · 주/일 = 광고 RAW 세포라 캠페인"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#e8c84a;"></span>페이드 비용</button>
           <button class="tgl" id="btnS-total" data-cost-key="total" onclick="toggleSeries(this,'total')" title="퍼포먼스 + 브랜딩 + KOL + 채널마케팅 + 매장 행사 + 퍼포먼스 기타 · 월/주 단위 전용"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4a6fa5;"></span>광고비(총계)</button>
-          <button class="tgl" id="btnS-roasCom" data-cost-key="roasCom" onclick="toggleSeries(this,'roasCom')" title=".COM 매출(원) ÷ 페이드 비용"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4bc8a0;"></span>닷컴 ROAS</button>
+          <button class="tgl" id="btnS-roasCom" data-cost-key="roasCom" onclick="toggleSeries(this,'roasCom')" title=".COM 매출(원) ÷ (페이드 + 온사이트 비용)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4bc8a0;"></span>닷컴 ROAS</button>
           <button class="tgl" id="btnS-roasTotal" data-cost-key="roasTotal" onclick="toggleSeries(this,'roasTotal')" title="TTL 매출(원) ÷ 광고비(총계) · 월/주 단위 전용"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#1b6e63;"></span>전체 ROAS</button>
         </div>
         <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
@@ -1406,6 +1406,8 @@ function roasOf_(num, den){ return den > 0 ? num / den * 100 : null; }
 // 🛑 대시보드 매출은 2026-07-26 부터라 7월은 6일치 매출 ÷ 7월 전체 비용이 된다(실측 6%) → 그 달은 ROAS 에서 뺀다.
 function roasCost_(period, label, key){
   if (period === 'monthly' && !(D.range && D.range.start && D.range.start <= key + '-01')) return 0;
+  // 닷컴 ROAS 분모 = 페이드 + 세포라 온사이트 (어노브 통합 탭과 같은 기준 · 일 단위는 페이드만)
+  if (label === '퍼포먼스 비용' && period !== 'daily') return costVal(period, label, key) + costVal(period, '온사이트 비용', key);
   return costVal(period, label, key);
 }
 function fmtRoas_(v){ return v === null || v === undefined ? '—' : Math.round(v).toLocaleString('en-US') + '%'; }
@@ -1533,7 +1535,7 @@ var KPI_NOTES = {
   orders: 'RAW_commerce 의 주문 수량 합계입니다.',
   cvr:    '주문 수량 / Visits TY × 100. 원본 Conversion TY 를 방문으로 가중 합산한 값과 같습니다.',
   roasTotal: 'TTL 매출(원화) ÷ 광고비 총계. 주를 고르면 주, 아니면 월 단위로 합산하고, 비용이 아직 0 인 기간(장부 마감 전)과 매출 자료가 그 달 1일부터 없는 달(7월)은 분자·분모 모두에서 뺍니다. 「공통 비용 포함」을 끄면 공통 브랜딩·KOL 비용을 뺀 총계로 계산합니다.',
-  roasCom:   '.COM 매출(원화) ÷ 페이드 비용(세포라 광고). 월 = 장부 퍼포먼스 · 주 = 광고 RAW 세포라 캠페인. 비용이 0 인 기간은 분자·분모 모두에서 뺍니다.'
+  roasCom:   '.COM 매출(원화) ÷ (페이드 비용 + 세포라 온사이트 비용). 페이드 = 월 장부 퍼포먼스 · 주 광고 RAW 세포라 캠페인. 일 단위는 페이드만. 비용이 0 인 기간은 분자·분모 모두에서 뺍니다.'
 };
 
 // 통합 탭 KPI 는 큰 숫자가 언제나 USD 이고 ₩ 는 보조줄이다 — 통화 칩과 무관하다.
