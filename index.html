@@ -704,6 +704,7 @@ body{
       </div>
     </div>
 
+    <style id="dmdStyle">#demandSec .dmd-chip{font-size:11px;padding:2px 9px;border:1px solid #ccc;border-radius:12px;background:#fff;color:#666;cursor:pointer;margin-right:3px;}#demandSec .dmd-chip.on{background:#33447a;color:#fff;border-color:#33447a;}#demandSec .dmd-ddbtn{font-size:12px;padding:4px 10px;border:1px solid #bbb;border-radius:6px;background:#fff;cursor:pointer;}#demandSec .dmd-ddbtn.muted{color:#aaa;border-color:#ddd;background:#fafafa;}#demandSec .dmd-ddbtn:disabled{cursor:not-allowed;opacity:0.55;}#demandSec .dmd-ddpanel{display:none;position:absolute;top:110%;left:0;z-index:50;background:#fff;border:1px solid #ccc;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.12);padding:6px 10px;min-width:150px;max-height:260px;overflow:auto;}#demandSec .dmd-ddpanel.open{display:block;}#demandSec .dmd-op{display:block;font-size:12px;padding:2px 0;white-space:nowrap;cursor:pointer;}#demandSec .dmd-ax{font-size:11px;color:#666;}#demandSec .dmd-ax input{width:50px;font-size:11px;padding:1px 3px;margin:0 1px;border:1px solid #ccc;border-radius:4px;}#demandSec .dmd-reset{font-size:11px;padding:3px 8px;border:1px solid #bbb;border-radius:6px;background:#fff;cursor:pointer;}#demandSec .dmd-seg{display:inline-flex;border:1px solid #bbb;border-radius:6px;overflow:hidden;}#demandSec .dmd-seg button{font-size:11px;padding:3px 9px;border:0;background:#fff;color:#666;cursor:pointer;border-right:1px solid #eee;}#demandSec .dmd-seg button:last-child{border-right:0;}#demandSec .dmd-seg button.on{background:#2f6fb0;color:#fff;}#demandDataTable th.dmd-hl,#demandDataTable td.dmd-hl{background:rgba(255,196,0,0.18);}#demandDataTable th.dmd-hl{color:#8a5a00;}#demandDataTable .dmd-hl-badge{display:inline-block;margin-left:4px;padding:0 5px;border-radius:8px;background:#f2a900;color:#fff;font-size:8px;letter-spacing:0;text-transform:none;vertical-align:1px;}#demandDataTable td.dmd-ing,#demandDataTable th.dmd-ing{color:#b8bcc6;}#demandDataTable .dmd-ing-badge{display:inline-block;margin-left:4px;padding:0 5px;border-radius:8px;border:1px solid #c9ccd4;color:#9ca3af;font-size:8px;letter-spacing:0;text-transform:none;vertical-align:1px;}#demandSec .cty-badge{display:inline-block;font-size:9.5px;font-weight:600;color:#A8463F;background:#FBEDEC;border:1px solid #F0C9C5;border-radius:10px;padding:1px 8px;letter-spacing:0;white-space:nowrap;vertical-align:middle;}#demandSec .chart-sec-sub{font-size:10px;color:#aaa;margin-bottom:12px;}#demandSec .ads-tbl-wrap{overflow-x:auto;}#demandSec .ads-metric-tbl{border-collapse:collapse;font-size:10px;white-space:nowrap;width:100%;}#demandSec .ads-metric-tbl th,#demandSec .ads-metric-tbl td{padding:5px 9px;border-bottom:1px solid #EEE;text-align:right;}#demandSec .ads-metric-tbl th:first-child,#demandSec .ads-metric-tbl td.ads-metric-lbl{text-align:left;position:sticky;left:0;background:#fff;font-weight:600;color:#1D2847;z-index:1;}#demandSec .ads-metric-tbl thead th{color:#9ca3af;font-weight:700;border-bottom:2px solid #E0E0E4;font-size:9px;letter-spacing:.5px;text-transform:uppercase;}#demandSec .ads-metric-tbl tbody tr:hover td{background:#F8F8FB;}#demandSec .ads-metric-tbl .ca-lbl{color:#7B3F1D;}#demandSec .ads-metric-tbl .ca-na{color:#7b8194;cursor:help;}#demandSec .ads-metric-tbl .ca-why{display:block;font-size:9px;font-weight:400;color:#7b8194;}</style><div class="chart-sec" id="demandSec"><div style="display:flex;justify-content:flex-start;align-items:center;margin-bottom:8px;gap:8px;"><div class="sec-hdr" id="dmdToggle" style="margin-bottom:0;cursor:pointer;user-select:none;"><span id="dmdCaret" style="display:inline-block;font-size:11px;">▸</span> 쿼리 현황</div><span class="cty-badge" title="구글·아마존 쿼리와 겹쳐보기(유입·매출·노출)는 전부 미국 자료입니다.">미국 기준</span></div><div id="dmdBody" style="display:none;"><div class="chart-card"><div class="dmd-ctl" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin-bottom:10px;"><span class="dmd-seg"><button data-per="monthly">월</button><button data-per="weekly" class="on">주</button><button data-per="daily" title="일별 쿼리 미제공으로 지원되지 않습니다." style="color:#c4c4c4;cursor:not-allowed;">일</button></span><span style="display:inline-flex;gap:6px;"><div class="dmd-dd" style="position:relative;"><button class="dmd-ddbtn" id="dmdMoBtn">기간(월) ▾</button><div class="dmd-ddpanel" id="dmdMoPanel"></div></div><div class="dmd-dd" style="position:relative;"><button class="dmd-ddbtn" id="dmdWkBtn">기간(주) ▾</button><div class="dmd-ddpanel" id="dmdWkPanel"></div></div></span><span style="width:1px;height:16px;background:#ddd;"></span><div class="dmd-dd" style="position:relative;"><button class="dmd-ddbtn" id="dmdGBtn">구글 쿼리 ▾</button><div class="dmd-ddpanel" id="dmdGPanel"></div></div><div class="dmd-dd" style="position:relative;"><button class="dmd-ddbtn muted" id="dmdAzBtn">아마존 쿼리 ▾</button><div class="dmd-ddpanel" id="dmdAzPanel"></div></div><span style="width:1px;height:16px;background:#ddd;"></span><span style="font-size:11px;color:#888;">겹쳐보기</span><span id="dmdOv"><button class="dmd-chip on" data-k="유입">유입</button><button class="dmd-chip on" data-k="매출">매출</button><button class="dmd-chip" data-k="KOL 노출">KOL 노출</button><button class="dmd-chip" data-k="광고 노출">광고 노출</button><button class="dmd-chip" data-k="노출 합계">노출 합계</button></span><span style="width:1px;height:16px;background:#ddd;"></span><span style="font-size:11px;color:#888;">축범위</span><span class="dmd-ax">쿼리 <input type="number" id="axQmin" placeholder="min">~<input type="number" id="axQmax" placeholder="max"></span><span class="dmd-ax">유입 <input type="number" id="axVmin" placeholder="min">~<input type="number" id="axVmax" placeholder="max"></span><span class="dmd-ax">매출 <input type="number" id="axRmin" placeholder="min">~<input type="number" id="axRmax" placeholder="max"></span><span class="dmd-ax">노출 <input type="number" id="axImin" placeholder="min">~<input type="number" id="axImax" placeholder="max"></span><button class="dmd-reset" id="dmdReset">자동</button></div><div class="chart-wrap" style="position:relative;height:300px;"><canvas id="demandChart"></canvas></div></div><div class="chart-card" style="margin-top:10px;"><div class="chart-sec-sub" style="margin-bottom:8px;">쿼리 현황 지표 확인용 표 (현재 필터·주기 기준)</div><div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="demandDataTable"></table></div><div class="chart-note" style="text-align:left;color:#999;margin-top:6px;">단위: K(천) 이상 축약, 매출은 K(천)/M(백만) 축약. 구글·아마존 쿼리, KOL·광고 노출·노출 합계는 일 모드에서 데이터가 없어 '-'로 표시됩니다.</div></div></div></div>
     <div class="chart-sec">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;">
         <div class="sec-hdr" style="margin-bottom:0;flex:1;">통합 성과 그래프</div>
@@ -6533,6 +6534,7 @@ function applyPayload(data){
   D.dcStoreNos = data.dcStoreNos || [];
   // 비용·노출·쿼리(「세포라 대시보드용」 탭) · 세포라 광고 RAW — 원화. 옛 캐시에는 없는 키다(→ 비용 0).
   D.demand     = data.demand     || {};
+  window.DEMAND = D.demand;   // 쿼리 현황 패널(어노브 코드)이 읽는 이름
   D.ads        = data.ads        || [];
   _adsDayC = null;
 
@@ -6608,6 +6610,167 @@ window.toggleSeries     = toggleSeries;
 window.setSalesType     = setSalesType;
 window.setCurrency  = setCurrency;
 window.setChPeriod      = setChPeriod;
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+//  통합 탭 「쿼리 현황」 패널 (2026-11-13 어노브에서 이식)
+//  · 원천 = D.demand (수요전환 시트 「세포라 대시보드용」 [쿼리수]·[노출수]) — window.DEMAND 로 넘긴다
+//  · 유입 = RAW_commerce Visits · 매출 = Raw_실매출 TTL(날짜 환율로 원화 — 광고 탭 어댑터의 SALES_BY_DATE)
+//  · 키워드 목록·표 행은 시트 라벨 그대로 (어노브 고정 키워드 대신)
+// ═══════════════════════════════════════════════════════════════════════════════
+window.DSTART_WK='2026-02-08'; window.DSTART_MO='2026-02';
+window.DSTATE=window.DSTATE&&window.DSTATE.period?window.DSTATE:{ g:{'합계':true}, a:{}, ov:{visits:true,sales:true,klImpr:false,adImpr:false,imprSum:false}, axis:{qmin:'',qmax:'',vmin:'',vmax:'',rmin:'',rmax:'',imin:'',imax:''}, period:'weekly', fMonths:new Set(), fWeeks:new Set(), collapsed:true };
+// 2026-11-02 — 「지난주」 = 미국 서부(PT) 기준으로 토요일이 끝난 가장 최근 주(일~토). 진행 중인 주 = 그 다음 주. 매일 자동으로 바뀐다
+function dmQueryKeys(p){var dm=window.DEMAND||{},q=dm.query||{},set={};
+  ['google','amazon'].forEach(function(kind){var b=q[kind]&&q[kind][p];if(!b)return;Object.keys(b).forEach(function(lab){Object.keys(b[lab]||{}).forEach(function(k){set[k]=1;});});});
+  var keys=Object.keys(set).sort();
+  function tot(k){var t=0;['google','amazon'].forEach(function(kind){var sm=q[kind]&&q[kind][p]&&q[kind][p]['합계'];if(sm&&sm[k])t+=sm[k];});return t;}
+  while(keys.length&&!tot(keys[keys.length-1]))keys.pop();return keys;}
+function dmDailyKeys(){var set={};try{RAW_SKU.forEach(function(r){set[r.date]=1;});}catch(e){}try{Object.keys(SALES_BY_DATE).forEach(function(d){set[d]=1;});}catch(e){}return Object.keys(set).sort();}
+function dmPeriodKeys(){var st=window.DSTATE,p=st.period,keys=(p==='daily')?dmDailyKeys():dmQueryKeys(p);
+  var startKey=(p==='monthly')?DSTART_MO:DSTART_WK;
+  if(st.fMonths.size||st.fWeeks.size){keys=keys.filter(function(k){var mo=k.slice(0,7);var mOk=st.fMonths.size===0||st.fMonths.has(mo);var wOk=st.fWeeks.size===0||st.fWeeks.has(k);return mOk&&wOk;});}
+  return keys;}
+function dmVisitsMap(p){var m={};try{RAW_SKU.forEach(function(r){var k=getPeriodKey(r.date,p);m[k]=(m[k]||0)+(r.visits||0);});}catch(e){}return m;}
+function dmSalesMap(p){var m={};try{Object.keys(SALES_BY_DATE).forEach(function(d){var k=getPeriodKey(d,p);m[k]=(m[k]||0)+((SALES_BY_DATE[d]||{}).total||0);});}catch(e){}return m;}   // 2026-10-19 — SALES_BY_DATE 는 USD → 날짜별 환율로 원화(축·툴팁·표가 ₩ 기준). 이전엔 달러를 ₩로 표시해 축 눈금이 모두 0
+function renderDemand(){
+  var sec=document.getElementById('demandSec'); if(!sec) return;
+  var st=window.DSTATE, p=st.period, daily=(p==='daily');
+  var gbtn=document.getElementById('dmdGBtn'), abtn=document.getElementById('dmdAzBtn');
+  if(gbtn){gbtn.classList.toggle('muted',daily);gbtn.disabled=daily;}
+  if(abtn){abtn.disabled=daily;}
+  if(st.collapsed){ if(window._demandChart){window._demandChart.destroy();window._demandChart=null;} return; }
+  var cv=document.getElementById('demandChart'); if(!cv) return;
+  if(window._demandChart){window._demandChart.destroy();window._demandChart=null;}
+  var dm=window.DEMAND||{};
+  var keys=dmPeriodKeys();
+  var labels=keys.map(function(k){return daily?k.slice(5):fmtPeriodLabel(k,p);});
+  // 2026-10-19 — 시트에서 아직 비어 있는 주(Code.gs 가 빈칸을 0 으로 보냄)는 그리지 않는다: 계열마다 마지막으로 값(0 아님)이 있는 주 뒤는 null
+  function tailNull(arr){var last=-1;arr.forEach(function(v,i){if(v!=null&&v!==0)last=i;});return arr.map(function(v,i){return i>last?null:v;});}
+  function ser(o){return tailNull(keys.map(function(k){var v=o&&o[k];return (v||v===0)?v:null;}));}
+  function qp(kind,lab){return dm.query&&dm.query[kind]&&dm.query[kind][p]&&dm.query[kind][p][lab];}
+  function ip(lab){return dm.impr&&dm.impr[p]&&dm.impr[p][lab];}
+  var vMap=dmVisitsMap(p), sMap=dmSalesMap(p);
+  var gC=dmdColors_('google',['#1a7a4a','#d0555a','#8257c5','#2ba7c0']);gC['합계']='#2f6fb0';var aC=dmdColors_('amazon',['#F7B23A','#A83DB0','#5E5AF5','#1E9E8A','#9A7B12','#c06090']);aC['합계']='#E0730C';
+  var ds=[];
+  if(!daily){
+    Object.keys(st.g).forEach(function(lab){if(!st.g[lab])return;ds.push({label:'구글 '+lab,data:ser(qp('google',lab)),borderColor:gC[lab]||'#2f6fb0',backgroundColor:'transparent',borderWidth:(lab==='합계'?3.2:2.2),pointRadius:2,pointHoverRadius:4,tension:0.25,yAxisID:'yQ',order:1});});
+    Object.keys(st.a).forEach(function(lab){if(!st.a[lab])return;ds.push({label:'아마존 '+lab,data:ser(qp('amazon',lab)),borderColor:(aC[lab]||'#e08a3c'),backgroundColor:'transparent',borderWidth:(lab==='합계'?3.2:2.0),borderDash:[],pointRadius:1.5,tension:0.25,yAxisID:'yQ2',order:2});});
+  }
+  if(st.ov.visits)ds.push({label:'유입',data:keys.map(function(k){return vMap[k]!=null?vMap[k]:null;}),borderColor:'#C2185B',backgroundColor:'rgba(194,24,91,0.06)',borderWidth:3.0,borderDash:[2,3],pointRadius:1.5,tension:0.25,yAxisID:'yV',fill:false,order:3});
+  if(st.ov.sales)ds.push({label:'매출',type:'bar',data:keys.map(function(k){return sMap[k]!=null?sMap[k]:null;}),backgroundColor:'rgba(217,112,112,0.85)',hoverBackgroundColor:'rgba(217,112,112,0.95)',borderWidth:0,borderRadius:3,categoryPercentage:0.6,barPercentage:0.9,yAxisID:'yS',order:4});
+  if(!daily&&st.ov.klImpr)ds.push({label:'KOL 노출',data:ser(ip('KOL')),borderColor:'#8257c5',backgroundColor:'transparent',borderWidth:2.4,pointRadius:1.5,tension:0.25,yAxisID:'yI',order:5});
+  if(!daily&&st.ov.adImpr)ds.push({label:'광고 노출',data:ser(ip('퍼포먼스')),borderColor:'#2ba7c0',backgroundColor:'transparent',borderWidth:2.4,pointRadius:1.5,tension:0.25,yAxisID:'yI',order:6});
+  if(!daily&&st.ov.imprSum){var _kl=ser(ip('KOL')),_pf=ser(ip('퍼포먼스'));ds.push({label:'노출 합계',data:keys.map(function(k,i){return (_kl[i]==null&&_pf[i]==null)?null:(_kl[i]||0)+(_pf[i]||0);}),borderColor:'#6a4fb0',backgroundColor:'transparent',borderWidth:2.8,pointRadius:1.5,tension:0.25,yAxisID:'yI',order:7});}
+  function nn(v){return (v===''||v==null||isNaN(+v))?undefined:+v;}
+  var ax=st.axis, showA=Object.keys(st.a).some(function(k){return st.a[k];}), showV=st.ov.visits, showS=st.ov.sales, showI=(!daily&&(st.ov.klImpr||st.ov.adImpr||st.ov.imprSum));
+  var _wm=(p==='weekly')?dmWeekMarks():null, _hlI=_wm?keys.indexOf(_wm.last):-1, _ingI=_wm?keys.findIndex(function(k){return k>=_wm.cur;}):-1;
+  var _hlPlugin={id:'dmdWeekHl',beforeDatasetsDraw:function(c){if(_hlI<0&&_ingI<0)return;var xs=c.scales.x,ca=c.chartArea,n=keys.length;if(!xs||!n)return;var w=(ca.right-ca.left)/n,g=c.ctx;g.save();
+    if(_hlI>=0){var x=xs.getPixelForValue(_hlI);g.fillStyle='rgba(255,196,0,0.16)';g.fillRect(x-w/2,ca.top,w,ca.bottom-ca.top);g.fillStyle='#b07800';g.font='bold 9px sans-serif';g.textAlign='center';g.fillText('지난주',x,ca.top+10);}
+    if(_ingI>=0){var x2=xs.getPixelForValue(_ingI);g.fillStyle='rgba(150,155,165,0.10)';g.fillRect(x2-w/2,ca.top,ca.right-(x2-w/2),ca.bottom-ca.top);g.fillStyle='#9ca3af';g.font='9px sans-serif';g.textAlign='center';g.fillText('진행 중',x2,ca.top+10);}
+    g.restore();}};
+  window._demandChart=new Chart(cv.getContext('2d'),{type:'line',data:{labels:labels,datasets:ds},plugins:[_hlPlugin],options:{
+    responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:12,padding:8}},
+      tooltip:{callbacks:{label:function(c){var v=c.parsed.y;if(v==null)return c.dataset.label+': -';var l=c.dataset.label;if(l==='매출')return l+': ₩'+Math.round(v).toLocaleString();return l+': '+Math.round(v).toLocaleString();}}}},
+    scales:{
+      x:{grid:{display:false},ticks:{font:{size:9},color:'#888',maxRotation:45}},
+      yQ:{type:'linear',position:'left',display:!daily,min:nn(ax.qmin),max:nn(ax.qmax),grid:{display:false},title:{display:true,text:'쿼리 (건)',font:{size:9},color:'#2f6fb0'},ticks:{font:{size:9},color:'#2f6fb0',callback:function(v){return v>=1000?(v/1000).toFixed(0)+'K':v;}}},
+      yQ2:{type:'linear',position:'right',display:showA,grid:{drawOnChartArea:false},title:{display:true,text:'아마존 (건)',font:{size:9},color:'#e08a3c'},ticks:{font:{size:9},color:'#e08a3c',callback:function(v){return v>=1000?(v/1000).toFixed(0)+'K':v;}}},
+      yV:{type:'linear',position:'left',display:showV,min:nn(ax.vmin),max:nn(ax.vmax),grid:{drawOnChartArea:false},title:{display:true,text:'닷컴 유입',font:{size:9},color:'#C2185B'},ticks:{font:{size:9},color:'#C2185B',callback:function(v){return v>=1000?(v/1000).toFixed(0)+'K':v;}}},
+      yS:{type:'linear',position:'right',display:showS,min:nn(ax.rmin),max:nn(ax.rmax),grid:{drawOnChartArea:false},title:{display:true,text:'매출 (₩백만)',font:{size:9},color:'#d0454a'},ticks:{font:{size:9},color:'#d0454a',callback:function(v){return (v/1000000).toFixed(0);}}},
+      yI:{type:'linear',position:'right',display:showI,min:nn(ax.imin),max:nn(ax.imax),grid:{drawOnChartArea:false},title:{display:true,text:'노출 (백만)',font:{size:9},color:'#8257c5'},ticks:{font:{size:9},color:'#8257c5',callback:function(v){return (v/1000000).toFixed(1);}}}
+    }
+  }});
+  renderDemandTable(keys, p, daily);
+  window.__dmdRenderedFor=window.DEMAND;   // 펼치기 렉 완화(2026-10-08) — 이 데이터로 그렸다는 표시. 데이터를 새로 받으면 DEMAND 가 새 객체가 된다
+}
+window.renderDemand=renderDemand;
+// 닥포 — 표 행 = 그 주기(월/주) 시트 블록에 있는 키워드 그대로(합계 먼저). 시트 라벨을 바꾸지 않는다.
+function dmdLabels_(kind,p){var dm=window.DEMAND||{},b=dm.query&&dm.query[kind]&&dm.query[kind][p];var ks=b?Object.keys(b):[];return ks.filter(function(k){return k==='합계';}).concat(ks.filter(function(k){return k!=='합계';}));}
+function dmdAllLabels_(kind){var s={},o=[];['monthly','weekly'].forEach(function(p){dmdLabels_(kind,p).forEach(function(k){if(!s[k]){s[k]=1;o.push(k);}});});return o;}
+function dmdColors_(kind,pal){var o={},i=0;dmdAllLabels_(kind).forEach(function(k){if(k!=='합계')o[k]=pal[i++%pal.length];});return o;}
+function dmdMetrics_(p){if(p==='daily')p='weekly';var r=[];['google','amazon'].forEach(function(kind){dmdLabels_(kind,p).forEach(function(k){r.push({label:(kind==='google'?'구글 ':'아마존 ')+k,kind:kind,key:k});});});return r;}
+// 키워드 고르기 목록 — 시트 라벨(월·주 합집합)로 만든다. 처음 상태는 어노브처럼 구글 합계만 켬
+function buildQueryPanels_(){var st=window.DSTATE;[['google','dmdGPanel','g',st.g],['amazon','dmdAzPanel','a',st.a]].forEach(function(x){var el=document.getElementById(x[1]);if(!el)return;
+  el.innerHTML=dmdAllLabels_(x[0]).map(function(k){return '<label class="dmd-op"><input type="checkbox" data-p="'+x[2]+'" data-k="'+k.replace(/"/g,'&quot;')+'"'+(x[3][k]?' checked':'')+'> '+k+'</label>';}).join('')||'<span class="dmd-op" style="color:#aaa;">키워드 없음</span>';
+  [].forEach.call(el.querySelectorAll('input'),function(cb){cb.onchange=function(){(x[2]==='g'?st.g:st.a)[cb.getAttribute('data-k')]=cb.checked;renderDemand();};});});}
+
+function renderDemandTable(keys,p,daily){
+  var el=document.getElementById('demandDataTable'); if(!el) return;
+  var dm=window.DEMAND||{};
+  var vMap=dmVisitsMap(p), sMap=dmSalesMap(p);
+  // 2026-10-19 — 차트와 같은 규칙: 계열마다 마지막으로 값(0 아님)이 있는 주 뒤는 「-」
+  function lastKey(o){var last=null;keys.forEach(function(k){var v=o&&o[k];if(typeof v==='number'&&v!==0)last=k;});return last;}
+  function cut(o,k){var v=o&&o[k];if(typeof v!=='number')return null;var lk=lastKey(o);return (lk==null||k>lk)?null:v;}
+  function qv(kind,key,k){return cut(dm.query&&dm.query[kind]&&dm.query[kind][p]&&dm.query[kind][p][key],k);}
+  function iv(lab,k){return cut(dm.impr&&dm.impr[p]&&dm.impr[p][lab],k);}
+  var rows=dmdMetrics_(p).map(function(m){
+    return {label:m.label, fmt:mtblCount, get:function(k){return daily?null:qv(m.kind,m.key,k);}};
+  }).concat([
+    {label:'유입', fmt:mtblCount, get:function(k){var v=vMap[k];return typeof v==='number'?v:null;}},
+    {label:'매출', fmt:mtblMoney, get:function(k){var v=sMap[k];return typeof v==='number'?v:null;}},
+    {label:'KOL 노출', fmt:mtblCount, get:function(k){return daily?null:iv('KOL',k);}},
+    {label:'광고 노출', fmt:mtblCount, get:function(k){return daily?null:iv('퍼포먼스',k);}},
+    {label:'노출 합계', fmt:mtblCount, get:function(k){if(daily)return null;var a=iv('KOL',k),b=iv('퍼포먼스',k);return (a==null&&b==null)?null:(a||0)+(b||0);}},
+  ]);
+  var labels=keys.map(function(k){return daily?k.slice(5):fmtPeriodLabel(k,p);});
+  var _wm=(p==='weekly')?dmWeekMarks():null;   // 2026-11-02 지난주 강조 · 진행 중인 주 옅게
+  function wc(k){if(!_wm)return '';if(k===_wm.last)return ' class="dmd-hl"';if(k>=_wm.cur)return ' class="dmd-ing"';return '';}
+  var html='<thead><tr><th>지표</th>';
+  keys.forEach(function(k,i){var b=(_wm&&k===_wm.last)?'<span class="dmd-hl-badge">지난주</span>':(_wm&&k>=_wm.cur)?'<span class="dmd-ing-badge">진행 중</span>':'';html+='<th'+wc(k)+'>'+labels[i]+b+'</th>';});
+  html+='</tr></thead><tbody>';
+  rows.forEach(function(r){
+    html+='<tr><td class="ads-metric-lbl">'+r.label+'</td>';
+    keys.forEach(function(k){html+='<td'+wc(k)+'>'+r.fmt(r.get(k))+'</td>';});
+    html+='</tr>';
+  });
+  html+='</tbody>';
+  el.innerHTML=html;
+  // 2026-11-02 — 표를 새로 그릴 때(열기·주기·기간 필터·데이터 갱신) 최신 주가 보이도록 오른쪽 끝으로. 사용자가 그 뒤에 스크롤하면 건드리지 않는다
+  var _wr=el.parentElement; if(_wr){requestAnimationFrame(function(){_wr.scrollLeft=_wr.scrollWidth;});}
+}
+function availMonths(){var s={};dmQueryKeys('monthly').forEach(function(k){s[k]=1;});dmQueryKeys('weekly').forEach(function(k){s[k.slice(0,7)]=1;});return Object.keys(s).sort();}
+function availWeeks(){var ks=dmQueryKeys('weekly');if(window.DSTATE.fMonths.size)ks=ks.filter(function(k){return window.DSTATE.fMonths.has(k.slice(0,7));});return ks;}
+function moLabel(k){return k.slice(2).replace('-','/');}
+function buildMoPanel(){var el=document.getElementById('dmdMoPanel');if(!el)return;var st=window.DSTATE;el.innerHTML='<label class="dmd-op"><input type="checkbox" id="dmdMoAll"'+(st.fMonths.size===0?' checked':'')+'> 전체</label>'+availMonths().map(function(k){return '<label class="dmd-op"><input type="checkbox" data-mo="'+k+'"'+(st.fMonths.has(k)?' checked':'')+'> '+moLabel(k)+'</label>';}).join('');
+  var all=document.getElementById('dmdMoAll');if(all)all.onchange=function(){st.fMonths.clear();buildMoPanel();buildWkPanel();updFilterLabels();renderDemand();};
+  [].forEach.call(el.querySelectorAll('input[data-mo]'),function(cb){cb.onchange=function(){var k=cb.getAttribute('data-mo');if(cb.checked)st.fMonths.add(k);else st.fMonths.delete(k);buildWkPanel();updFilterLabels();renderDemand();};});}
+function buildWkPanel(){var el=document.getElementById('dmdWkPanel');if(!el)return;var st=window.DSTATE;el.innerHTML='<label class="dmd-op"><input type="checkbox" id="dmdWkAll"'+(st.fWeeks.size===0?' checked':'')+'> 전체</label>'+availWeeks().map(function(k){return '<label class="dmd-op"><input type="checkbox" data-wk="'+k+'"'+(st.fWeeks.has(k)?' checked':'')+'> '+fmtPeriodLabel(k,'weekly')+'</label>';}).join('');
+  var all=document.getElementById('dmdWkAll');if(all)all.onchange=function(){st.fWeeks.clear();buildWkPanel();updFilterLabels();renderDemand();};
+  [].forEach.call(el.querySelectorAll('input[data-wk]'),function(cb){cb.onchange=function(){var k=cb.getAttribute('data-wk');if(cb.checked)st.fWeeks.add(k);else st.fWeeks.delete(k);updFilterLabels();renderDemand();};});}
+function updFilterLabels(){var st=window.DSTATE;var m=document.getElementById('dmdMoBtn'),w=document.getElementById('dmdWkBtn');if(m)m.textContent='기간(월)'+(st.fMonths.size?' ('+st.fMonths.size+')':'')+' ▾';if(w)w.textContent='기간(주)'+(st.fWeeks.size?' ('+st.fWeeks.size+')':'')+' ▾';}
+function syncWkEnable(){var w=document.getElementById('dmdWkBtn');if(!w)return;var off=(window.DSTATE.period!=='weekly');w.disabled=off;w.classList.toggle('muted',off);}
+function refreshDemand(){if(!(window.DEMAND&&window.DEMAND.query))return;if(window.DSTATE.collapsed)return;try{buildQueryPanels_();buildMoPanel();buildWkPanel();updFilterLabels();syncWkEnable();}catch(e){}renderDemand();}
+window.refreshDemand=refreshDemand;
+function initDemandControls(){
+  if(window.__dmdInit) return;
+  var sec=document.getElementById('demandSec'); if(!sec) return;
+  var st=window.DSTATE;
+  var tg=document.getElementById('dmdToggle');
+  if(tg)tg.onclick=function(){
+    st.collapsed=!st.collapsed;
+    var b=document.getElementById('dmdBody');if(b)b.style.display=st.collapsed?'none':'block';
+    var cr=document.getElementById('dmdCaret');if(cr)cr.textContent=st.collapsed?'▸':'▾';
+    if(!st.collapsed){if(window._demandChart&&window.__dmdRenderedFor===window.DEMAND)return;try{buildQueryPanels_();buildMoPanel();buildWkPanel();updFilterLabels();syncWkEnable();}catch(e){}renderDemand();}
+  };
+  [].forEach.call(sec.querySelectorAll('.dmd-seg button'),function(btn){btn.onclick=function(){if(btn.getAttribute('data-per')==='daily')return;st.period=btn.getAttribute('data-per');[].forEach.call(sec.querySelectorAll('.dmd-seg button'),function(b){b.classList.toggle('on',b===btn);});buildMoPanel();buildWkPanel();updFilterLabels();syncWkEnable();renderDemand();};});
+  var gp=document.getElementById('dmdGPanel'),ap=document.getElementById('dmdAzPanel'),gb=document.getElementById('dmdGBtn'),ab=document.getElementById('dmdAzBtn');
+  if(gb)gb.onclick=function(e){if(e)e.stopPropagation();if(this.disabled)return;gp.classList.toggle('open');};
+  if(ab)ab.onclick=function(e){if(e)e.stopPropagation();if(this.disabled)return;ap.classList.toggle('open');};
+  var mb=document.getElementById('dmdMoBtn'),wb=document.getElementById('dmdWkBtn');
+  if(mb)mb.onclick=function(e){if(e)e.stopPropagation();document.getElementById('dmdMoPanel').classList.toggle('open');};
+  if(wb)wb.onclick=function(e){if(e)e.stopPropagation();if(this.disabled)return;document.getElementById('dmdWkPanel').classList.toggle('open');};
+  [].forEach.call(document.querySelectorAll('#dmdOv .dmd-chip'),function(b){b.onclick=function(){var map={'유입':'visits','매출':'sales','KOL 노출':'klImpr','광고 노출':'adImpr','노출 합계':'imprSum'};var f=map[b.getAttribute('data-k')];st.ov[f]=!st.ov[f];b.classList.toggle('on',st.ov[f]);renderDemand();};});
+  function axHook(id,key){var e=document.getElementById(id);if(!e)return;e.value=st.axis[key];e.oninput=function(){st.axis[key]=e.value;renderDemand();};}
+  axHook('axQmin','qmin');axHook('axQmax','qmax');axHook('axVmin','vmin');axHook('axVmax','vmax');axHook('axRmin','rmin');axHook('axRmax','rmax');axHook('axImin','imin');axHook('axImax','imax');
+  var rs=document.getElementById('dmdReset');if(rs)rs.onclick=function(){st.axis={qmin:'',qmax:'',vmin:'',vmax:'',rmin:'',rmax:'',imin:'',imax:''};['axQmin','axQmax','axVmin','axVmax','axRmin','axRmax','axImin','axImax'].forEach(function(i){var el=document.getElementById(i);if(el)el.value='';});renderDemand();};
+  document.addEventListener('click',function(ev){if(!ev.target.closest('#demandSec .dmd-dd')){[].forEach.call(document.querySelectorAll('#demandSec .dmd-ddpanel.open'),function(p){p.classList.remove('open');});}});
+  if(!window.__rcWrapped && typeof renderMainChart==='function'){window.__rcWrapped=true;var _o=renderMainChart;window.renderMainChart=renderMainChart=function(){_o.apply(this,arguments);try{refreshDemand();}catch(e){console.warn('refreshDemand',e);}};}
+  window.__dmdInit=true;
+  refreshDemand();
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initDemandControls);}else{initDemandControls();}
 </script>
 </body>
 </html>
