@@ -31,7 +31,7 @@
 // 상태가 될 수 있다. 토큰 없이 /exec 를 호출하면 이 값이 돌아오므로
 // 밖에서 배포 상태를 바로 확인할 수 있다.
 // 🛑 Code.gs 를 고치면 이 값을 함께 올린다.
-var CODE_VERSION = '2026-10-19-fx';
+var CODE_VERSION = '2026-11-12-cost';
 
 // 이 배포가 실제로 거는 검사 목록. 토큰 없이 /exec 를 부르면 함께 돌아온다.
 // audience 가 빠져 있으면 옛 코드가 배포돼 있다는 뜻이다 (→ 새 버전으로 재배포).
@@ -335,6 +335,17 @@ function buildPayload_() {
   var skuWeek    = softParse_('Raw_실매출_SKU별_주간', function(){ return parseSkuWeek_(ss, warnings); }, warnings, []);
   var skuDaily   = softParse_('Raw_실매출_SKU별_일간', function(){ return parseSkuDaily_(ss, warnings); }, warnings, []);
 
+  // ── 비용 · 노출 · 쿼리 / 세포라 광고 (2026-11-12 민경 「어노브랑 같게」) ─────────
+  // 🛑 soft-fail. 수요전환 시트를 못 열어도 매출·유입 탭은 그대로 뜬다 — 비용 칩만 0 이 된다.
+  var demand = { cost:{monthly:{},weekly:{}}, impr:{monthly:{},weekly:{}},
+                 query:{ google:{monthly:{},weekly:{}}, amazon:{monthly:{},weekly:{}} } };
+  var ads = [];
+  var dss = softParse_('수요전환 시트', function(){ return openDemandSS_(); }, warnings, null);
+  if (dss) {
+    demand = softParse_(DEMAND_TAB, function(){ return parseDemand_(dss, warnings); }, warnings, demand);
+    ads    = softParse_(ADS_TAB,    function(){ return parseAdsSephora_(dss, warnings); }, warnings, []);
+  }
+
   // ── 채널 목록 (표시 순서 = 매출 큰 순, NA는 항상 맨 뒤) ────────────────────
   var salesByCh = {};
   channel.forEach(function (r) { salesByCh[r.channel] = (salesByCh[r.channel] || 0) + r.sales; });
@@ -384,6 +395,11 @@ function buildPayload_() {
     // 실매출 주차 목록 — 라벨은 `주차별요약` 의 `기간` 을 정본으로 쓴다.
     bmWeeks:    buildBmWeeks_(bmWeek, salesWeek, salesDaily),
     dcStoreNos: DC_STORE_NOS,
+
+    // 비용·노출·쿼리 = 수요전환 시트 「세포라 대시보드용」 탭(장부·KOL·광고 RAW 수식) · 원화
+    demand:     demand,
+    // 세포라 광고 = 수요전환 시트 「퍼포먼스 광고_RAW」 판매채널 sephora/세포라 · 원화
+    ads:        ads,
 
     warnings:  warnings,
     diagnostics: diagnostics,
@@ -544,6 +560,130 @@ function fxSheetCheck_(ss, warnings) {
 }
 
 // 새 탭 파서 전용 안전망. 실패를 삼키지 않고 warnings 로 화면에 올린다.
+// ═══════════════════════════════════════════════════════════════════════════════
+//  수요전환 시트 — 비용 · 노출 · 쿼리 / 세포라 광고  (2026-11-12)
+//
+//  · 시트 = [팀용]수요전환_DF_US_2026. 🛑 리포지토리가 공개라 ID 는 스크립트 속성
+//    DEMAND_SPREADSHEET_ID 에만 둔다.
+//  · 「세포라 대시보드용」 탭은 전부 수식이다(장부 [★작성]광고선전비 · KOL 시트 · 광고 RAW · 쿼리_요약).
+//    여기서는 계산하지 않고 탭 값을 그대로 옮긴다 — 숫자 기준은 탭 한 곳에만 있다.
+//  · 구조: A열 [비용]/[노출수]/[쿼리수] → 「1. 월별」「2. 주차별」(쿼리는 「- 구글」「- 아마존」)
+//          → 머리글 행(A = 월간·주간·키워드, B부터 날짜) → 항목 행(A = 이름) … 빈 행에서 끝.
+//  · 키: 월 = 'YYYY-MM' · 주 = 그 주 일요일 'YYYY-MM-DD' (대시보드 주차와 같은 일~토)
+// ═══════════════════════════════════════════════════════════════════════════════
+var DEMAND_PROP_KEY = 'DEMAND_SPREADSHEET_ID';
+var DEMAND_TAB = '세포라 대시보드용';
+var ADS_TAB = '퍼포먼스 광고_RAW';
+
+function openDemandSS_() {
+  var id = PropertiesService.getScriptProperties().getProperty(DEMAND_PROP_KEY);
+  if (!id) throw new Error('스크립트 속성 ' + DEMAND_PROP_KEY + ' 가 비어 있습니다');
+  return SpreadsheetApp.openById(id);
+}
+
+// 머리글 칸 → 키. 날짜 객체 · 시트 일련번호(SEQUENCE 결과) · 'YYYY. M. D' 글자 모두 받는다.
+function demandKey_(val, tz, monthly) {
+  var d = null;
+  if (val instanceof Date) d = val;
+  else if (typeof val === 'number' && val > 20000 && val < 80000) {
+    d = new Date(Date.UTC(1899, 11, 30) + Math.round(val) * 86400000);
+    tz = 'UTC';                                   // 일련번호는 시간대 없는 날짜
+  } else {
+    var m = String(val || '').trim().match(/^(\d{4})[-.\/]\s*(\d{1,2})(?:[-.\/]\s*(\d{1,2}))?/);
+    if (m) return monthly ? m[1] + '-' + pad2_(+m[2]) : (m[3] ? m[1] + '-' + pad2_(+m[2]) + '-' + pad2_(+m[3]) : null);
+  }
+  var s = d ? fmtDate_(d, tz) : null;
+  if (!s) return null;
+  return monthly ? s.slice(0, 7) : s;
+}
+
+function parseDemand_(dss, warnings) {
+  var out = { cost:{monthly:{},weekly:{}}, impr:{monthly:{},weekly:{}},
+              query:{ google:{monthly:{},weekly:{}}, amazon:{monthly:{},weekly:{}} } };
+  var sh = dss.getSheetByName(DEMAND_TAB);
+  if (!sh) throw new Error('탭이 없습니다');
+  var tz = dss.getSpreadsheetTimeZone();
+  var v = sh.getDataRange().getValues();
+  var sec = null, block = null, monthly = false, cols = null;
+  for (var i = 0; i < v.length; i++) {
+    var a = String(v[i][0] === null || v[i][0] === undefined ? '' : v[i][0]).trim();
+    if (a === '[비용]')   { sec = 'cost'; block = null; continue; }
+    if (a === '[노출수]') { sec = 'impr'; block = null; continue; }
+    if (a === '[쿼리수]') { sec = 'query'; block = null; continue; }
+    if (/^\d+(-\d+)?\.\s/.test(a)) {                     // 「1. 월별」「2-1. 주차별 - 구글」
+      var p = a.indexOf('월별') >= 0 ? 'monthly' : (a.indexOf('주차별') >= 0 ? 'weekly' : null);
+      block = null; cols = null; monthly = p === 'monthly';
+      if (!sec || !p) continue;
+      if (sec === 'query') {
+        var src = a.indexOf('구글') >= 0 ? 'google' : (a.indexOf('아마존') >= 0 ? 'amazon' : null);
+        if (src) block = out.query[src][p];
+      } else block = out[sec][p];
+      continue;
+    }
+    if (!block) continue;
+    if (!cols) {                                          // 머리글 행
+      if (a !== '월간' && a !== '주간' && a !== '키워드') continue;
+      cols = [];
+      for (var j = 1; j < v[i].length; j++) {
+        var k = demandKey_(v[i][j], tz, monthly);
+        if (k) cols.push([j, k]);
+      }
+      continue;
+    }
+    if (!a) { block = null; cols = null; continue; }       // 빈 행 = 블록 끝
+    var rec = {};
+    cols.forEach(function (c) { rec[c[1]] = toNum_(v[i][c[0]]); });
+    block[a] = rec;
+  }
+  if (!Object.keys(out.cost.monthly).length && !Object.keys(out.cost.weekly).length)
+    warnings.push('[' + DEMAND_TAB + '] 비용 블록을 찾지 못했습니다 — 탭 구조를 확인하세요.');
+  return out;
+}
+
+// 「퍼포먼스 광고_RAW」 — 판매채널(C) sephora/세포라 · 매체(B) 메타·틱톡·유튜브·구글 행만.
+// 비용은 「최종 광고비(원)」(AH) — 「세포라 대시보드용」 주간 퍼포먼스 비용과 같은 열이다.
+function parseAdsSephora_(dss, warnings) {
+  var sh = dss.getSheetByName(ADS_TAB);
+  if (!sh) throw new Error('탭이 없습니다');
+  var tz = dss.getSpreadsheetTimeZone();
+  var v = sh.getDataRange().getValues();
+  if (v.length < 2) return [];
+  var h = v[0].map(function (x) { return String(x || '').trim(); });
+  function c(name) {
+    var i = h.indexOf(name);
+    if (i < 0) throw new Error('헤더 「' + name + '」 없음 — 실제 헤더: ' + h.join(' | '));
+    return i;
+  }
+  var iD = c('날짜'), iM = c('매체'), iC = c('채널 (판매채널)'), iCamp = c('캠페인명'),
+      iG = c('광고 그룹명'), iCr = c('광고 소재명'), iImp = c('노출 수'), iClk = c('클릭 수'),
+      iView = c('조회'), iConv = c('전환 수'), iRev = c('전환 매출'), iSp = c('최종 광고비(원)');
+  var MEDIA = { '메타':1, '틱톡':1, '유튜브':1, '구글':1 };
+  var out = [];
+  for (var r = 1; r < v.length; r++) {
+    var row = v[r];
+    var ch = String(row[iC] || '').trim();
+    if (ch.toLowerCase() !== 'sephora' && ch !== '세포라') continue;
+    var media = String(row[iM] || '').trim();
+    if (!MEDIA[media]) continue;
+    var raw = row[iD], date = null;
+    if (raw instanceof Date) date = fmtDate_(raw, tz);
+    else {
+      var m = String(raw || '').trim().match(/^(\d{4})[-.\/]\s*(\d{1,2})[-.\/]\s*(\d{1,2})/);
+      if (m) date = m[1] + '-' + pad2_(+m[2]) + '-' + pad2_(+m[3]);
+    }
+    if (!date) continue;
+    out.push({
+      date: date, media: media,
+      campaign: String(row[iCamp] || '').trim(), adgroup: String(row[iG] || '').trim(),
+      creative: String(row[iCr] || '').trim(),
+      impressions: toNum_(row[iImp]), clicks: toNum_(row[iClk]), views: toNum_(row[iView]),
+      purchases: toNum_(row[iConv]), revenue: toNum_(row[iRev]),
+      spend: toNum_(String(row[iSp]).replace(/[₩,]/g, ''))
+    });
+  }
+  return out;
+}
+
 function softParse_(label, fn, warnings, fallback) {
   try {
     return fn();
