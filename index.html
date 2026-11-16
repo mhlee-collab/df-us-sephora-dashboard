@@ -6575,6 +6575,9 @@ function applyPayload(data){
   refreshChannel(true);
   refreshBm(true);
   refreshSku(true);
+  // 2026-11-16 — 온라인매출·퍼포먼스 광고 탭도 새 데이터로 다시 그린다(캐시로 먼저 그린 화면에 새 날짜가 빠지지 않게)
+  try { var _t = document.querySelector('.sb-item.active'), _k = _t && _t.getAttribute('data-tab');
+        if (_k === 'online') refreshOnline(); else if (_k === 'ads') refreshAds(); } catch(e){ console.warn('[탭 다시 그리기]', e); }
 }
 
 function pruneSet(set, allowed){
