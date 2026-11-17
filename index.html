@@ -6775,5 +6775,88 @@ function initDemandControls(){
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',initDemandControls);}else{initDemandControls();}
 </script>
+<script>
+// 2026-11-17 모든 표 공통 — 날짜 열 강조 + 왼쪽 지표 열 고정 (표마다 따로 붙이지 않아도 되게)
+//  · 주: 지난주(PT 기준 토요일이 끝난 최근 주, 일~토) 노란 음영+「지난주」, 이번 주부터 회색+「진행 중」
+//  · 일: 전일(PT 어제) 노란 음영+「전일」. 어제 자료가 아직 없으면 가장 최근 날짜에 「최근」. 오늘부터 회색
+//  · 월: 지난달 노란 음영+「지난달」, 이번 달부터 회색+「진행 중」
+//  · 표 머리글 글자(예: 11/8-11/14, 2026-11-14, 01-20, 11/14, 26/11, 2026-11, 11월)를 읽어 판단하므로 새 표에도 자동 적용
+//  · 표가 다시 그려질 때마다(MutationObserver) 다시 적용. 이미 지난주 강조가 들어간 표(.dmd-hl)는 그대로 둔다
+(function(){
+  var st=document.createElement('style');
+  st.textContent='table td.tsx-hl,table th.tsx-hl{background:rgba(255,196,0,0.18)!important;}table th.tsx-hl{color:#8a5a00!important;}'+
+    'table td.tsx-ing,table th.tsx-ing{color:#b8bcc6!important;}'+
+    '.tsx-b{display:inline-block;margin-left:4px;padding:0 5px;border-radius:8px;background:#f2a900;color:#fff;font-size:8px;font-weight:700;letter-spacing:0;text-transform:none;vertical-align:1px;white-space:nowrap;}'+
+    '.tsx-bi{display:inline-block;margin-left:4px;padding:0 5px;border-radius:8px;border:1px solid #c9ccd4;color:#9ca3af;font-size:8px;font-weight:400;letter-spacing:0;text-transform:none;vertical-align:1px;white-space:nowrap;}'+
+    'table .tsx-stk{position:sticky!important;left:0;z-index:2;}';
+  document.head.appendChild(st);
+  function pt(){var t=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));t.setHours(0,0,0,0);return t;}
+  function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function add(d,n){var x=new Date(d);x.setDate(x.getDate()+n);return x;}
+  function cellText(c){var k=c.cloneNode(true);k.querySelectorAll('.tsx-b,.tsx-bi,.dmd-hl-badge,.dmd-ing-badge,.promo-pill').forEach(function(e){e.remove();});return (k.textContent||'').replace(/\s+/g,' ').trim();}
+  function parse(s){var m;
+    if((m=s.match(/(\d{1,2})\/(\d{1,2})\s*[~\-–]\s*(\d{1,2})\/(\d{1,2})/)))return {t:'w',a:[+m[1],+m[2]],b:[+m[3],+m[4]]};
+    if((m=s.match(/^(\d{4})-(\d{2})-(\d{2})/)))return {t:'d',y:+m[1],m:+m[2],d:+m[3]};
+    if((m=s.match(/^(\d{4})-(\d{2})(?![\d-])/)))return {t:'m',y:+m[1],m:+m[2]};
+    if((m=s.match(/^(\d{1,2})월/)))return {t:'m',m:+m[1]};
+    if((m=s.match(/^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)(?![A-Z])/i)))return {t:'m',m:'JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC'.indexOf(m[1].toUpperCase())/3+1};
+    if((m=s.match(/^(\d{2})-(\d{2})$/)))return {t:'d',m:+m[1],d:+m[2]};
+    if((m=s.match(/^(\d{1,2})\/(\d{1,2})$/)))return {t:'ab',a:+m[1],b:+m[2]};
+    return null;}
+  function md2date(mo,d,T){var y=T.getFullYear(),x=new Date(y,mo-1,d);if(x>add(T,60))x=new Date(y-1,mo-1,d);return x;}
+  function isFixed(c){if(c.classList.contains('f'))return true;var cs=getComputedStyle(c);return cs.position==='sticky'&&cs.left!=='auto';}   // 왼쪽 고정 열만(머리글 위쪽 고정은 제외)
+  function grid(tb){var G=[];for(var r=0;r<tb.rows.length;r++){G[r]=G[r]||[];var c=0;var cs=tb.rows[r].cells;for(var i=0;i<cs.length;i++){var cell=cs[i];while(G[r][c])c++;for(var a=0;a<cell.rowSpan;a++)for(var b=0;b<cell.colSpan;b++){(G[r+a]=G[r+a]||[])[c+b]=cell;}cell.__tc=c;c+=cell.colSpan;}}return G;}
+  function mark(tb){
+    if(!tb.rows||tb.rows.length<2)return;
+    if(tb.__tsxDay===ymd(pt())&&tb.querySelector('.tsx-hl,.tsx-ing'))return;   // 오늘 이미 표시함
+    if(tb.querySelector('.dmd-hl,.dmd-ing'))return;                             // 기존 코드가 표시한 표
+    tb.querySelectorAll('.tsx-hl,.tsx-ing').forEach(function(c){c.classList.remove('tsx-hl','tsx-ing');});
+    tb.querySelectorAll('.tsx-b,.tsx-bi').forEach(function(e){e.remove();});
+    var T=pt(),G=grid(tb),best=null;
+    for(var r=0;r<Math.min(3,tb.rows.length);r++){var ps=[];var cs=tb.rows[r].cells;
+      for(var i=0;i<cs.length;i++){var c=cs[i];if(c.colSpan!==1||isFixed(c))continue;var p=parse(cellText(c));if(p){p.c=c;p.k=c.__tc;ps.push(p);}}
+      if(ps.length>=2&&(!best||ps.length>best.length))best=ps;}
+    if(!best)return;
+    var mode=best.some(function(p){return p.t==='w';})?'w':null;
+    if(!mode){var ab=best.filter(function(p){return p.t==='ab';});
+      if(ab.length)mode=ab.some(function(p){return p.a>12;})?'m':'d';
+      else mode=best[0].t;}
+    var cols=[];
+    best.forEach(function(p){var s,e;
+      if(mode==='w'){if(p.t!=='w')return;s=md2date(p.a[0],p.a[1],T);e=md2date(p.b[0],p.b[1],T);if(e<s)e=new Date(s.getFullYear()+1,p.b[0]-1,p.b[1]);}
+      else if(mode==='d'){if(p.t==='d'){s=p.y?new Date(p.y,p.m-1,p.d):md2date(p.m,p.d,T);}else if(p.t==='ab'){s=md2date(p.a,p.b,T);}else return;e=s;}
+      else{var y,mo;if(p.t==='m'){mo=p.m;y=p.y||(mo>T.getMonth()+2?T.getFullYear()-1:T.getFullYear());}else if(p.t==='ab'){y=2000+p.a;mo=p.b;}else return;s=new Date(y,mo-1,1);e=new Date(y,mo,0);}
+      cols.push({p:p,s:s,e:e});});
+    if(cols.length<2)return;
+    var hl=null,lbl='',ing=[];
+    if(mode==='w'){var cur=add(T,-T.getDay()),wed=add(cur,-4);
+      cols.forEach(function(c){if(c.s<=wed&&c.e>=wed)hl=c;else if(c.e>=cur)ing.push(c);});lbl='지난주';}
+    else if(mode==='d'){var yd=ymd(add(T,-1)),late=null;
+      cols.forEach(function(c){if(c.s>=T)ing.push(c);else{if(ymd(c.s)===yd)hl=c;if(!late||c.s>late.s)late=c;}});
+      if(hl)lbl='전일';else if(late){hl=late;lbl='최근';}}
+    else{var cm=new Date(T.getFullYear(),T.getMonth(),1),lm=new Date(T.getFullYear(),T.getMonth()-1,1);
+      cols.forEach(function(c){if(c.s>=cm)ing.push(c);else if(+c.s===+lm)hl=c;});lbl='지난달';}
+    function paint(k,cls){for(var r=0;r<G.length;r++){var cell=G[r]&&G[r][k];if(cell&&cell.colSpan===1&&cell.__tc===k&&!isFixed(cell))cell.classList.add(cls);}}
+    if(hl){paint(hl.p.k,'tsx-hl');var b=document.createElement('span');b.className='tsx-b';b.textContent=lbl;if(lbl==='최근')b.title='전일 자료가 아직 들어오지 않아 가장 최근 날짜를 표시합니다';hl.p.c.appendChild(b);}
+    ing.forEach(function(c,i){paint(c.p.k,'tsx-ing');if(i===0&&!/진행 중/.test(cellText(c.p.c))){var b=document.createElement('span');b.className='tsx-bi';b.textContent='진행 중';c.p.c.appendChild(b);}});
+    tb.__tsxDay=ymd(T);
+  }
+  // 가로로 넘치는 표인데 첫 열이 고정되지 않은 경우만 고정(지금 표들은 이미 고정 — 앞으로 생길 표 대비)
+  function stick(tb){
+    var w=tb.parentElement;if(!w||!tb.rows.length||w.scrollWidth<=w.clientWidth+1)return;
+    var first=tb.rows[tb.rows.length-1].cells[0];if(!first||isFixed(first))return;
+    var G=grid(tb);for(var r=0;r<G.length;r++){var c=G[r]&&G[r][0];if(c&&!c.classList.contains('tsx-stk')){c.classList.add('tsx-stk');var bg=getComputedStyle(c).backgroundColor;if(!bg||bg==='rgba(0, 0, 0, 0)'||bg==='transparent')c.style.background='#fff';}}
+  }
+  var busy=false,tm=null;
+  function run(){if(busy)return;busy=true;try{document.querySelectorAll('table').forEach(function(tb){try{mark(tb);if(tb.offsetParent)stick(tb);}catch(e){}});}finally{setTimeout(function(){busy=false;},0);}}
+  function later(){clearTimeout(tm);tm=setTimeout(run,120);}
+  new MutationObserver(function(){if(!busy)later();}).observe(document.body,{childList:true,subtree:true});
+  document.addEventListener('click',later,true);
+  window.addEventListener('resize',later);
+  setInterval(later,600000);   // 날짜가 바뀌면(PT 자정) 다시 표시
+  later();
+})();
+</script>
+
 </body>
 </html>
