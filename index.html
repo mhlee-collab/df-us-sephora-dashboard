@@ -1466,7 +1466,8 @@ body{
   </div>
   <div class="chart-card" style="position:relative;">
     <div class="leg-row" style="align-items:center;flex-wrap:wrap;gap:6px;">
-      <div class="leg"><div class="leg-dot" style="background:#d97070;"></div><span>Sales (포털)</span></div>
+      <div class="leg" id="onlSalesLeg"><div class="leg-dot" style="background:#d97070;"></div><span>Sales (포털)</span></div>
+      <label id="onlBmWrap" title="켜면 포털 온라인 매출 위에 B&amp;M(매장) 실매출을 다른 색으로 쌓아 보여 줍니다. B&amp;M = 통합 대시보드 B&amp;M과 같은 값(Location 파일 매장 순매출)" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#444;cursor:pointer;margin-right:4px;"><input type="checkbox" id="onlBmChk" onchange="setOnlBm(this.checked)" style="margin:0;cursor:pointer;">B&amp;M 매출 포함</label>
       <span class="cur-sw" title="달러 = 포털 원본 · 원화 = 날짜별 환율(2026-08-31까지 1,500원 · 09-01부터 1,400원)"><button class="on" data-ocur="KRW" onclick="setOnlCur('KRW')">₩ 원화</button><button data-ocur="USD" onclick="setOnlCur('USD')">$ 달러</button></span>
       <button class="mkr-btn active" data-onl-show="visits" onclick="toggleOnl(this)">Visits</button>
       <button class="mkr-btn" data-onl-show="cvr" onclick="toggleOnl(this)">CVR</button>
@@ -6072,7 +6073,7 @@ function dmScrollRight_(wrap){if(!wrap)return;wrap._dmAuto=true;
 //     닥포는 포털 이커머스(RAW_commerce Sales TY · Visits · Orders)가 이미 대시보드 데이터(D.commerce)에 있어
 //     어노브처럼 시트를 직접 읽지 않고 그대로 쓴다. 실매출 탭·통합 대시보드 값은 건드리지 않는다.
 const ONL = { period:'weekly', cur:'KRW', tcur:'KRW', month:'', week:'',
-  show:{ visits:true, cvr:false, ad:false, brand:false, kol:false, ch:false, total:false, roas:false, roasT:false },
+  show:{ visits:true, cvr:false, ad:false, brand:false, kol:false, ch:false, total:false, roas:false, roasT:false }, bm:false,
   byDate:null, src:'', at:0, loading:false, err:'' };
 let onlChart = null;
 function onlDate_(v) {
@@ -6106,6 +6107,15 @@ function onlCostVal_(p, label, key) {
   if (!INCLUDE_COMMON && COMMON_OF[label]) COMMON_OF[label].forEach(function(c) { v -= costSheet_(p, c, key); });
   return v;
 }
+// 2026-11-17 민경 「온라인 매출 탭에 B&M 매출 추가해서 볼 수 있는 체크」 — 통합 대시보드 B&M과 같은 원천(Raw_실매출 B&M · USD)
+//   포털(주문일·환불 전)과 B&M(매장 판매일·순매출)은 기준이 달라 합계는 참고용
+var _onlBmSrc = null, _onlBmMap = null;
+function onlBmAt_(d) {
+  var sd = (D._set && D._set.USD && D._set.USD.salesDaily) || D.salesDaily || [];
+  if (sd !== _onlBmSrc) { _onlBmSrc = sd; _onlBmMap = {}; sd.forEach(function(r) { if (r && r.date) _onlBmMap[r.date] = r.bm; }); }
+  var v = _onlBmMap[d];
+  return (v == null || v === '') ? null : +v;
+}
 function onlDates_(period) {
   var ds = Object.keys(ONL.byDate || {}).sort();
   return ds.filter(function(d) {
@@ -6118,12 +6128,15 @@ function onlData_() {
   ds.forEach(function(d) { sp[d] = adsDaySpend_(d); });
   ds.forEach(function(d) {
     var k = p === 'daily' ? d : getPeriodKey(d, p);
-    var x = b[k] || (b[k] = { date:k, label:p === 'daily' ? d.slice(5) : fmtPeriodLabel(k, p), visits:0, orders:0, sales:0, sales_krw:0, spend:0 });
+    var x = b[k] || (b[k] = { date:k, label:p === 'daily' ? d.slice(5) : fmtPeriodLabel(k, p), visits:0, orders:0, sales:0, sales_krw:0, spend:0, bm_usd:0, bm_krw:0, bm_n:0, bm_miss:0 });
+    var bmv = onlBmAt_(d);   // 2026-11-17 B&M 매출 포함 체크 — 그 날 B&M 실매출(USD). 자료 없는 날은 null
+    if (bmv == null) x.bm_miss++; else { x.bm_usd += bmv; x.bm_krw += bmv * fxRate(d); x.bm_n++; }
     var s = ONL.byDate[d] || 0;
     x.visits += v[d] || 0; x.orders += o[d] || 0; x.sales += s; x.sales_krw += s * fxRate(d); x.spend += sp[d] || 0;
   });
   return Object.values(b).sort(function(a, c) { return a.date.localeCompare(c.date); }).map(function(x) {
     x.cvr = x.visits > 0 ? x.orders / x.visits * 100 : 0;
+    if (!x.bm_n) { x.bm_usd = null; x.bm_krw = null; }
     if (p === 'daily') { x.roas = roasSafe_(x.sales_krw, x.spend); x.roasT = null; }
     else {
       x.roas = roasSafe_(x.sales_krw, onlCostVal_(p, '퍼포먼스 비용', x.date) + onlCostVal_(p, '온사이트 비용', x.date));
@@ -6161,6 +6174,7 @@ function onlRenderKpi_(data) {
   var v = sum('visits'), o = sum('orders'), s = sum('sales'), sk = sum('sales_krw');
   var card = function(t, val, sub) { return '<div class="kpi"><div class="kpi-label">' + t + '</div><div class="kpi-value">' + val + '</div><div class="kpi-sub">' + (sub || '') + '</div></div>'; };
   el.innerHTML = card('포털 매출', curFmt_(ONL.cur === 'USD' ? s : sk, ONL.cur), ONL.cur === 'USD' ? curFmt_(sk, 'KRW') : curFmt_(s, 'USD'))
+    + (ONL.bm ? (function() { var bu = sum('bm_usd'), bk = sum('bm_krw'), miss = sum('bm_miss'); return card('B&M 매출', curFmt_(ONL.cur === 'USD' ? bu : bk, ONL.cur), '포털+B&M ' + curFmt_(ONL.cur === 'USD' ? s + bu : sk + bk, ONL.cur) + (miss ? ' · B&M 자료 없는 날 ' + miss + '일' : '')); })() : '')
     + card('TOTAL VISITS', Math.round(v).toLocaleString('en-US'), '포털')
     + card('CVR', (v > 0 ? o / v * 100 : 0).toFixed(2) + '%', '주문 수량 ' + Math.round(o).toLocaleString('en-US'));
 }
@@ -6169,6 +6183,12 @@ function onlRenderChart_(data) {
   var ln = function(label, vals, color, axis, order) { return { label:label, data:vals, type:'line', borderColor:color, backgroundColor:'transparent', borderWidth:1.8, pointRadius:n > 40 ? 0 : 2, pointHoverRadius:4, pointBackgroundColor:color, spanGaps:false, fill:false, yAxisID:axis, order:order == null ? 0 : order, tension:0.25 }; };
   var ds = [];
   ds.push({ label:'Sales (포털)', data:data.map(function(d) { return cur === 'USD' ? d.sales : d.sales_krw; }), type:'bar', backgroundColor:makeGrad('onlineChart', '#d97070', 0.85, 0.45), hoverBackgroundColor:makeGrad('onlineChart', '#d97070', 0.95, 0.6), yAxisID:'yS', order:2, barPercentage:0.5, categoryPercentage:0.85 });
+  var BM_ = !!ONL.bm, BM_COL = '#7d8fb3', sleg = document.getElementById('onlSalesLeg');   // 2026-11-17 B&M = 포털 막대 위에 회청색으로 누적
+  if (sleg) sleg.innerHTML = '<div class="leg-dot" style="background:#d97070;"></div><span>Sales (포털)' + (BM_ ? '(아래)' : '') + '</span>' + (BM_ ? '<div class="leg-dot" style="background:' + BM_COL + ';margin-left:6px;"></div><span>B&amp;M 매출(위) 누적</span>' : '');
+  if (BM_) {
+    ds.forEach(function(x) { if (x.yAxisID === 'yS') x.stack = 'onl'; });
+    ds.push({ label:'B&M 매출', data:data.map(function(d) { return cur === 'USD' ? d.bm_usd : d.bm_krw; }), type:'bar', stack:'onl', backgroundColor:hexToRgba(BM_COL, 0.8), hoverBackgroundColor:BM_COL, yAxisID:'yS', order:2, barPercentage:0.5, categoryPercentage:0.85 });
+  }
   if (S.visits) ds.push(Object.assign(ln('Visits', data.map(function(d) { return d.visits; }), '#6aadd5', 'yV', 3), { fill:true, backgroundColor:makeGrad('onlineChart', '#6aadd5', 0.15, 0), pointRadius:0 }));
   if (S.cvr) ds.push(ln('CVR', data.map(function(d) { return d.cvr; }), '#8878d0', 'yC', 1));
   if (S.ad) ds.push(ln('페이드 비용', data.map(function(d) { return P === 'daily' ? (d.spend || null) : onlCostVal_(P, '퍼포먼스 비용', d.date); }), '#e8c84a', 'yA'));
@@ -6185,6 +6205,7 @@ function onlRenderChart_(data) {
       title:function(c) { return '📅 ' + data[c[0].dataIndex].label; },
       label:function(c) { var v = c.raw, l = c.dataset.label; if (v == null) return null;
         if (l === 'Visits') return '  Visits: ' + v.toLocaleString();
+        if (l === 'B&M 매출') { var dd = data[c.dataIndex], tt = (cur === 'USD' ? dd.sales + (dd.bm_usd || 0) : dd.sales_krw + (dd.bm_krw || 0)); return '  B&M 매출: ' + curFmt_(v, cur) + '  (포털+B&M ' + curFmt_(tt, cur) + ')' + (dd.bm_miss ? '  · B&M 자료 없는 날 ' + dd.bm_miss + '일' : ''); }
         if (l === 'Sales (포털)') return '  ' + l + ': ' + curFmt_(v, cur);
         if (l === 'CVR') return '  CVR: ' + v.toFixed(2) + '%';
         if (l.indexOf('ROAS') >= 0) return '  ' + l + ': ' + v + '%';
@@ -6195,6 +6216,7 @@ function onlRenderChart_(data) {
       yC:{ type:'linear', position:'right', display:S.cvr, grid:{ drawOnChartArea:false }, ticks:{ font:{ size:9 }, color:'#8878d0', callback:function(v) { return v.toFixed(1) + '%'; } }, title:{ display:true, text:'CVR(%)', font:{ size:9 }, color:'#8878d0' } },
       yA:{ type:'linear', position:'right', display:showA, grid:{ drawOnChartArea:false }, min:0, ticks:{ font:{ size:9 }, color:'#e8c84a', callback:money('₩') }, title:{ display:true, text:'비용(₩)', font:{ size:9 }, color:'#e8c84a' } },
       yR:{ type:'linear', position:'left', display:S.roas || (S.roasT && cost), grid:{ drawOnChartArea:false }, ticks:{ font:{ size:9 }, color:'#4bc8a0', callback:function(v) { return v + '%'; } }, title:{ display:true, text:'ROAS(%)', font:{ size:9 }, color:'#4bc8a0' } } } } };
+  if (BM_) { cfg.options.scales.x.stacked = true; cfg.options.scales.yS.stacked = true; cfg.options.scales.yS.title.text = (cur === 'USD' ? 'Sales 포털+B&M ($)' : 'Sales 포털+B&M (₩)'); }
   if (P === 'weekly' && typeof dmWeekHlPlugin_ === 'function') cfg.plugins = [dmWeekHlPlugin_(data.map(function(d) { return d.date; }), dmWeekMarks())];
   var c = document.getElementById('onlineChart'); if (!c) return;
   if (onlChart) onlChart.destroy();
@@ -6215,6 +6237,9 @@ function onlRenderTable_(data) {
     ['온라인 ROAS', function(v) { return mtblPct(v, true); }, function(d) { return d.roas; }],
     ['전체 광고비 ROAS', function(v) { return mtblPct(v, true); }, function(d) { return d.roasT; }]
   ];
+  if (ONL.bm) rows.splice(2, 0,   // 2026-11-17 B&M 매출 포함 체크 — 포털 매출 바로 아래
+    ['B&M 매출' + (usd ? ' (USD)' : ''), usd ? mtblUsd : mtblMoney, function(d) { return usd ? d.bm_usd : d.bm_krw; }],
+    ['포털 + B&M' + (usd ? ' (USD)' : ''), usd ? mtblUsd : mtblMoney, function(d) { return d.bm_usd == null ? null : (usd ? d.sales + d.bm_usd : d.sales_krw + d.bm_krw); }]);
   var wm = (P === 'weekly' && typeof dmWeekMarks === 'function') ? dmWeekMarks() : null;
   var wc = function(k) { return !wm ? '' : k === wm.last ? ' class="dmd-hl"' : k >= wm.cur ? ' class="dmd-ing"' : ''; };
   var h = '<thead><tr><th class="mt-cty">국가</th><th class="mt-lbl">지표</th>';
@@ -6244,6 +6269,7 @@ window.setOnlPeriod = function(p) { ONL.period = p; document.querySelectorAll('[
 window.setOnlCur = function(c) { ONL.cur = c; document.querySelectorAll('[data-ocur]').forEach(function(b) { b.classList.toggle('on', b.dataset.ocur === c); }); onlRender_(); };
 window.setOnlTblCur = function(c) { ONL.tcur = c; document.querySelectorAll('[data-otcur]').forEach(function(b) { b.classList.toggle('on', b.dataset.otcur === c); }); onlRender_(); };
 window.toggleOnl = function(btn) { var k = btn.dataset.onlShow; ONL.show[k] = !ONL.show[k]; btn.classList.toggle('active', ONL.show[k]); onlRender_(); };
+window.setOnlBm = function(on) { ONL.bm = !!on; var c = document.getElementById('onlBmChk'); if (c) c.checked = ONL.bm; onlRender_(); };
 window.setOnlFilter = function() { ONL.month = document.getElementById('onlMonth').value; ONL.week = document.getElementById('onlWeek').value; onlRender_(); };
 window.refreshOnline = refreshOnline;
 
