@@ -1453,6 +1453,7 @@ body{
 <div class="filter-row">
   <div class="filter-block"><div class="filter-lbl">Month</div><select class="onl-sel" id="onlMonth" onchange="setOnlFilter()"><option value="">ALL</option></select></div>
   <div class="filter-block"><div class="filter-lbl">Week (Sun–Sat)</div><select class="onl-sel" id="onlWeek" onchange="setOnlFilter()"><option value="">ALL</option></select></div>
+  <div class="filter-block"><div class="filter-lbl">기간 (시작일 ~ 종료일)</div><div style="display:flex;align-items:center;gap:4px;"><input type="date" class="onl-sel" id="onlFrom" onchange="setOnlRange()"><span style="color:#999;font-size:12px;">~</span><input type="date" class="onl-sel" id="onlTo" onchange="setOnlRange()"><button class="ads-p-btn" onclick="clearOnlRange()" title="기간 필터 해제">초기화</button></div></div>
 </div>
 <div id="onlSrcNote" class="onl-note" style="display:none;"></div>
 <div class="chart-sec">
@@ -1486,7 +1487,7 @@ body{
     <div class="chart-sec-sub" style="margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;"><span>지표 확인용 표 (현재 필터·주기 기준)</span>
       <span class="cur-sw" title="매출 행 통화"><button class="on" data-otcur="KRW" onclick="setOnlTblCur('KRW')">₩ 원화</button><button data-otcur="USD" onclick="setOnlTblCur('USD')">$ 달러</button></span></div>
     <div class="ads-tbl-wrap"><table class="ads-metric-tbl" id="onlineDataTable"></table></div>
-    <div class="chart-note" style="text-align:left;color:#999;margin-top:6px;line-height:1.7;">매출 = 세포라 브랜드포털 이커머스 Sales TY 합계(주문일 기준 · .COM만, 매장 제외). 환불·반품을 처리일에 빼는 실매출과 정의가 달라 통합 대시보드 매출보다 크게 나옵니다.<br>온라인 ROAS = 포털 매출 ÷ (페이드 + 세포라 온사이트 — 닥포는 온사이트 비용 행이 없으면 0). 전체 광고비 ROAS = 포털 매출 ÷ 광고비(총계). 일 단위 온라인 ROAS는 페이드만 씁니다.</div>
+    <div class="chart-note" style="text-align:left;color:#999;margin-top:6px;line-height:1.7;">매출 = 세포라 브랜드포털 이커머스 Sales TY 합계(주문일 기준 · .COM만, 매장 제외). 환불·반품을 처리일에 빼는 실매출과 정의가 달라 통합 대시보드 매출보다 크게 나옵니다.<br>온라인 ROAS = 포털 매출 ÷ (페이드 + 세포라 온사이트 — 닥포는 온사이트 비용 행이 없으면 0). 전체 광고비 ROAS = 포털 매출 ÷ 광고비(총계). 일 단위 온라인 ROAS는 페이드만 씁니다.<br>기간 필터는 월·주 필터와 함께 적용됩니다. 주·월 보기에서 기간이 그 주·월의 일부만 포함하면 열 이름에 「(부분)」이 붙고, 그 열의 비용·ROAS는 주·월 전체 비용 기준입니다(비용이 일 단위로 없음).</div>
   </div>
 </div>
 </div>
@@ -6072,7 +6073,7 @@ function dmScrollRight_(wrap){if(!wrap)return;wrap._dmAuto=true;
 // ═══ 온라인매출(sell-out) 탭 (2026-11-13 어노브에서 이식) — 매출만 포털 이커머스로 바꾼 통합 대시보드 그래프·표.
 //     닥포는 포털 이커머스(RAW_commerce Sales TY · Visits · Orders)가 이미 대시보드 데이터(D.commerce)에 있어
 //     어노브처럼 시트를 직접 읽지 않고 그대로 쓴다. 실매출 탭·통합 대시보드 값은 건드리지 않는다.
-const ONL = { period:'weekly', cur:'KRW', tcur:'KRW', month:'', week:'',
+const ONL = { period:'weekly', cur:'KRW', tcur:'KRW', month:'', week:'', from:'', to:'',
   show:{ visits:true, cvr:false, ad:false, brand:false, kol:false, ch:false, total:false, roas:false, roasT:false }, bm:false,
   byDate:null, src:'', at:0, loading:false, err:'' };
 let onlChart = null;
@@ -6116,10 +6117,12 @@ function onlBmAt_(d) {
   var v = _onlBmMap[d];
   return (v == null || v === '') ? null : +v;
 }
+// 2026-11-23 기간 필터 — 필터 전 전체 날짜(부분 주·월 판별용)
+function onlAllDays_() { return Object.keys(ONL.byDate || {}).sort(); }
 function onlDates_(period) {
   var ds = Object.keys(ONL.byDate || {}).sort();
   return ds.filter(function(d) {
-    return (!ONL.month || d.slice(0, 7) === ONL.month) && (!ONL.week || getWeekKey(d) === ONL.week);
+    return (!ONL.month || d.slice(0, 7) === ONL.month) && (!ONL.week || getWeekKey(d) === ONL.week) && (!ONL.from || d >= ONL.from) && (!ONL.to || d <= ONL.to);
   });
 }
 function onlData_() {
@@ -6134,6 +6137,12 @@ function onlData_() {
     var s = ONL.byDate[d] || 0;
     x.visits += v[d] || 0; x.orders += o[d] || 0; x.sales += s; x.sales_krw += s * fxRate(d); x.spend += sp[d] || 0;
   });
+  if ((ONL.from || ONL.to) && p !== 'daily') {   // 기간 필터로 주·월 일부만 들어간 열 = 「(부분)」
+    var pc = {}, fc = {};
+    ds.forEach(function(d) { var k = getPeriodKey(d, p); pc[k] = (pc[k] || 0) + 1; });
+    onlAllDays_().forEach(function(d) { var k = getPeriodKey(d, p); fc[k] = (fc[k] || 0) + 1; });
+    Object.values(b).forEach(function(x) { if ((pc[x.date] || 0) < (fc[x.date] || 0)) { x.partial = true; x.label += ' (부분)'; } });
+  }
   return Object.values(b).sort(function(a, c) { return a.date.localeCompare(c.date); }).map(function(x) {
     x.cvr = x.visits > 0 ? x.orders / x.visits * 100 : 0;
     if (!x.bm_n) { x.bm_usd = null; x.bm_krw = null; }
@@ -6157,6 +6166,8 @@ function onlFillFilters_() {
   var wks = [...new Set(src.map(getWeekKey))];
   if (ONL.week && wks.indexOf(ONL.week) < 0) ONL.week = '';
   fill('onlWeek', wks, function(w) { return fmtPeriodLabel(w, 'weekly'); }, ONL.week);
+  var fr = document.getElementById('onlFrom'), to = document.getElementById('onlTo');
+  if (fr && to && ds.length) { fr.min = to.min = ds[0]; fr.max = to.max = ds[ds.length - 1]; fr.value = ONL.from; to.value = ONL.to; }
 }
 function onlRenderNote_() {
   var el = document.getElementById('onlSrcNote'); if (!el) return;
@@ -6271,6 +6282,12 @@ window.setOnlTblCur = function(c) { ONL.tcur = c; document.querySelectorAll('[da
 window.toggleOnl = function(btn) { var k = btn.dataset.onlShow; ONL.show[k] = !ONL.show[k]; btn.classList.toggle('active', ONL.show[k]); onlRender_(); };
 window.setOnlBm = function(on) { ONL.bm = !!on; var c = document.getElementById('onlBmChk'); if (c) c.checked = ONL.bm; onlRender_(); };
 window.setOnlFilter = function() { ONL.month = document.getElementById('onlMonth').value; ONL.week = document.getElementById('onlWeek').value; onlRender_(); };
+window.setOnlRange = function() {
+  var f = document.getElementById('onlFrom').value, t = document.getElementById('onlTo').value;
+  if (f && t && f > t) { var x = f; f = t; t = x; }   // 거꾸로 고르면 바꿔 준다
+  ONL.from = f; ONL.to = t; onlRender_();
+};
+window.clearOnlRange = function() { ONL.from = ''; ONL.to = ''; onlRender_(); };
 window.refreshOnline = refreshOnline;
 
 function switchTab(tab){
